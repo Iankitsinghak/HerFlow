@@ -1,0 +1,294 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile in the Woomania application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the Firebase Auth user ID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL of the user's profile picture in Firebase Storage.",
+          "format": "uri"
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography of the user."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "displayName",
+        "email"
+      ]
+    },
+    "CycleLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CycleLog",
+      "type": "object",
+      "description": "Represents a user's menstrual cycle log.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CycleLog entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile. (Relationship: UserProfile 1:N CycleLog)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of the cycle log.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of the cycle log.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any notes associated with the cycle log."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "startDate"
+      ]
+    },
+    "BlogPost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BlogPost",
+      "type": "object",
+      "description": "Represents a blog post related to women's health.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the BlogPost entity."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who authored the post. (Relationship: UserProfile 1:N BlogPost)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the blog post."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the blog post."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the blog post image in Firebase Storage.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the blog post was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "authorId",
+        "title",
+        "content",
+        "createdAt"
+      ]
+    },
+    "CommunityPost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CommunityPost",
+      "type": "object",
+      "description": "Represents a community forum post.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CommunityPost entity."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who authored the post. (Relationship: UserProfile 1:N CommunityPost)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the community post."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the community post."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the community post was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "authorId",
+        "title",
+        "content",
+        "createdAt"
+      ]
+    },
+    "DoctorQuestion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DoctorQuestion",
+      "type": "object",
+      "description": "Represents a question asked to a doctor.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the DoctorQuestion entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who asked the question. (Relationship: UserProfile 1:N DoctorQuestion)"
+        },
+        "question": {
+          "type": "string",
+          "description": "The question asked to the doctor."
+        },
+        "answer": {
+          "type": "string",
+          "description": "The answer provided by the doctor (if answered)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the question was asked.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "question",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/userProfiles/{userProfileId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Uses path-based ownership to ensure only the user can access their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth user ID."
+            },
+            {
+              "name": "userProfileId",
+              "description": "The unique ID of the user profile document. Consider using the userId as the document ID for simplicity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/cycleLogs/{cycleLogId}",
+        "definition": {
+          "entityName": "CycleLog",
+          "schema": {
+            "$ref": "#/backend/entities/CycleLog"
+          },
+          "description": "Stores user's cycle logs. Includes 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth user ID.  This is the owner of the cycle log."
+            },
+            {
+              "name": "cycleLogId",
+              "description": "The unique ID of the cycle log document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/blogPosts/{blogPostId}",
+        "definition": {
+          "entityName": "BlogPost",
+          "schema": {
+            "$ref": "#/backend/entities/BlogPost"
+          },
+          "description": "Stores blog posts. Includes 'authorId' for filtering and management by the author.",
+          "params": [
+            {
+              "name": "blogPostId",
+              "description": "The unique ID of the blog post document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/communityPosts/{communityPostId}",
+        "definition": {
+          "entityName": "CommunityPost",
+          "schema": {
+            "$ref": "#/backend/entities/CommunityPost"
+          },
+          "description": "Stores community posts. Includes 'authorId' for filtering and management by the author.",
+          "params": [
+            {
+              "name": "communityPostId",
+              "description": "The unique ID of the community post document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/doctorQuestions/{doctorQuestionId}",
+        "definition": {
+          "entityName": "DoctorQuestion",
+          "schema": {
+            "$ref": "#/backend/entities/DoctorQuestion"
+          },
+          "description": "Stores questions asked to doctors. Includes 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth user ID.  This is the owner of the doctor question."
+            },
+            {
+              "name": "doctorQuestionId",
+              "description": "The unique ID of the doctor question document."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization and structural segregation to achieve these goals.\n\n**Authorization Independence:** Authorization data is denormalized to avoid hierarchical `get()` calls in security rules. This ensures atomic operations and simplifies debugging.  For example, the `CycleLog` collection includes the `userId`, directly enabling security rules based on the requesting user's ID without needing to fetch the UserProfile.\n\n**Structural Segregation:** Each collection houses documents with uniform security requirements. User-specific data is stored under `/users/{userId}` to enforce ownership-based access control.\n\n**Access Modeling:**\n*   **Private Data:** Path-based ownership is used for private user data like `CycleLog` entries, ensuring only the user can access their own data.\n*   **Collaborative Data:** Although not present in this data model, if collaborative features were added, a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) would be used and denormalized where necessary.\n*   **Global Roles:** Existence over content is used. For example, a collection `/roles_admin/{uid}` would signify admin access, but this is not part of the specified data model.\n\n**QAPs (Rules are not Filters):** The structure facilitates secure `list` operations by segregating data based on ownership. Listing cycle logs is restricted to the specific user's path, preventing unauthorized access to other users' data. Similarly, blog posts and community posts, while potentially public, maintain the `authorId` to allow filtering and management by the author.\n\nIn summary, this structure prioritizes security by enforcing clear ownership and access control rules at the path level, while also enabling efficient data retrieval and management."
+  }
+}

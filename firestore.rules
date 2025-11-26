@@ -1,0 +1,200 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict, user-centric security model. User-specific data
+ * (profiles, cycle logs, doctor questions) is private and accessible only by the owning user.
+ * Publicly shared content (blog posts, community posts) is readable by anyone but can only be
+ * created, modified, or deleted by the original author.
+ *
+ * Data Structure: A hybrid model is used. All private user data is structurally segregated and
+ * nested under the `/users/{userId}` path, creating a secure data boundary for each user.
+ * Public content is stored in top-level collections like `/blogPosts` and `/communityPosts`
+ * for efficient public querying.
+ *
+ * Key Security Decisions:
+ * - Default Deny: All operations are denied by default. Access is granted only through explicit `allow` statements.
+ * - Strict Ownership: User-private data is protected using path-based security (`/users/{userId}/...`). A user can only access documents within their own path segment.
+ * - No User Listing: The top-level `/users` collection is not listable to protect user privacy.
+ * - Author-Controlled Public Content: For public collections, write access is tied to an `authorId` field within the document, ensuring only the creator can manage their content.
+ *
+ * Denormalization for Authorization: To ensure fast and simple security checks, authorization-critical
+ * data is denormalized. For example, `blogPosts` documents contain an `authorId` and `cycleLogs`
+ * documents contain a `userId`. This avoids slow and costly `get()` calls to other documents
+ * during rule evaluation, adhering to best practices for performance and security.
+ *
+ * Structural Segregation: The ruleset leverages separate collections for data with different
+ * security needs. Private data (`cycleLogs`) is in a user-owned subcollection, while public
+ * data (`blogPosts`) is in a top-level collection. This is more secure and performant than using
+ * a single collection with a 'isPublic' flag, especially for list operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if a document already exists. Used for update and delete operations.
+     */
+    function isExistingDoc() {
+      return resource != null;
+    }
+
+    /**
+     * A composite check for update/delete operations to verify both
+     * ownership and the existence of the document being modified.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && isExistingDoc();
+    }
+
+    /**
+     * On create, validates that the incoming document's 'userId' field
+     * matches the owner's UID from the path. This enforces relational integrity.
+     */
+    function hasCorrectUserId(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On update, ensures the 'userId' field cannot be changed, preventing
+     * a document from being reassigned to another user.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * On create, validates that the incoming document's 'authorId' field
+     * is set to the currently authenticated user's UID.
+     */
+    function isNewAuthor() {
+      return request.resource.data.authorId == request.auth.uid;
+    }
+
+    /**
+     * On update, ensures the 'authorId' field cannot be changed.
+     */
+    function isAuthorIdImmutable() {
+      return request.resource.data.authorId == resource.data.authorId;
+    }
+
+    // ------------------------------------------------------------------------
+    // User-Private Collections
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description A placeholder rule to prevent any operations on the top-level user path segment.
+     * @path /users/{userId}
+     * @allow (none) - This rule block explicitly denies all direct operations on a user's root document placeholder.
+     * @deny (list) - An attacker attempting to list all documents in the `/users` collection.
+     * @principle Prevents enumeration of all application users, protecting user privacy.
+     */
+    match /users/{userId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Secures a user's own profile document.
+     * @path /users/{userId}/userProfiles/{userProfileId}
+     * @allow (create) - A new user (auth.uid=`user-123`) creating their own profile at `/users/user-123/userProfiles/profile-abc`.
+     * @allow (get) - User `user-123` reading their own profile.
+     * @deny (update) - User `user-456` trying to update the profile for `user-123`.
+     * @principle Enforces strict data ownership within a user's private data tree.
+     */
+    match /users/{userId}/userProfiles/{userProfileId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasCorrectUserId(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures a user's private menstrual cycle logs.
+     * @path /users/{userId}/cycleLogs/{cycleLogId}
+     * @allow (create) - User `user-123` creating a new cycle log in their own subcollection.
+     * @allow (list) - User `user-123` listing all of their past cycle logs.
+     * @deny (get) - User `user-456` attempting to read a cycle log belonging to `user-123`.
+     * @principle Protects sensitive personal health information by restricting all access to the data owner.
+     */
+    match /users/{userId}/cycleLogs/{cycleLogId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasCorrectUserId(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures questions a user has asked a doctor.
+     * @path /users/{userId}/doctorQuestions/{doctorQuestionId}
+     * @allow (create) - User `user-123` submitting a new question at `/users/user-123/doctorQuestions/q-abc`.
+     * @allow (get) - User `user-123` reading their own question and its answer.
+     * @deny (list) - Any user trying to list questions, even their own, if that were the policy (here it's allowed).
+     * @principle Protects sensitive health-related questions by restricting access to the user who asked them.
+     */
+    match /users/{userId}/doctorQuestions/{doctorQuestionId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasCorrectUserId(userId);
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // ------------------------------------------------------------------------
+    // Public-Read / Owner-Write Collections
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Allows anyone to read blog posts, but only authors to write them.
+     * @path /blogPosts/{blogPostId}
+     * @allow (list) - Any user, authenticated or not, listing all blog posts.
+     * @allow (create) - An authenticated user creating a new post, ensuring the post data's `authorId` matches their UID.
+     * @deny (update) - A user trying to edit a blog post where `resource.data.authorId` does not match their own UID.
+     * @principle Implements a "Public Read, Owner Write" pattern, common for content platforms.
+     */
+    match /blogPosts/{blogPostId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && isNewAuthor();
+      allow update: if isExistingOwner(resource.data.authorId) && isAuthorIdImmutable();
+      allow delete: if isExistingOwner(resource.data.authorId);
+    }
+
+    /**
+     * @description Allows anyone to read community posts, but only authors to manage their own posts.
+     * @path /communityPosts/{communityPostId}
+     * @allow (get) - Any user, authenticated or not, reading a specific community post.
+     * @allow (create) - An authenticated user (auth.uid=`user-123`) creating a new post with `authorId: 'user-123'`.
+     * @deny (delete) - User `user-456` attempting to delete a post created by `user-123`.
+     * @principle Implements a "Public Read, Owner Write" pattern for user-generated community content.
+     */
+    match /communityPosts/{communityPostId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && isNewAuthor();
+      allow update: if isExistingOwner(resource.data.authorId) && isAuthorIdImmutable();
+      allow delete: if isExistingOwner(resource.data.authorId);
+    }
+  }
+}
