@@ -15,7 +15,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signup, googleSignIn } from "@/lib/auth";
+import { signup } from "@/lib/auth";
+import { googleSignIn } from "@/lib/auth-client";
 import { useState, useTransition } from "react";
 import {
   Form,
