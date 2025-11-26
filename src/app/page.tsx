@@ -5,8 +5,35 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function WelcomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+
+  // While checking auth state, show a loader
+  if (loading || user) {
+     return (
+        <div className="flex items-center justify-center h-screen">
+            <div className="flex flex-col items-center space-y-4">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+                <p className="text-lg text-muted-foreground">Loading...</p>
+            </div>
+        </div>
+    );
+  }
+
+  // If not logged in, show the welcome page
   return (
     <div className="flex flex-col min-h-screen items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center text-center max-w-lg mx-auto">
@@ -27,7 +54,7 @@ export default function WelcomePage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
           <Button asChild size="lg" className="w-full">
-            <Link href="/onboarding/start">Get Started</Link>
+            <Link href="/signup">Get Started</Link>
           </Button>
           <Button asChild variant="secondary" size="lg" className="w-full">
             <Link href="/login">I already have an account</Link>

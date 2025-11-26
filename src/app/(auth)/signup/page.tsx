@@ -29,6 +29,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -36,6 +37,7 @@ const formSchema = z.object({
 });
 
 export default function SignupPage() {
+    const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
@@ -54,19 +56,19 @@ export default function SignupPage() {
             if (result?.error) {
                 setError(result.error);
             }
+            // Redirect is handled by the server action on success
         });
     }
 
-    const onGoogleSignIn = () => {
+    const onGoogleSignIn = async () => {
         setError(null);
-        startTransition(async () => {
-            const result = await googleSignIn();
-            if (result?.error) {
-                setError(result.error);
-            } else {
-                window.location.href = '/dashboard';
-            }
-        });
+        const result = await googleSignIn();
+        if (result?.error) {
+            setError(result.error);
+        } else {
+            // On successful Google sign-in, go to onboarding
+            router.push('/onboarding/start');
+        }
     }
 
   return (

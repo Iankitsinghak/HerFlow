@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useMemo } from 'react';
+import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import {
     getCurrentCyclePhase,
@@ -23,6 +23,7 @@ import {
     type CycleLog
 } from '@/lib/cycle-service';
 import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const quickActions = [
   {
@@ -60,7 +61,15 @@ const recommendedPosts = [
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const displayName = user?.displayName?.split(' ')[0] || 'there';
+
+  const userProfileRef = useMemoFirebase(
+    () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<any>(userProfileRef);
+
+  const displayName = userProfile?.displayName?.split(' ')[0] || 'there';
+  const hasCompletedOnboarding = userProfile && userProfile.periodStatus;
 
   const logsCollectionRef = useMemoFirebase(
       () => (user && firestore ? collection(firestore, `users/${user.uid}/cycleLogs`) : null),
@@ -75,14 +84,30 @@ export default function DashboardPage() {
   const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
 
   const { currentPhase, nextPeriodDate } = useMemo(() => {
-    if (!rawLogs) return { currentPhase: 'Unknown', nextPeriodDate: null };
+    if (!rawLogs || !hasCompletedOnboarding) return { currentPhase: 'Unknown', nextPeriodDate: null };
     
     return {
         currentPhase: getCurrentCyclePhase(rawLogs),
         nextPeriodDate: estimateNextPeriodDate(rawLogs)
     }
-  }, [rawLogs]);
+  }, [rawLogs, hasCompletedOnboarding]);
 
+  const isLoading = isLoadingProfile || isLoadingLogs;
+
+  if (isLoading) {
+    return (
+        <div className="space-y-8">
+            <Skeleton className="h-12 w-1/2" />
+            <Skeleton className="h-40 w-full" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -97,32 +122,44 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Today at a glance */}
+      {/* Today at a glance / Onboarding CTA */}
       <Card className="bg-secondary">
         <CardHeader>
-          <CardTitle>Today at a glance</CardTitle>
+          <CardTitle>
+            {hasCompletedOnboarding ? 'Today at a glance' : 'Complete your cycle setup 🌸'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-            {isLoadingLogs ? (
-                 <p className="text-lg">🌸 Loading your cycle data...</p>
-            ): rawLogs && rawLogs.length > 0 ? (
-                 <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
-            ) : (
-                <p className="text-lg">🌸 Start by telling us how your body feels today.</p>
-            )}
-           
-            <div className="mt-4 flex flex-col sm:flex-row gap-4">
+           {hasCompletedOnboarding ? (
+            <>
+              <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
+              <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                  <Button asChild>
+                      <Link href="/dashboard/cycle-log">
+                          <Plus className="mr-2" /> Log today’s symptoms
+                      </Link>
+                  </Button>
+                  <Button variant="outline" asChild>
+                      <Link href="/dashboard/cycle-log">
+                          Add a period day
+                      </Link>
+                  </Button>
+              </div>
+            </>
+           ) : (
+             <>
+              <p className="text-lg text-muted-foreground">
+                Tell us about your last period and cycle pattern to unlock predictions and personalized insights.
+              </p>
+              <div className="mt-4">
                 <Button asChild>
-                    <Link href="/dashboard/cycle-log">
-                        <Plus className="mr-2" /> Log today’s symptoms
+                    <Link href="/onboarding/start">
+                        Complete Setup
                     </Link>
                 </Button>
-                <Button variant="outline" asChild>
-                    <Link href="/dashboard/cycle-log">
-                        Add a period day
-                    </Link>
-                </Button>
-            </div>
+              </div>
+            </>
+           )}
         </CardContent>
       </Card>
 
@@ -134,7 +171,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                    {React.cloneElement(action.icon, { className: 'h-6 w-6' })}
+                    {action.icon}
                   </div>
                   <div>
                     <CardTitle className="text-base font-headline">
@@ -157,15 +194,13 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold font-headline">Your cycle overview</h2>
             <Card>
                 <CardContent className="pt-6 space-y-3">
-                {isLoadingLogs ? (
-                    <p className="text-muted-foreground">Loading cycle data...</p>
-                ) : !rawLogs || rawLogs.length === 0 ? (
+                {!hasCompletedOnboarding ? (
                     <>
                         <p className="text-muted-foreground">
                             You haven’t logged any cycle data yet.
                         </p>
                         <p className="text-muted-foreground mt-2">
-                            👉 Start with “Add your last period” or “Log today” to see patterns here.
+                            👉 Start by completing your setup to see patterns here.
                         </p>
                     </>
                 ) : (
@@ -215,5 +250,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

@@ -22,12 +22,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOnboarding } from "../provider";
+import { useUser } from "@/firebase";
 
 export default function AboutYouPage() {
   const router = useRouter();
+  const { user } = useUser();
   const { onboardingData, setOnboardingData } = useOnboarding();
 
-  const [name, setName] = useState(onboardingData.name || "");
+  // Pre-fill name from Google Auth if available
+  const [name, setName] = useState(onboardingData.name || user?.displayName || "");
   const [ageRange, setAgeRange] = useState(onboardingData.ageRange || "");
   const [country, setCountry] = useState(onboardingData.country || "");
   
@@ -41,9 +44,9 @@ export default function AboutYouPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">About You</CardTitle>
+        <CardTitle className="font-headline text-2xl">First, a little about you</CardTitle>
         <CardDescription>
-          Just a little context to get started.
+          This helps us personalize your journey.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

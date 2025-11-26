@@ -15,6 +15,12 @@ const { auth, firestore } = initializeFirebase();
 export async function signup(userData: any) {
   try {
     const { email, password, ...profileData } = userData;
+
+    // Check if email and password are provided. A temporary one is created on the summary page.
+    if (!email || !password) {
+      throw new Error("Email and password are required for signup.");
+    }
+
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -24,25 +30,34 @@ export async function signup(userData: any) {
     if (userCredential.user) {
         const userProfileRef = doc(firestore, `users/${userCredential.user.uid}/userProfiles`, userCredential.user.uid);
         
-        // Ensure displayName from onboarding is used
         const finalProfileData = {
           userId: userCredential.user.uid,
           email: userCredential.user.email,
-          displayName: profileData.name || userCredential.user.displayName || '',
-          ...profileData,
+          displayName: profileData.name || '',
+          ageRange: profileData.ageRange || null,
+          country: profileData.country || null,
+          periodStatus: profileData.periodStatus || null,
+          cycleLength: profileData.cycleLength || null,
+          lastPeriodDate: profileData.lastPeriodDate || null,
+          focusAreas: profileData.focusAreas || [],
+          doctorComfort: profileData.doctorComfort || null,
+          sharingPreference: profileData.sharingPreference || null,
+          showReminders: profileData.showReminders === undefined ? true : profileData.showReminders,
+          createdAt: new Date().toISOString(),
         };
-
-        // remove onboarding-specific fields that shouldn't be in the DB
-        delete finalProfileData.name; 
 
         await setDoc(userProfileRef, finalProfileData, { merge: true });
     }
   } catch (error: any) {
     console.error("Signup Error:", error);
+    // In a real app, you'd want to return this error to the UI
+    // For now, we'll log it and the redirect won't happen.
     return { error: error.message };
   }
+  // Redirect to the dashboard after successful signup and profile creation.
   redirect('/dashboard');
 }
+
 
 export async function login({ email, password }: any) {
   try {
