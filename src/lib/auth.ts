@@ -1,15 +1,9 @@
 
 "use server";
 
-import { signOut } from "firebase/auth";
-import { initializeFirebase } from "@/firebase";
-import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { redirect } from "next/navigation";
 import { getAdminAuth, getAdminFirestore } from './firebase-admin';
-import { signInWithEmailAndPassword } from "firebase/auth";
-
-// This is a client-side initialization, keep it for client-side functions like logout.
-const { auth } = initializeFirebase();
+import * as admin from 'firebase-admin';
 
 export async function signup(userData: any) {
   const { email, password, ...profileData } = userData;
@@ -36,6 +30,7 @@ export async function signup(userData: any) {
                 });
                 uid = userRecord.uid;
             } else {
+                // For social sign-ins where a password isn't provided on this form
                 const newUserRecord = await adminAuth.createUser({ email, displayName: profileData.name });
                 uid = newUserRecord.uid;
             }
@@ -69,6 +64,7 @@ export async function signup(userData: any) {
 
     await userProfileRef.set(finalProfileData, { merge: true });
 
+    // Create the first cycle log if the date was provided
     if (profileData.lastPeriodDate && profileData.lastPeriodDate !== 'unknown') {
         const logsCollectionRef = adminFirestore.collection(`users/${uid}/cycleLogs`);
         await logsCollectionRef.add({
@@ -82,32 +78,9 @@ export async function signup(userData: any) {
 
   } catch (error: any) {
     console.error("Signup/Profile Update Error:", error);
-    return { error: `An error occurred during signup: ${error.message}` };
+    // Be careful not to leak sensitive implementation details in error messages.
+    return { error: `An error occurred during signup. Please try again.` };
   }
 
   redirect('/dashboard');
-}
-
-
-export async function login({ email, password }: any) {
-  try {
-    // Client-side auth is appropriate for login
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-  } catch (error: any) {
-    return { error: error.message };
-  }
-  redirect('/dashboard');
-}
-
-export async function logout() {
-  try {
-    await signOut(auth);
-  } catch (error: any) {
-    return { error: error.message };
-  }
-   redirect('/login');
 }

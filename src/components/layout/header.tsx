@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
-import { logout } from "@/lib/auth";
+import { logout } from "@/lib/auth-client";
 import {
   DropdownMenu,
   DropdownMenuContent,
