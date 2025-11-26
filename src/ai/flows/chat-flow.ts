@@ -9,6 +9,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { ChatRequest, ChatRequestSchema } from '@/ai/types';
+import { Readable } from 'stream';
 
 const systemInstruction = `You are Woomania AI, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the Woomania app.
 
@@ -26,13 +27,14 @@ const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatRequestSchema,
-    outputSchema: z.string().stream(),
+    outputSchema: z.string(),
+    stream: true,
   },
   async (request) => {
-    const { stream } = ai.generate({
+    const { stream } = await ai.generate({
         prompt: request.message,
         history: request.history,
-        model: 'googleai/gemini-2.5-flash',
+        model: 'googleai/gemini-1.5-flash-latest',
         system: systemInstruction,
         stream: true,
     });
