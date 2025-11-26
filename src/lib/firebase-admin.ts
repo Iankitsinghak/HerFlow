@@ -17,7 +17,7 @@ function getInitializedAdminApp(): admin.app.App {
       credential: admin.credential.cert(serviceAccount),
     });
   } catch (e: any) {
-    if (e.code === 'ENOENT' || e.message.includes('FIREBASE_SERVICE_ACCOUNT')) {
+    if (e.code === 'ENOENT' || (e.message && e.message.includes('FIREBASE_SERVICE_ACCOUNT'))) {
         throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable not set. This is required for server-side operations.');
     }
     console.error('Firebase Admin SDK initialization error:', e);
