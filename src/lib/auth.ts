@@ -17,15 +17,21 @@ const { auth, firestore } = initializeFirebase();
 export async function signup(userData: any) {
   const { email, password, ...profileData } = userData;
 
+  if (!email) {
+    return { error: "Email is required to sign up." };
+  }
+
   try {
     let user;
     const adminAuth = getAdminAuth(adminApp);
     
-    // Check if user exists via server-side check. This is more reliable.
+    // Check if user exists via server-side check.
     let userExists = false;
+    let uid: string | undefined;
+
     try {
         const userRecord = await adminAuth.getUserByEmail(email);
-        user = userRecord;
+        uid = userRecord.uid;
         userExists = true;
     } catch (error: any) {
         if (error.code !== 'auth/user-not-found') {
@@ -37,24 +43,29 @@ export async function signup(userData: any) {
     if (!userExists) {
         // User does not exist, create them
         if (!password) {
-            throw new Error("Password is required for new user signup.");
+            // This case handles social auth users who are new but don't have a password set yet
+            // We create them in Firebase Auth from the server.
+            const newUserRecord = await adminAuth.createUser({ email, displayName: profileData.name });
+            uid = newUserRecord.uid;
+        } else {
+             // This handles email/password signup
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            uid = userCredential.user.uid;
         }
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        user = userCredential.user;
     }
     
-    if (!user) {
-        throw new Error("Could not create or find user.");
+    if (!uid) {
+        throw new Error("Could not create or find user account.");
     }
 
     // Now, save the profile data to Firestore.
     // This works for both new users and existing users (e.g., Google sign-in)
-    const userProfileRef = doc(firestore, `users/${user.uid}/userProfiles`, user.uid);
+    const userProfileRef = doc(firestore, `users/${uid}/userProfiles`, uid);
     
     const finalProfileData = {
-      userId: user.uid,
-      email: user.email,
-      displayName: profileData.name || user.displayName || '',
+      userId: uid,
+      email: email,
+      displayName: profileData.name,
       ageRange: profileData.ageRange || null,
       country: profileData.country || null,
       periodStatus: profileData.periodStatus || null,
