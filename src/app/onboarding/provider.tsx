@@ -44,6 +44,9 @@ export function useOnboarding() {
   return context;
 }
 
+// This component is no longer needed in the root layout, but we keep it
+// in case it's used elsewhere for its provider logic. We can rename it to
+// avoid confusion.
 export function OnboardingWrapper({ children }: { children: ReactNode }) {
   return <OnboardingProvider>{children}</OnboardingProvider>;
 }
