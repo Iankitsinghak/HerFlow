@@ -1,23 +1,22 @@
 
 import * as admin from 'firebase-admin';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined;
-
-// Ensure that the app is only initialized once
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: serviceAccount ? admin.credential.cert(serviceAccount) : undefined,
-    });
-  } catch (e) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn(
-        'Firebase Admin initialization failed. This may happen in environments where service account is not available. Using unauthenticated client-side fallbacks.'
-      );
-    }
-  }
+// Check if the service account environment variable exists
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable not set.');
 }
 
-export const adminApp = admin.apps[0];
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+let adminApp: admin.app.App;
+
+// Initialize the app only if it hasn't been initialized yet
+if (!admin.apps.length) {
+  adminApp = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+} else {
+  adminApp = admin.app(); // Get the default app if it already exists
+}
+
+export { adminApp };
