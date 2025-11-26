@@ -7,14 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, User, Sparkles, Loader } from 'lucide-react';
 import { streamChat } from '@/ai/flows/chat-flow';
-import type { ChatRequest } from '@/ai/types';
+import type { ChatRequest, Message } from '@/ai/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
-interface Message {
-  role: 'user' | 'model';
-  content: string;
-}
 
 export function AiChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -36,14 +32,15 @@ export function AiChatInterface() {
     setInput('');
 
     startTransition(async () => {
+      // Add a placeholder for the model's response immediately
+      const placeholderMessage: Message = { role: 'model', content: '' };
+      setMessages(prev => [...prev, placeholderMessage]);
+
       try {
         const stream = await streamChat({
-            history: messages,
+            history: newMessages, // Pass the most up-to-date history
             message: input,
         });
-
-        // Add a placeholder for the model's response
-        setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
         const reader = stream.getReader();
         const decoder = new TextDecoder();
@@ -55,15 +52,26 @@ export function AiChatInterface() {
             break;
           }
           streamedContent += decoder.decode(value);
+          
           setMessages(prev => {
               const updatedMessages = [...prev];
-              updatedMessages[updatedMessages.length - 1] = { role: 'model', content: streamedContent };
+              // Always update the last message in the array, which is our placeholder
+              if (updatedMessages.length > 0) {
+                 updatedMessages[updatedMessages.length - 1] = { role: 'model', content: streamedContent };
+              }
               return updatedMessages;
           });
         }
       } catch (error) {
         console.error('Error streaming chat:', error);
-        setMessages(prev => [...prev, { role: 'model', content: 'Sorry, something went wrong. Please try again.' }]);
+        const errorMessage: Message = { role: 'model', content: 'Sorry, something went wrong. Please try again.' };
+        setMessages(prev => {
+           const updatedMessages = [...prev];
+           if (updatedMessages.length > 0) {
+             updatedMessages[updatedMessages.length - 1] = errorMessage;
+           }
+           return updatedMessages;
+        });
       }
     });
   };
@@ -108,7 +116,7 @@ export function AiChatInterface() {
                       : 'bg-muted rounded-bl-none'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-sm whitespace-pre-wrap">{message.content === '' && isPending ? <Loader className="h-5 w-5 animate-spin text-muted-foreground" /> : message.content}</p>
                 </div>
                 {message.role === 'user' && (
                    <Avatar className="w-8 h-8">
@@ -117,16 +125,6 @@ export function AiChatInterface() {
                 )}
               </div>
             ))
-            )}
-             {isPending && messages[messages.length - 1]?.role === 'user' && (
-                <div className="flex items-start gap-3">
-                     <Avatar className="w-8 h-8">
-                        <AvatarFallback className='bg-primary/10 text-primary'><Sparkles className='h-5 w-5' /></AvatarFallback>
-                    </Avatar>
-                    <div className="p-3 rounded-lg bg-muted flex items-center">
-                        <Loader className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                </div>
             )}
           </div>
         </ScrollArea>

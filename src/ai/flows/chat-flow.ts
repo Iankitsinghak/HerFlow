@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { ChatRequest, ChatRequestSchema } from '@/ai/types';
+import { ChatRequest, ChatRequestSchema, MessageSchema } from '@/ai/types';
 import { Readable } from 'stream';
 
 const systemInstruction = `You are Woomania AI, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the Woomania app.
@@ -31,10 +31,12 @@ const chatFlow = ai.defineFlow(
     stream: true,
   },
   async (request) => {
+    // The system prompt must be the first message in the history.
+    const systemPrompt = { role: 'system', content: systemInstruction } as const;
+    
     const { stream } = await ai.generate({
         prompt: request.message,
-        history: request.history,
-        system: systemInstruction,
+        history: [systemPrompt, ...request.history],
         stream: true,
     });
     

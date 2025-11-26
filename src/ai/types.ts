@@ -2,10 +2,12 @@
 import { z } from 'genkit';
 
 // Define the structure for a single message in the chat history
-const MessageSchema = z.object({
-  role: z.enum(['user', 'model']),
+export const MessageSchema = z.object({
+  role: z.enum(['user', 'model', 'system']),
   content: z.string(),
 });
+export type Message = z.infer<typeof MessageSchema>;
+
 
 // Define the input schema for the chat flow
 export const ChatRequestSchema = z.object({
