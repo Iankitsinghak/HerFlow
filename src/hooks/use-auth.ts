@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AuthContext } from "@/components/auth-provider";
@@ -8,5 +9,8 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context;
+  // The context now provides { user, isUserLoading, userError }
+  // To keep it compatible with the old useAuth that returned { user, loading }
+  // we can remap it here.
+  return { user: context.user, loading: context.isUserLoading, error: context.userError };
 };

@@ -6,7 +6,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { initializeFirebase } from "@/firebase/config"; // Changed import
+import { doc, setDoc } from "firebase/firestore";
+
+const { auth, firestore } = initializeFirebase();
 
 export async function signup({ email, password }: any) {
   try {
@@ -15,7 +18,17 @@ export async function signup({ email, password }: any) {
       email,
       password
     );
-    // You can add user profile creation here if needed
+
+    if (userCredential.user) {
+        const userProfileRef = doc(firestore, `users/${userCredential.user.uid}/userProfiles`, userCredential.user.uid);
+        await setDoc(userProfileRef, {
+            userId: userCredential.user.uid,
+            email: userCredential.user.email,
+            displayName: userCredential.user.displayName,
+            profilePictureUrl: userCredential.user.photoURL
+        });
+    }
+
     return { user: userCredential.user };
   } catch (error: any) {
     return { error: error.message };

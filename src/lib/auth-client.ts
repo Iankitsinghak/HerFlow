@@ -5,7 +5,10 @@ import {
     GoogleAuthProvider,
     signInWithPopup,
   } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { initializeFirebase } from "@/firebase";
+
+const { auth } = initializeFirebase();
+
 
 export async function googleSignIn() {
     try {
