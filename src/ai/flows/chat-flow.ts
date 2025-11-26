@@ -48,7 +48,7 @@ IMPORTANT: You are not a doctor and must not provide medical advice. Always pref
 
 Keep your answers concise, easy to understand, and supportive.`;
 
-    const { stream, response } = await ai.generate({
+    const { stream, response } = ai.generate({
         model: 'googleai/gemini-2.5-flash',
         prompt: request.message,
         history: request.history,
