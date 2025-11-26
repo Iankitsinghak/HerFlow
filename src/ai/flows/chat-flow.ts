@@ -34,7 +34,7 @@ const chatFlow = ai.defineFlow(
     const { stream } = await ai.generate({
         prompt: request.message,
         history: request.history,
-        model: 'googleai/gemini-1.5-flash-latest',
+        model: 'googleai/gemini-1.5-flash',
         system: systemInstruction,
         stream: true,
     });
@@ -63,3 +63,4 @@ export async function streamChat(request: ChatRequest) {
 
     return readableStream;
 }
+
