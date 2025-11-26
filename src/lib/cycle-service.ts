@@ -20,7 +20,7 @@ export interface CycleLog {
 export interface GroupedCycle {
   startDate: Date;
   endDate: Date;
-  duration: number;
+  duration: number | string; // Can be a number or a string like "4-5"
   symptoms: string[];
   logs: CycleLog[];
 }
@@ -134,69 +134,74 @@ export function getCurrentCyclePhase(logs: CycleLog[]): string {
 
 /**
  * Groups raw, daily log entries into distinct, consecutive period cycles.
+ * If only one log exists (from onboarding), it uses the estimated period duration.
  * @param logs - A sorted array of CycleLog objects.
+ * @param userProfile - The user's profile data, containing onboarding estimates.
  * @returns An array of GroupedCycle objects.
  */
-export function groupLogsIntoCycles(logs: CycleLog[]): GroupedCycle[] {
-    const cycles: GroupedCycle[] = [];
-    if (!logs || logs.length === 0) return cycles;
+export function groupLogsIntoCycles(logs: CycleLog[], userProfile?: { periodDuration?: string }): GroupedCycle[] {
+    if (!logs || logs.length === 0) return [];
 
+    // SCENARIO 1: Only one log exists, which is the initial log from onboarding.
+    // In this case, we create a projected cycle based on user's onboarding estimates.
+    if (logs.length === 1 && logs[0].isPeriodDay && userProfile?.periodDuration) {
+        const singleLog = logs[0];
+        const startDate = startOfDay(parseISO(singleLog.date));
+        
+        // Estimate end date from periodDuration string (e.g., "4-5" -> 4 days)
+        const durationEstimate = parseInt(userProfile.periodDuration, 10);
+        const endDate = addDays(startDate, Math.max(0, durationEstimate - 1));
+
+        return [{
+            startDate: startDate,
+            endDate: endDate,
+            duration: userProfile.periodDuration, // Use the string from onboarding, e.g., "4-5"
+            symptoms: singleLog.symptoms || [],
+            logs: [singleLog]
+        }];
+    }
+
+    // SCENARIO 2: Multiple logs exist, calculate cycles based on actual data.
+    const cycles: GroupedCycle[] = [];
     let currentCycleLogs: CycleLog[] = [];
 
     for (let i = 0; i < logs.length; i++) {
         const log = logs[i];
         if (log.isPeriodDay) {
             const prevLog = logs[i - 1];
-            // Start a new cycle if it's the first log, or if it's not consecutive
-            if (currentCycleLogs.length === 0 || !prevLog || differenceInDays(parseISO(log.date), parseISO(prevLog.date)) > 1) {
-                // If there's a cycle being tracked, push it to the cycles array first
+            const isFirstDayOfThisPeriod = !prevLog || !prevLog.isPeriodDay || differenceInDays(parseISO(log.date), parseISO(prevLog.date)) > 1;
+
+            if (isFirstDayOfThisPeriod) {
+                // The previous cycle has ended. Finalize and push it.
                 if (currentCycleLogs.length > 0) {
                     const startDate = parseISO(currentCycleLogs[0].date);
                     const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
-                    const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
                     cycles.push({
                         startDate: startOfDay(startDate),
                         endDate: startOfDay(endDate),
                         duration: differenceInDays(endDate, startDate) + 1,
-                        symptoms: symptoms,
+                        symptoms: [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))],
                         logs: currentCycleLogs
                     });
                 }
-                // Start the new cycle
+                // Start a new cycle.
                 currentCycleLogs = [log];
             } else {
-                // Continue the current cycle
+                // This log is a consecutive day of the current period.
                 currentCycleLogs.push(log);
-            }
-        } else {
-             // If we encounter a non-period day, the current period cycle ends.
-             if (currentCycleLogs.length > 0) {
-                const startDate = parseISO(currentCycleLogs[0].date);
-                const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
-                const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
-
-                cycles.push({
-                    startDate: startOfDay(startDate),
-                    endDate: startOfDay(endDate),
-                    duration: differenceInDays(endDate, startDate) + 1,
-                    symptoms: symptoms,
-                    logs: currentCycleLogs
-                });
-                currentCycleLogs = [];
             }
         }
     }
-    
-    // Add the last cycle if it's still being tracked
+
+    // After the loop, if there's an ongoing cycle, add it to the list.
     if (currentCycleLogs.length > 0) {
         const startDate = parseISO(currentCycleLogs[0].date);
         const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
-        const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
         cycles.push({
             startDate: startOfDay(startDate),
             endDate: startOfDay(endDate),
             duration: differenceInDays(endDate, startDate) + 1,
-            symptoms: symptoms,
+            symptoms: [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))],
             logs: currentCycleLogs
         });
     }

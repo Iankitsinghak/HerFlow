@@ -29,8 +29,9 @@ import {
 import { MoreHorizontal, PlusCircle, CalendarDays, Droplets, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
+import { useDoc } from "@/firebase/firestore/use-doc";
 import { format } from 'date-fns';
 import {
     calculateAverageCycleLength,
@@ -51,6 +52,12 @@ export default function CycleLogPage() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const userProfileRef = useMemoFirebase(
+      () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
+      [user, firestore]
+    );
+    const { data: userProfile } = useDoc<any>(userProfileRef);
+
     const logsCollectionRef = useMemoFirebase(
         () => (user && firestore ? collection(firestore, `users/${user.uid}/cycleLogs`) : null),
         [user, firestore]
@@ -64,8 +71,8 @@ export default function CycleLogPage() {
     const { data: rawLogs, isLoading } = useCollection<CycleLog>(logsQuery);
 
     const groupedCycles = useMemo(() => {
-        return rawLogs ? groupLogsIntoCycles(rawLogs) : [];
-    }, [rawLogs]);
+        return rawLogs ? groupLogsIntoCycles(rawLogs, userProfile) : [];
+    }, [rawLogs, userProfile]);
 
     const averageCycleLength = useMemo(() => {
         return rawLogs ? calculateAverageCycleLength(rawLogs) : 28;
@@ -211,7 +218,7 @@ export default function CycleLogPage() {
                         <TableRow key={index}>
                         <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{cycle.duration} days</TableCell>
+                        <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
                         <TableCell>
                             <div className="flex flex-wrap gap-1">
                             {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
