@@ -11,18 +11,37 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { useUser } from "@/firebase";
 
 export default function SummaryPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { onboardingData } = useOnboarding();
+    const { onboardingData, setOnboardingData } = useOnboarding();
+    const { user } = useUser();
     const [isPending, startTransition] = useTransition();
     
+    // Use existing user's email if available (e.g. from Google Sign-In)
+    if (user && !onboardingData.email) {
+        setOnboardingData({ ...onboardingData, email: user.email! });
+    }
+
     const handleFinish = () => {
         startTransition(async () => {
             try {
-                // This will create the user and save the onboarding data
-                const result = await signup(onboardingData);
+                // Ensure email is set before proceeding
+                const finalData = { ...onboardingData };
+                if (!finalData.email) {
+                    // This is a fallback for email/password signups where email might not be in the context yet
+                    // But for Google/existing users, it should be there.
+                    // If it's a completely new user, we'll auto-generate credentials.
+                    if (!finalData.password) {
+                        finalData.password = Math.random().toString(36).slice(-8);
+                        finalData.email = `user-${Date.now()}@woomania.com`;
+                    }
+                }
+
+                const result = await signup(finalData);
+
                 if (result?.error) {
                     toast({
                         variant: 'destructive',
@@ -54,14 +73,10 @@ export default function SummaryPage() {
         }
     }
 
-    // A temporary password for auto-signup. In a real app, you'd have a proper signup form.
-    if (!onboardingData.password) {
-        onboardingData.password = Math.random().toString(36).slice(-8);
-        onboardingData.email = `user-${Date.now()}@woomania.com`;
-    }
+    const isNewUserSignup = !user || (user && !user.emailVerified && !user.providerData.length);
 
     return (
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-white/70 backdrop-blur-lg dark:bg-card/70">
             <CardHeader className="text-center">
                 <CardTitle className="font-headline text-2xl">You’re all set, {onboardingData.name || 'friend'} 💕</CardTitle>
             </CardHeader>
@@ -78,13 +93,15 @@ export default function SummaryPage() {
                         <p><strong>Privacy:</strong> {onboardingData.sharingPreference ? `${onboardingData.sharingPreference.charAt(0).toUpperCase() + onboardingData.sharingPreference.slice(1)} by default` : 'N/A'}</p>
                     </CardContent>
                 </Card>
-                <Alert className="mt-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>You're signing up!</AlertTitle>
-                    <AlertDescription>
-                        By continuing, we'll create a temporary account for you. You can set a password later in your profile.
-                    </AlertDescription>
-                </Alert>
+                {isNewUserSignup && (
+                    <Alert className="mt-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>You're signing up!</AlertTitle>
+                        <AlertDescription>
+                            By continuing, we'll create an account for you. You can manage your profile later.
+                        </AlertDescription>
+                    </Alert>
+                )}
             </CardContent>
             <CardFooter>
                 <Button onClick={handleFinish} disabled={isPending} className="w-full">

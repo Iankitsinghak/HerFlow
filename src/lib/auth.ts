@@ -7,54 +7,73 @@ import {
   signOut,
 } from "firebase/auth";
 import { initializeFirebase } from "@/firebase/config";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { redirect } from "next/navigation";
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import { adminApp } from "./firebase-admin";
 
 const { auth, firestore } = initializeFirebase();
 
 export async function signup(userData: any) {
+  const { email, password, ...profileData } = userData;
+
   try {
-    const { email, password, ...profileData } = userData;
-
-    // Check if email and password are provided. A temporary one is created on the summary page.
-    if (!email || !password) {
-      throw new Error("Email and password are required for signup.");
+    let user;
+    const adminAuth = getAdminAuth(adminApp);
+    
+    // Check if user exists via server-side check. This is more reliable.
+    let userExists = false;
+    try {
+        const userRecord = await adminAuth.getUserByEmail(email);
+        user = userRecord;
+        userExists = true;
+    } catch (error: any) {
+        if (error.code !== 'auth/user-not-found') {
+            throw error; // Re-throw unexpected errors
+        }
+        // user-not-found is the expected case for a new signup
     }
 
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    if (userCredential.user) {
-        const userProfileRef = doc(firestore, `users/${userCredential.user.uid}/userProfiles`, userCredential.user.uid);
-        
-        const finalProfileData = {
-          userId: userCredential.user.uid,
-          email: userCredential.user.email,
-          displayName: profileData.name || '',
-          ageRange: profileData.ageRange || null,
-          country: profileData.country || null,
-          periodStatus: profileData.periodStatus || null,
-          cycleLength: profileData.cycleLength || null,
-          lastPeriodDate: profileData.lastPeriodDate || null,
-          focusAreas: profileData.focusAreas || [],
-          doctorComfort: profileData.doctorComfort || null,
-          sharingPreference: profileData.sharingPreference || null,
-          showReminders: profileData.showReminders === undefined ? true : profileData.showReminders,
-          createdAt: new Date().toISOString(),
-        };
-
-        await setDoc(userProfileRef, finalProfileData, { merge: true });
+    if (!userExists) {
+        // User does not exist, create them
+        if (!password) {
+            throw new Error("Password is required for new user signup.");
+        }
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        user = userCredential.user;
     }
+    
+    if (!user) {
+        throw new Error("Could not create or find user.");
+    }
+
+    // Now, save the profile data to Firestore.
+    // This works for both new users and existing users (e.g., Google sign-in)
+    const userProfileRef = doc(firestore, `users/${user.uid}/userProfiles`, user.uid);
+    
+    const finalProfileData = {
+      userId: user.uid,
+      email: user.email,
+      displayName: profileData.name || user.displayName || '',
+      ageRange: profileData.ageRange || null,
+      country: profileData.country || null,
+      periodStatus: profileData.periodStatus || null,
+      cycleLength: profileData.cycleLength || null,
+      lastPeriodDate: profileData.lastPeriodDate || null,
+      focusAreas: profileData.focusAreas || [],
+      doctorComfort: profileData.doctorComfort || null,
+      sharingPreference: profileData.sharingPreference || null,
+      showReminders: profileData.showReminders === undefined ? true : profileData.showReminders,
+      createdAt: new Date().toISOString(),
+    };
+
+    await setDoc(userProfileRef, finalProfileData, { merge: true });
+
   } catch (error: any) {
-    console.error("Signup Error:", error);
-    // In a real app, you'd want to return this error to the UI
-    // For now, we'll log it and the redirect won't happen.
+    console.error("Signup/Profile Update Error:", error);
     return { error: error.message };
   }
-  // Redirect to the dashboard after successful signup and profile creation.
+
   redirect('/dashboard');
 }
 

@@ -40,8 +40,8 @@ export default function OnboardingLayout({
   // If there's a user, render the onboarding flow
   return (
     <OnboardingProvider>
-        <div className="min-h-screen bg-background flex flex-col">
-            <header className="p-4 border-b">
+        <div className="min-h-screen bg-gradient-to-br from-background to-pink-100 dark:to-fuchsia-950/20 flex flex-col">
+            <header className="p-4 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
                 <Logo />
             </header>
             <main className="flex-1 flex items-center justify-center p-4">
