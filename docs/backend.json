@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -34,9 +35,7 @@
         }
       },
       "required": [
-        "id",
         "userId",
-        "displayName",
         "email"
       ]
     },
@@ -191,7 +190,8 @@
   "auth": {
     "providers": [
       "password",
-      "anonymous"
+      "anonymous",
+      "google.com"
     ]
   },
   "firestore": {
