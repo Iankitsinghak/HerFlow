@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -21,9 +21,11 @@ export default function SummaryPage() {
     const [isPending, startTransition] = useTransition();
     
     // Use existing user's email if available (e.g. from Google Sign-In)
-    if (user && !onboardingData.email) {
-        setOnboardingData({ ...onboardingData, email: user.email! });
-    }
+    useEffect(() => {
+        if (user && !onboardingData.email) {
+            setOnboardingData({ ...onboardingData, email: user.email! });
+        }
+    }, [user, onboardingData, setOnboardingData]);
 
     const handleFinish = () => {
         startTransition(async () => {
