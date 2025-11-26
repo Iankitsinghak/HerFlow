@@ -80,11 +80,11 @@ export default function CycleLogPage() {
     }, [rawLogs]);
 
     const handleAddPeriodDay = async () => {
-        if (!logsCollectionRef) return;
+        if (!logsCollectionRef || !user) return;
         setIsSubmitting(true);
         
         const newLog = {
-            userId: user!.uid,
+            userId: user.uid,
             date: new Date().toISOString(),
             isPeriodDay: true,
             symptoms: [],

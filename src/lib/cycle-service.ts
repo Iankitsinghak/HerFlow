@@ -9,7 +9,7 @@ import {
 import type { FieldValue } from 'firebase/firestore';
 
 export interface CycleLog {
-  id: string;
+  id?: string;
   userId: string;
   date: string; // ISO String
   isPeriodDay: boolean;

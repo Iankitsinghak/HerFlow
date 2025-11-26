@@ -9,6 +9,8 @@ function getInitializedAdminApp(): admin.app.App {
   }
 
   try {
+    // This will automatically use the FIREBASE_CONFIG environment variable
+    // if it's available, or the GOOGLE_APPLICATION_CREDENTIALS for a service account.
     admin.initializeApp({
       credential: admin.credential.applicationDefault(),
     });
