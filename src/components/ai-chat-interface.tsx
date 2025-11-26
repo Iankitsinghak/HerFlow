@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Send, User, Bot, Loader } from 'lucide-react';
 import { streamChat } from '@/ai/flows/chat-flow';
+import type { ChatRequest } from '@/ai/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 

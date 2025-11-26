@@ -4,24 +4,11 @@
  * @fileOverview A conversational AI flow for the Woomania app.
  *
  * - streamChat - A streaming function that takes conversation history and returns an AI response stream.
- * - ChatRequest - The input type for the streamChat function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-// Define the structure for a single message in the chat history
-const MessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
-
-// Define the input schema for the chat flow
-export const ChatRequestSchema = z.object({
-  history: z.array(MessageSchema),
-  message: z.string(),
-});
-export type ChatRequest = z.infer<typeof ChatRequestSchema>;
+import { ChatRequest, ChatRequestSchema } from '@/ai/types';
 
 // Define the main chat flow
 const chatFlow = ai.defineFlow(
@@ -91,8 +78,10 @@ Keep your answers concise, easy to understand, and supportive.`;
                 await response; // Wait for the full response to be processed by Genkit
                 return;
             }
-            text += value.text;
-            controller.enqueue(textEncoder.encode(value.text));
+            if (value?.text) {
+                text += value.text;
+                controller.enqueue(textEncoder.encode(value.text));
+            }
         },
     });
 
