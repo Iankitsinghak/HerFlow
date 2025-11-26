@@ -29,10 +29,10 @@ import {
 import { MoreHorizontal, PlusCircle, CalendarDays, Droplets, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc, getDocs, where, limit, writeBatch } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
 import { useDoc } from "@/firebase/firestore/use-doc";
-import { format, isSameDay, parseISO, startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import {
     calculateAverageCycleLength,
     estimateNextPeriodDate,
@@ -246,4 +246,3 @@ export default function CycleLogPage() {
     </div>
   );
 }
-
