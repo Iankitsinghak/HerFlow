@@ -1,17 +1,15 @@
 
 "use server";
 
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-} from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { initializeFirebase } from "@/firebase";
 import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { redirect } from "next/navigation";
-import { getAdminAuth } from './firebase-admin';
+import { getAdminAuth, getAdminFirestore } from './firebase-admin';
+import { signInWithEmailAndPassword } from "firebase/auth";
 
-const { auth, firestore } = initializeFirebase();
+// This is a client-side initialization, keep it for client-side functions like logout.
+const { auth } = initializeFirebase();
 
 export async function signup(userData: any) {
   const { email, password, ...profileData } = userData;
@@ -21,26 +19,29 @@ export async function signup(userData: any) {
   }
 
   try {
-    let uid: string;
     const adminAuth = getAdminAuth();
+    const adminFirestore = getAdminFirestore();
+    let uid: string;
     
     try {
         const userRecord = await adminAuth.getUserByEmail(email);
         uid = userRecord.uid;
     } catch (error: any) {
         if (error.code === 'auth/user-not-found') {
-            // User does not exist, create a new one
             if (password) {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                uid = userCredential.user.uid;
+                const userRecord = await adminAuth.createUser({ 
+                    email, 
+                    password, 
+                    displayName: profileData.name 
+                });
+                uid = userRecord.uid;
             } else {
-                // This handles cases like Google Sign-In where a user might not have a password but needs an auth record
                 const newUserRecord = await adminAuth.createUser({ email, displayName: profileData.name });
                 uid = newUserRecord.uid;
             }
         } else {
             console.error("Admin Auth Error:", error);
-            throw error; // Re-throw other admin errors
+            throw error;
         }
     }
     
@@ -48,8 +49,7 @@ export async function signup(userData: any) {
         throw new Error("Could not create or find user account.");
     }
 
-    // Now that we have a UID, save the profile data.
-    const userProfileRef = doc(firestore, `users/${uid}/userProfiles`, uid);
+    const userProfileRef = adminFirestore.doc(`users/${uid}/userProfiles/${uid}`);
     
     const finalProfileData = {
       userId: uid,
@@ -67,36 +67,31 @@ export async function signup(userData: any) {
       createdAt: new Date().toISOString(),
     };
 
-    // Use merge: true to avoid overwriting existing data if a user re-onboards
-    await setDoc(userProfileRef, finalProfileData, { merge: true });
+    await userProfileRef.set(finalProfileData, { merge: true });
 
-    // After saving profile, create the first cycle log if last period date is known
     if (profileData.lastPeriodDate && profileData.lastPeriodDate !== 'unknown') {
-        const logsCollectionRef = collection(firestore, `users/${uid}/cycleLogs`);
-        // Note: For simplicity, we're not checking if a log for this exact date already exists.
-        // In a production app, you might want to prevent duplicate logs for the same day.
-        await addDoc(logsCollectionRef, {
+        const logsCollectionRef = adminFirestore.collection(`users/${uid}/cycleLogs`);
+        await logsCollectionRef.add({
             userId: uid,
             date: profileData.lastPeriodDate,
             isPeriodDay: true,
             symptoms: [],
-            createdAt: serverTimestamp()
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
     }
 
   } catch (error: any) {
     console.error("Signup/Profile Update Error:", error);
-    // Provide a more user-friendly error message
     return { error: `An error occurred during signup: ${error.message}` };
   }
 
-  // On successful signup and profile save, redirect to the dashboard.
   redirect('/dashboard');
 }
 
 
 export async function login({ email, password }: any) {
   try {
+    // Client-side auth is appropriate for login
     await signInWithEmailAndPassword(
       auth,
       email,
