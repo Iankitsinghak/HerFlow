@@ -50,14 +50,14 @@ export async function streamChat(request: ChatRequest) {
     
     const textEncoder = new TextEncoder();
 
-    const readableStream = new ReadableStream({
-        async start(controller) {
+    const readableStream = new Readable({
+        async read() {
             for await (const chunk of stream) {
                 if (chunk.text) {
-                    controller.enqueue(textEncoder.encode(chunk.text));
+                    this.push(textEncoder.encode(chunk.text));
                 }
             }
-            controller.close();
+            this.push(null); // Signal the end of the stream
         },
     });
 
