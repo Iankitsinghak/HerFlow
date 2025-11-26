@@ -26,7 +26,7 @@ const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatRequestSchema,
-    outputSchema: z.string(),
+    outputSchema: z.string().stream(),
   },
   async (request) => {
     const { stream } = ai.generate({
@@ -38,8 +38,7 @@ const chatFlow = ai.defineFlow(
     });
     
     // This is a special case for streaming. We return the raw stream.
-    // The framework will handle piping it to the client.
-    return stream as any;
+    return stream;
   }
 );
 
@@ -47,21 +46,16 @@ const chatFlow = ai.defineFlow(
 export async function streamChat(request: ChatRequest) {
     const stream = await chatFlow(request);
     
-    let text = '';
-    const streamReader = stream.getReader();
     const textEncoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
-        async pull(controller) {
-            const { done, value } = await streamReader.read();
-            if (done) {
-                controller.close();
-                return;
+        async start(controller) {
+            for await (const chunk of stream) {
+                if (chunk.text) {
+                    controller.enqueue(textEncoder.encode(chunk.text));
+                }
             }
-            if (value?.text) {
-                text += value.text;
-                controller.enqueue(textEncoder.encode(value.text));
-            }
+            controller.close();
         },
     });
 
