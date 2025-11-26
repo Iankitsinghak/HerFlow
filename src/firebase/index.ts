@@ -1,23 +1,8 @@
 
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-
-// This function is the single source of truth for initializing Firebase on the client.
-export function initializeFirebase() {
-  if (typeof window === 'undefined') {
-    throw new Error("initializeFirebase should only be called on the client.");
-  }
-  
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  
-  return { firebaseApp: app, auth, firestore };
-}
+// This file serves as a barrel file for Firebase-related hooks and utilities.
+// It re-exports functionality from other modules for easy importing.
 
 export * from './provider';
 export * from './client-provider';

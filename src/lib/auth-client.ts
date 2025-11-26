@@ -9,21 +9,20 @@ import {
     signOut,
     type Auth,
     type User,
+    getAuth,
   } from "firebase/auth";
-import { initializeFirebase } from "@/firebase";
-import { doc, setDoc, addDoc, collection, serverTimestamp, getDoc } from "firebase/firestore";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, getDoc } from "firebase/firestore";
+import { firebaseConfig } from "@/firebase/config";
 
-// Get the auth and firestore instances once and reuse them.
-let auth: Auth;
-let firestore: any;
-try {
-    const services = initializeFirebase();
-    auth = services.auth;
-    firestore = services.firestore;
-} catch (e) {
-    console.error("Failed to initialize Firebase on the client", e);
-}
+// --- START: Consolidated Firebase Initialization ---
+// This pattern ensures that Firebase is initialized only once on the client.
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth: Auth = getAuth(app);
+const firestore = getFirestore(app);
+// --- END: Consolidated Firebase Initialization ---
 
+export { auth, firestore }; // Export initialized services
 
 export async function googleSignIn() {
     if (!auth) return { error: "Auth service not available." };
@@ -34,8 +33,6 @@ export async function googleSignIn() {
       const userProfileRef = doc(firestore, `users/${result.user.uid}/userProfiles`, result.user.uid);
       const userProfileSnap = await getDoc(userProfileRef);
       
-      // If the profile doesn't exist, it's their first time through social sign-in.
-      // Redirect to onboarding. Otherwise, to dashboard.
       if (!userProfileSnap.exists()) {
           return { user: result.user, isNewUser: true };
       }
@@ -55,7 +52,6 @@ export async function login(values: any) {
       values.email,
       values.password
     );
-    // Let the onAuthStateChanged listener handle the redirect
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
@@ -85,10 +81,13 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
         const uid = currentUser.uid;
         const userProfileRef = doc(firestore, `users/${uid}/userProfiles`, uid);
 
+        // Robust fallback for displayName
+        const displayName = onboardingData.name || currentUser.displayName || currentUser.email || 'User';
+
         const finalProfileData = {
             userId: uid,
             email: currentUser.email,
-            displayName: onboardingData.name || currentUser.displayName || currentUser.email || 'User',
+            displayName: displayName,
             ageRange: onboardingData.ageRange || null,
             country: onboardingData.country || null,
             periodStatus: onboardingData.periodStatus || null,
@@ -101,10 +100,8 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
             createdAt: serverTimestamp(),
         };
 
-        // Use setDoc with merge:true to create or update the profile.
         await setDoc(userProfileRef, finalProfileData, { merge: true });
 
-        // Create the first cycle log if the date was provided.
         if (onboardingData.lastPeriodDate && onboardingData.lastPeriodDate !== 'unknown') {
             const logsCollectionRef = collection(firestore, `users/${uid}/cycleLogs`);
             await addDoc(logsCollectionRef, {
@@ -124,12 +121,10 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
     }
 }
 
-
 export async function logout() {
   if (!auth) return { error: "Auth service not available." };
   try {
     await signOut(auth);
-    // Redirect happens in a useEffect hook watching the user state
     window.location.href = '/login';
   } catch (error: any)
   {

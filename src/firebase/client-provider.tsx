@@ -1,47 +1,28 @@
 
 'use client';
 
-import React, { useEffect, useState, type ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase';
-import { FirebaseApp } from 'firebase/app';
-import { Auth } from 'firebase/auth';
-import { Firestore } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
+import { auth, firestore } from '@/lib/auth-client'; // Import initialized services
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-interface FirebaseServices {
-    firebaseApp: FirebaseApp;
-    auth: Auth;
-    firestore: Firestore;
-}
-
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [firebaseServices, setFirebaseServices] = useState<FirebaseServices | null>(null);
+  // The Firebase app, auth, and firestore instances are now initialized
+  // directly in '@lib/auth-client.ts'. We can get the app instance
+  // here and pass all three to the underlying provider.
 
-  useEffect(() => {
-    // This effect runs only once on the client after the component mounts.
-    if (typeof window !== 'undefined' && !firebaseServices) {
-      const services = initializeFirebase();
-      if (!services.firebaseApp || !services.auth || !services.firestore) {
-        throw new Error("Firebase could not be initialized on the client.");
-      }
-      setFirebaseServices(services);
-    }
-  }, []); // Empty dependency array ensures this runs only once on mount.
-
-  if (!firebaseServices) {
-    // You can render a loading spinner or null here while waiting for Firebase to initialize.
-    return null;
-  }
+  // This will throw if the app is not initialized, which is what we want.
+  const firebaseApp = getApp();
 
   return (
     <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
+      firebaseApp={firebaseApp}
+      auth={auth}
+      firestore={firestore}
     >
       {children}
     </FirebaseProvider>
