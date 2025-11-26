@@ -29,7 +29,7 @@ const chatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (request) => {
-    const { stream, response } = ai.generate({
+    const { stream } = ai.generate({
         prompt: request.message,
         history: request.history,
         model: 'googleai/gemini-2.5-flash',
