@@ -9,8 +9,7 @@ import {
 import { initializeFirebase } from "@/firebase";
 import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { redirect } from "next/navigation";
-import { getAuth as getAdminAuth } from 'firebase-admin/auth';
-import { adminApp } from "./firebase-admin";
+import { getAdminAuth } from './firebase-admin';
 
 const { auth, firestore } = initializeFirebase();
 
@@ -23,7 +22,7 @@ export async function signup(userData: any) {
 
   try {
     let uid: string;
-    const adminAuth = getAdminAuth(adminApp);
+    const adminAuth = getAdminAuth();
     
     try {
         const userRecord = await adminAuth.getUserByEmail(email);
