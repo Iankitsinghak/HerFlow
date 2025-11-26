@@ -27,6 +27,7 @@ export default function CycleStatusPage() {
 
   const [periodStatus, setPeriodStatus] = useState(onboardingData.periodStatus || "");
   const [cycleLength, setCycleLength] = useState(onboardingData.cycleLength || "");
+  const [periodDuration, setPeriodDuration] = useState(onboardingData.periodDuration || "");
   const [lastPeriodDate, setLastPeriodDate] = useState<Date | undefined>(() => {
     if (onboardingData.lastPeriodDate && onboardingData.lastPeriodDate !== 'unknown') {
         try {
@@ -43,13 +44,14 @@ export default function CycleStatusPage() {
     setOnboardingData({ 
         ...onboardingData, 
         periodStatus, 
-        cycleLength, 
+        cycleLength,
+        periodDuration,
         lastPeriodDate: dontRemember ? 'unknown' : lastPeriodDate?.toISOString() 
     });
     router.push("/onboarding/focus");
   };
 
-  const isFormValid = periodStatus && cycleLength && (lastPeriodDate || dontRemember);
+  const isFormValid = periodStatus && cycleLength && periodDuration && (lastPeriodDate || dontRemember);
 
   return (
     <Card className="w-full max-w-md">
@@ -97,6 +99,32 @@ export default function CycleStatusPage() {
              <div className="flex items-center space-x-2">
               <RadioGroupItem value="variable" id="c4" />
               <Label htmlFor="c4">It changes a lot / I don’t know</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
+        <div className="space-y-3">
+          <Label>How long does your period usually last?</Label>
+           <RadioGroup value={periodDuration} onValueChange={setPeriodDuration}>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="2-3" id="d1" />
+              <Label htmlFor="d1">2-3 days</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="4-5" id="d2" />
+              <Label htmlFor="d2">4-5 days</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="6-7" id="d3" />
+              <Label htmlFor="d3">6-7 days</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <RadioGroupItem value="8+" id="d4" />
+              <Label htmlFor="d4">8+ days</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="variable" id="d5" />
+              <Label htmlFor="d5">It varies / I don't know</Label>
             </div>
           </RadioGroup>
         </div>

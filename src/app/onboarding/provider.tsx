@@ -9,6 +9,7 @@ interface OnboardingData {
   country?: string;
   periodStatus?: string;
   cycleLength?: string;
+  periodDuration?: string;
   lastPeriodDate?: string;
   focusAreas?: string[];
   doctorComfort?: string;

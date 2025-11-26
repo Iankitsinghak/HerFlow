@@ -86,6 +86,7 @@ export default function SummaryPage() {
                         <p><strong>Age range:</strong> {onboardingData.ageRange || 'N/A'}</p>
                         <p><strong>Focus:</strong> {onboardingData.focusAreas?.join(', ') || 'N/A'}</p>
                         <p><strong>Cycle:</strong> ~{onboardingData.cycleLength || 'N/A'} days</p>
+                        <p><strong>Period lasts:</strong> ~{onboardingData.periodDuration || 'N/A'} days</p>
                         <p><strong>Last period approx:</strong> {getLastPeriodText()}</p>
                         <p><strong>Privacy:</strong> {onboardingData.sharingPreference ? `${onboardingData.sharingPreference.charAt(0).toUpperCase() + onboardingData.sharingPreference.slice(1)} by default` : 'N/A'}</p>
                     </CardContent>

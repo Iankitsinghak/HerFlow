@@ -9,11 +9,11 @@ import {
     signOut,
     type Auth,
     type User,
-    getAuth,
   } from "firebase/auth";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, getDoc } from "firebase/firestore";
 import { firebaseConfig } from "@/firebase/config";
+import { getAuth } from "firebase/auth";
 
 // --- START: Consolidated Firebase Initialization ---
 // This pattern ensures that Firebase is initialized only once on the client.
@@ -92,6 +92,7 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
             country: onboardingData.country || null,
             periodStatus: onboardingData.periodStatus || null,
             cycleLength: onboardingData.cycleLength || null,
+            periodDuration: onboardingData.periodDuration || null,
             lastPeriodDate: onboardingData.lastPeriodDate || null,
             focusAreas: onboardingData.focusAreas || [],
             doctorComfort: onboardingData.doctorComfort || null,
