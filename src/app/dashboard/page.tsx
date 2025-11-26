@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, cloneElement } from 'react';
 import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   CalendarDays,
   CircleHelp,
+  Heart,
   MessageCircle,
   Newspaper,
   Plus,
@@ -84,7 +85,7 @@ export default function DashboardPage() {
   const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
 
   const { currentPhase, nextPeriodDate } = useMemo(() => {
-    if (!rawLogs || !hasCompletedOnboarding) return { currentPhase: 'Unknown', nextPeriodDate: null };
+    if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) return { currentPhase: 'Unknown', nextPeriodDate: null };
     
     return {
         currentPhase: getCurrentCyclePhase(rawLogs),
@@ -123,10 +124,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Today at a glance / Onboarding CTA */}
-      <Card className="bg-secondary">
+      <Card className="bg-secondary/60 relative overflow-hidden animate-background-shine bg-[linear-gradient(110deg,#F8E0E8,45%,#FDF6F8,55%,#F8E0E8)] bg-[length:250%_100%]">
         <CardHeader>
-          <CardTitle>
-            {hasCompletedOnboarding ? 'Today at a glance' : 'Complete your cycle setup 🌸'}
+          <CardTitle className="flex items-center gap-2">
+            {hasCompletedOnboarding ? (
+                'Today at a glance'
+            ) : (
+                <>
+                <Heart className="text-primary animate-pulse-heart" />
+                <span>Complete your cycle setup</span>
+                </>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -171,7 +179,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                    {action.icon}
+                    {cloneElement(action.icon, { className: 'h-6 w-6' })}
                   </div>
                   <div>
                     <CardTitle className="text-base font-headline">

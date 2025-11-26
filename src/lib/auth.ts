@@ -7,7 +7,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { initializeFirebase } from "@/firebase/config";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { redirect } from "next/navigation";
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { adminApp } from "./firebase-admin";
@@ -22,35 +22,24 @@ export async function signup(userData: any) {
   }
 
   try {
-    let user;
+    let uid: string;
     const adminAuth = getAdminAuth(adminApp);
     
-    // Check if user exists via server-side check.
-    let userExists = false;
-    let uid: string | undefined;
-
     try {
         const userRecord = await adminAuth.getUserByEmail(email);
         uid = userRecord.uid;
-        userExists = true;
     } catch (error: any) {
-        if (error.code !== 'auth/user-not-found') {
-            throw error; // Re-throw unexpected errors
-        }
-        // user-not-found is the expected case for a new signup
-    }
-
-    if (!userExists) {
-        // User does not exist, create them
-        if (!password) {
-            // This case handles social auth users who are new but don't have a password set yet
-            // We create them in Firebase Auth from the server.
-            const newUserRecord = await adminAuth.createUser({ email, displayName: profileData.name });
-            uid = newUserRecord.uid;
+        if (error.code === 'auth/user-not-found') {
+            if (password) {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                uid = userCredential.user.uid;
+            } else {
+                const newUserRecord = await adminAuth.createUser({ email, displayName: profileData.name });
+                uid = newUserRecord.uid;
+            }
         } else {
-             // This handles email/password signup
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            uid = userCredential.user.uid;
+            console.error("Admin Auth Error:", error);
+            throw error;
         }
     }
     
@@ -58,8 +47,6 @@ export async function signup(userData: any) {
         throw new Error("Could not create or find user account.");
     }
 
-    // Now, save the profile data to Firestore.
-    // This works for both new users and existing users (e.g., Google sign-in)
     const userProfileRef = doc(firestore, `users/${uid}/userProfiles`, uid);
     
     const finalProfileData = {
@@ -79,6 +66,18 @@ export async function signup(userData: any) {
     };
 
     await setDoc(userProfileRef, finalProfileData, { merge: true });
+
+    // After saving profile, create the first cycle log if last period date is known
+    if (profileData.lastPeriodDate && profileData.lastPeriodDate !== 'unknown') {
+        const logsCollectionRef = collection(firestore, `users/${uid}/cycleLogs`);
+        await addDoc(logsCollectionRef, {
+            userId: uid,
+            date: profileData.lastPeriodDate,
+            isPeriodDay: true,
+            symptoms: [],
+            createdAt: serverTimestamp()
+        });
+    }
 
   } catch (error: any) {
     console.error("Signup/Profile Update Error:", error);
