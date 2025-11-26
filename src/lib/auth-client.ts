@@ -7,14 +7,24 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
+    type Auth,
   } from "firebase/auth";
-import { clientAuth } from "@/firebase";
+import { initializeFirebase } from "@/firebase";
+
+// Get the auth instance once and reuse it.
+let auth: Auth;
+try {
+    auth = initializeFirebase().auth;
+} catch (e) {
+    console.error("Failed to initialize Firebase Auth on the client", e);
+}
+
 
 export async function googleSignIn() {
-    if (!clientAuth) return { error: "Auth service not available." };
+    if (!auth) return { error: "Auth service not available." };
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(clientAuth, provider);
+      const result = await signInWithPopup(auth, provider);
       return { user: result.user };
     } catch (error: any) {
       return { error: error.message };
@@ -22,10 +32,10 @@ export async function googleSignIn() {
 }
 
 export async function login(values: any) {
-    if (!clientAuth) return { error: "Auth service not available." };
+    if (!auth) return { error: "Auth service not available." };
   try {
     await signInWithEmailAndPassword(
-      clientAuth,
+      auth,
       values.email,
       values.password
     );
@@ -37,10 +47,10 @@ export async function login(values: any) {
 }
 
 export async function clientSignup(values: any) {
-    if (!clientAuth) return { error: "Auth service not available." };
+    if (!auth) return { error: "Auth service not available." };
     try {
         await createUserWithEmailAndPassword(
-            clientAuth,
+            auth,
             values.email,
             values.password
         );
@@ -52,9 +62,9 @@ export async function clientSignup(values: any) {
 
 
 export async function logout() {
-  if (!clientAuth) return { error: "Auth service not available." };
+  if (!auth) return { error: "Auth service not available." };
   try {
-    await signOut(clientAuth);
+    await signOut(auth);
     // Redirect happens in a useEffect hook watching the user state
     window.location.href = '/login';
   } catch (error: any)

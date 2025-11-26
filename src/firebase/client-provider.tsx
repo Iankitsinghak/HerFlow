@@ -1,23 +1,41 @@
 
 'use client';
 
-import React, { useMemo, type ReactNode } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
+import { FirebaseApp } from 'firebase/app';
+import { Auth } from 'firebase/auth';
+import { Firestore } from 'firebase/firestore';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
+interface FirebaseServices {
+    firebaseApp: FirebaseApp;
+    auth: Auth;
+    firestore: Firestore;
+}
+
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side.
-    const { firebaseApp, auth, firestore } = initializeFirebase();
-    if (!firebaseApp || !auth || !firestore) {
+  const [firebaseServices, setFirebaseServices] = useState<FirebaseServices | null>(null);
+
+  useEffect(() => {
+    // This effect runs only once on the client after the component mounts.
+    if (typeof window !== 'undefined' && !firebaseServices) {
+      const services = initializeFirebase();
+      if (!services.firebaseApp || !services.auth || !services.firestore) {
         throw new Error("Firebase could not be initialized on the client.");
+      }
+      setFirebaseServices(services);
     }
-    return { firebaseApp, auth, firestore };
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []); // Empty dependency array ensures this runs only once on mount.
+
+  if (!firebaseServices) {
+    // You can render a loading spinner or null here while waiting for Firebase to initialize.
+    return null;
+  }
 
   return (
     <FirebaseProvider

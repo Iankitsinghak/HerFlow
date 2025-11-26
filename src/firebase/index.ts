@@ -12,20 +12,11 @@ export function initializeFirebase() {
     throw new Error("initializeFirebase should only be called on the client.");
   }
   
-  let firebaseApp: FirebaseApp;
+  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const firestore = getFirestore(app);
   
-  if (!getApps().length) {
-    // This is the first time, initialize the app
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    // App is already initialized, get the instance
-    firebaseApp = getApp();
-  }
-  
-  const auth = getAuth(firebaseApp);
-  const firestore = getFirestore(firebaseApp);
-  
-  return { firebaseApp, auth, firestore };
+  return { firebaseApp: app, auth, firestore };
 }
 
 export * from './provider';
