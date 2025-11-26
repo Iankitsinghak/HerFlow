@@ -63,6 +63,8 @@ export default function SignupPage() {
             const result = await googleSignIn();
             if (result?.error) {
                 setError(result.error);
+            } else {
+                window.location.href = '/dashboard';
             }
         });
     }

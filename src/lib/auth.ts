@@ -6,8 +6,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { initializeFirebase } from "@/firebase/config"; // Changed import
+import { initializeFirebase } from "@/firebase/config";
 import { doc, setDoc } from "firebase/firestore";
+import { redirect } from "next/navigation";
 
 const { auth, firestore } = initializeFirebase();
 
@@ -28,24 +29,23 @@ export async function signup({ email, password }: any) {
             profilePictureUrl: userCredential.user.photoURL
         });
     }
-
-    return { user: userCredential.user };
   } catch (error: any) {
     return { error: error.message };
   }
+  redirect('/dashboard');
 }
 
 export async function login({ email, password }: any) {
   try {
-    const userCredential = await signInWithEmailAndPassword(
+    await signInWithEmailAndPassword(
       auth,
       email,
       password
     );
-    return { user: userCredential.user };
   } catch (error: any) {
     return { error: error.message };
   }
+  redirect('/dashboard');
 }
 
 export async function logout() {
