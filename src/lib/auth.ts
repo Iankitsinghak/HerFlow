@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { initializeFirebase } from "@/firebase/config";
+import { initializeFirebase } from "@/firebase";
 import { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { redirect } from "next/navigation";
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
