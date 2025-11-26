@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
 import { Logo } from "../logo";
+import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useState } from "react";
+import DashboardSidebar from "./dashboard-sidebar";
+
+const navLinks = [
+    { href: "/blog", label: "Blog" },
+    { href: "/community", label: "Community" },
+    { href: "/ask-doctor", label: "Ask a Doctor" },
+    { href: "/ai-chat", label: "AI Chat" },
+]
 
 export default function Header() {
   const { user, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -30,11 +42,25 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container flex h-16 items-center px-4 md:px-6">
-        <Logo />
+        <div className="md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-64 bg-card">
+                   <DashboardSidebar />
+                </SheetContent>
+            </Sheet>
+        </div>
+        <div className="mx-auto md:mx-0">
+          <Logo />
+        </div>
         <nav className="hidden md:flex gap-6 ml-10">
-            <Link href="/blog" className="text-sm font-medium hover:text-primary transition-colors">Blog</Link>
-            <Link href="/community" className="text-sm font-medium hover:text-primary transition-colors">Community</Link>
-            <Link href="/ask-doctor" className="text-sm font-medium hover:text-primary transition-colors">Ask a Doctor</Link>
+            {navLinks.map(link => (
+                 <Link key={link.href} href={link.href} className="text-sm font-medium hover:text-primary transition-colors">{link.label}</Link>
+            ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
           {loading ? (

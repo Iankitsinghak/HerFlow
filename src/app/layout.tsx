@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { FirebaseClientProvider } from '@/firebase';
+import { OnboardingWrapper } from './onboarding/provider';
 
 export const metadata: Metadata = {
   title: 'Woomania',
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         <FirebaseClientProvider>
           <AuthProvider>
+            <OnboardingWrapper>
               <main className="flex-grow">{children}</main>
               <Toaster />
+            </OnboardingWrapper>
           </AuthProvider>
         </FirebaseClientProvider>
       </body>

@@ -7,10 +7,6 @@
       "type": "object",
       "description": "Represents a user's profile in the Woomania application.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
-        },
         "userId": {
           "type": "string",
           "description": "Reference to the Firebase Auth user ID."
@@ -32,6 +28,43 @@
         "bio": {
           "type": "string",
           "description": "A short biography of the user."
+        },
+        "ageRange": {
+            "type": "string",
+            "description": "User's selected age range."
+        },
+        "country": {
+            "type": "string",
+            "description": "User's country or region."
+        },
+        "periodStatus": {
+            "type": "string",
+            "description": "User's current period status (e.g., regular, irregular)."
+        },
+        "cycleLength": {
+            "type": "string",
+            "description": "User's typical menstrual cycle length."
+        },
+        "lastPeriodDate": {
+            "type": "string",
+            "description": "Start date of the user's last period."
+        },
+        "focusAreas": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Health topics the user wants to focus on."
+        },
+        "doctorComfort": {
+            "type": "string",
+            "description": "User's comfort level with online doctor consultations."
+        },
+        "sharingPreference": {
+            "type": "string",
+            "description": "User's default preference for sharing content (e.g., anonymous)."
+        },
+        "showReminders": {
+            "type": "boolean",
+            "description": "Whether the user wants to receive cycle-based reminders."
         }
       },
       "required": [
