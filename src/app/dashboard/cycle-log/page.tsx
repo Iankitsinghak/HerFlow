@@ -29,10 +29,10 @@ import {
 import { MoreHorizontal, PlusCircle, CalendarDays, Droplets, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc, getDocs, where, limit, writeBatch } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
 import { useDoc } from "@/firebase/firestore/use-doc";
-import { format } from 'date-fns';
+import { format, isSameDay, parseISO, startOfDay } from 'date-fns';
 import {
     calculateAverageCycleLength,
     estimateNextPeriodDate,
@@ -43,6 +43,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
+import { SymptomsForm } from "@/components/symptoms-form";
 
 type CycleLogWithId = WithId<CycleLog>;
 
@@ -51,6 +52,7 @@ export default function CycleLogPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSymptomsDialogOpen, setIsSymptomsDialogOpen] = useState(false);
 
     const userProfileRef = useMemoFirebase(
       () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
@@ -166,7 +168,7 @@ export default function CycleLogPage() {
             </div>
         </CardContent>
         <CardContent className="flex gap-4">
-             <Dialog>
+             <Dialog open={isSymptomsDialogOpen} onOpenChange={setIsSymptomsDialogOpen}>
                 <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -175,11 +177,16 @@ export default function CycleLogPage() {
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Log Today's Symptoms</DialogTitle>
+                        <DialogTitle>How are you feeling today?</DialogTitle>
                         <DialogDescription>
-                            This feature is coming soon!
+                            Select any symptoms you&apos;re experiencing. This will be saved for today&apos;s log.
                         </DialogDescription>
                     </DialogHeader>
+                    <SymptomsForm 
+                        onSave={() => setIsSymptomsDialogOpen(false)} 
+                        onCancel={() => setIsSymptomsDialogOpen(false)}
+                        currentLogs={rawLogs || []}
+                    />
                 </DialogContent>
             </Dialog>
             <Button variant="outline" onClick={handleAddPeriodDay} disabled={isSubmitting}>
@@ -239,3 +246,4 @@ export default function CycleLogPage() {
     </div>
   );
 }
+
