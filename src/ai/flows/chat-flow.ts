@@ -26,20 +26,14 @@ const chatFlow = ai.defineFlow(
 
     const { history, message } = request;
 
-    // Construct the full prompt for the model
-    const fullPrompt = {
-        system: systemPrompt,
-        history: history,
-        prompt: message,
-    };
-
     const llmResponse = await ai.generate({
-        prompt: fullPrompt.prompt,
-        history: fullPrompt.history,
+        prompt: message,
+        history: history,
+        model: 'googleai/gemini-2.5-flash',
         config: {
             // You can add safety settings or other configurations here
         },
-        model: 'googleai/gemini-2.5-flash'
+        system: systemPrompt,
     });
 
     return llmResponse.text;
@@ -56,11 +50,9 @@ Keep your answers concise, easy to understand, and supportive.`;
 
     const { stream, response } = await ai.generate({
         model: 'googleai/gemini-2.5-flash',
-        prompt: [
-            { role: 'system', content: systemInstruction },
-            ...request.history,
-            { role: 'user', content: request.message },
-        ],
+        prompt: request.message,
+        history: request.history,
+        system: systemInstruction,
         stream: true,
     });
     
