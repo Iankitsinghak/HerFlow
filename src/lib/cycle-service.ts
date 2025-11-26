@@ -6,6 +6,7 @@ import {
   startOfDay,
   isSameDay,
 } from 'date-fns';
+import type { FieldValue } from 'firebase/firestore';
 
 export interface CycleLog {
   id: string;
@@ -13,7 +14,7 @@ export interface CycleLog {
   date: string; // ISO String
   isPeriodDay: boolean;
   symptoms?: string[];
-  // other fields...
+  createdAt: FieldValue;
 }
 
 export interface GroupedCycle {
@@ -179,5 +180,3 @@ export function groupLogsIntoCycles(logs: CycleLog[]): GroupedCycle[] {
 
   return cycles.reverse(); // Show most recent first
 }
-
-    

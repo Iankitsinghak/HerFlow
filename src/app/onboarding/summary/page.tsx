@@ -30,18 +30,19 @@ export default function SummaryPage() {
     const handleFinish = () => {
         startTransition(async () => {
             try {
-                // Ensure email is set before proceeding
-                const finalData = { ...onboardingData };
-                if (!finalData.email) {
-                    // This is a fallback for email/password signups where email might not be in the context yet
-                    // But for Google/existing users, it should be there.
-                    // If it's a completely new user, we'll auto-generate credentials.
-                    if (!finalData.password) {
-                        finalData.password = Math.random().toString(36).slice(-8);
-                        finalData.email = `user-${Date.now()}@woomania.com`;
-                    }
+                // The user object from the useUser hook is the source of truth.
+                // It will contain the email from either Google sign-in or the email/password signup flow.
+                if (!user?.email) {
+                     toast({
+                        variant: 'destructive',
+                        title: 'Uh oh! Something went wrong.',
+                        description: 'Your email is not available. Please try signing up again.',
+                    });
+                    return;
                 }
 
+                const finalData = { ...onboardingData, email: user.email };
+                
                 const result = await signup(finalData);
 
                 if (result?.error) {
@@ -50,9 +51,8 @@ export default function SummaryPage() {
                         title: 'Uh oh! Something went wrong.',
                         description: result.error,
                     });
-                } else {
-                    // Redirect is handled by the server action on success
-                }
+                } 
+                // The server action will handle the redirect on success.
             } catch (error) {
                 console.error(error);
                 toast({
@@ -106,7 +106,7 @@ export default function SummaryPage() {
                 )}
             </CardContent>
             <CardFooter>
-                <Button onClick={handleFinish} disabled={isPending} className="w-full">
+                <Button onClick={handleFinish} disabled={isPending || !user?.email} className="w-full">
                     {isPending ? 'Setting things up...' : 'Go to my Woomania'}
                 </Button>
             </CardFooter>

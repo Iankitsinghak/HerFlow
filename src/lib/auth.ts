@@ -1,5 +1,5 @@
 
-"use server";
+'use server';
 
 import { redirect } from "next/navigation";
 import { getAdminAuth, getAdminFirestore } from './firebase-admin';
@@ -59,7 +59,7 @@ export async function signup(userData: any) {
       doctorComfort: profileData.doctorComfort || null,
       sharingPreference: profileData.sharingPreference || null,
       showReminders: profileData.showReminders === undefined ? true : profileData.showReminders,
-      createdAt: new Date().toISOString(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     await userProfileRef.set(finalProfileData, { merge: true });
@@ -79,7 +79,7 @@ export async function signup(userData: any) {
   } catch (error: any) {
     console.error("Signup/Profile Update Error:", error);
     // Be careful not to leak sensitive implementation details in error messages.
-    return { error: `An error occurred during signup. Please try again. Details: ${error.message}` };
+    return { error: `An error occurred during signup. Details: ${error.message}` };
   }
 
   redirect('/dashboard');

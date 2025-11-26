@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { signup } from "@/lib/auth";
+import { clientSignup } from "@/lib/auth-client";
 import { googleSignIn } from "@/lib/auth-client";
 import { useState, useTransition } from "react";
 import {
@@ -52,23 +52,25 @@ export default function SignupPage() {
     const onSubmit = (values: z.infer<typeof formSchema>) => {
         setError(null);
         startTransition(async () => {
-            const result = await signup(values);
+            const result = await clientSignup(values);
             if (result?.error) {
                 setError(result.error);
+            } else {
+                router.push('/onboarding/start');
             }
-            // Redirect is handled by the server action on success
         });
     }
 
     const onGoogleSignIn = async () => {
         setError(null);
-        const result = await googleSignIn();
-        if (result?.error) {
-            setError(result.error);
-        } else {
-            // On successful Google sign-in, go to onboarding
-            router.push('/onboarding/start');
-        }
+        startTransition(async () => {
+            const result = await googleSignIn();
+            if (result?.error) {
+                setError(result.error);
+            } else {
+                router.push('/onboarding/start');
+            }
+        });
     }
 
   return (
