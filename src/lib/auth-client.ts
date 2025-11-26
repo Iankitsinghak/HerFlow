@@ -88,7 +88,7 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
         const finalProfileData = {
             userId: uid,
             email: currentUser.email,
-            displayName: onboardingData.name,
+            displayName: onboardingData.name || currentUser.displayName || currentUser.email || 'User',
             ageRange: onboardingData.ageRange || null,
             country: onboardingData.country || null,
             periodStatus: onboardingData.periodStatus || null,
