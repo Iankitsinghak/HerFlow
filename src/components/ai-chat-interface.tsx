@@ -5,11 +5,11 @@ import { useState, useRef, useEffect, useTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, User, Bot, Loader } from 'lucide-react';
+import { Send, User, Sparkles, Loader } from 'lucide-react';
 import { streamChat } from '@/ai/flows/chat-flow';
 import type { ChatRequest } from '@/ai/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface Message {
   role: 'user' | 'model';
@@ -78,14 +78,15 @@ export function AiChatInterface() {
   }, [messages]);
 
   return (
-    <Card className="h-[70vh] flex flex-col">
+    <Card className="h-[70vh] flex flex-col shadow-lg border-primary/10">
       <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollAreaRef}>
           <div className="space-y-6">
             {messages.length === 0 ? (
-                <div className="text-center text-muted-foreground">
-                    <Bot className="mx-auto h-12 w-12 mb-2" />
-                    <p>Start a conversation by typing a message below.</p>
+                <div className="text-center text-muted-foreground pt-10">
+                    <Sparkles className="mx-auto h-12 w-12 text-primary/50 mb-4" />
+                    <h2 className="text-xl font-headline">Hello!</h2>
+                    <p className='mt-1'>How can I support you today?</p>
                 </div>
             ) : (
                 messages.map((message, index) => (
@@ -97,39 +98,39 @@ export function AiChatInterface() {
               >
                 {message.role === 'model' && (
                   <Avatar className="w-8 h-8">
-                     <AvatarFallback className='bg-primary text-primary-foreground'><Bot className='h-5 w-5' /></AvatarFallback>
+                     <AvatarFallback className='bg-primary/10 text-primary'><Sparkles className='h-5 w-5' /></AvatarFallback>
                   </Avatar>
                 )}
                 <div
-                  className={`p-3 rounded-lg max-w-sm ${
+                  className={`p-3 rounded-lg max-w-sm prose-p:my-0 prose-p:leading-normal prose dark:prose-invert ${
                     message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                      ? 'bg-primary text-primary-foreground rounded-br-none'
+                      : 'bg-muted rounded-bl-none'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 </div>
                 {message.role === 'user' && (
                    <Avatar className="w-8 h-8">
-                     <AvatarFallback><User className='h-5 w-5' /></AvatarFallback>
+                     <AvatarFallback className="bg-secondary"><User className='h-5 w-5' /></AvatarFallback>
                   </Avatar>
                 )}
               </div>
             ))
             )}
-             {isPending && (
+             {isPending && messages[messages.length - 1]?.role === 'user' && (
                 <div className="flex items-start gap-3">
                      <Avatar className="w-8 h-8">
-                        <AvatarFallback className='bg-primary text-primary-foreground'><Bot className='h-5 w-5' /></AvatarFallback>
+                        <AvatarFallback className='bg-primary/10 text-primary'><Sparkles className='h-5 w-5' /></AvatarFallback>
                     </Avatar>
                     <div className="p-3 rounded-lg bg-muted flex items-center">
-                        <Loader className="h-5 w-5 animate-spin" />
+                        <Loader className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                 </div>
             )}
           </div>
         </ScrollArea>
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-background/80">
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               value={input}
@@ -137,6 +138,7 @@ export function AiChatInterface() {
               placeholder="Ask about PCOS, periods, or anything else..."
               autoComplete="off"
               disabled={isPending}
+              className="text-base"
             />
             <Button type="submit" size="icon" disabled={!input.trim() || isPending}>
               <Send className="h-5 w-5" />
