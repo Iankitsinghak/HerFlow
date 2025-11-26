@@ -1,8 +1,8 @@
 
 'use client';
 
-import React from 'react';
-import { useUser } from '@/firebase';
+import React, { useMemo } from 'react';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import {
+    getCurrentCyclePhase,
+    estimateNextPeriodDate,
+    type CycleLog
+} from '@/lib/cycle-service';
+import { format } from 'date-fns';
 
 const quickActions = [
   {
@@ -51,7 +59,30 @@ const recommendedPosts = [
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const displayName = user?.displayName?.split(' ')[0] || 'there';
+
+  const logsCollectionRef = useMemoFirebase(
+      () => (user && firestore ? collection(firestore, `users/${user.uid}/cycleLogs`) : null),
+      [user, firestore]
+  );
+  
+  const logsQuery = useMemoFirebase(
+      () => (logsCollectionRef ? query(logsCollectionRef, orderBy('date', 'asc')) : null),
+      [logsCollectionRef]
+  );
+
+  const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
+
+  const { currentPhase, nextPeriodDate } = useMemo(() => {
+    if (!rawLogs) return { currentPhase: 'Unknown', nextPeriodDate: null };
+    
+    return {
+        currentPhase: getCurrentCyclePhase(rawLogs),
+        nextPeriodDate: estimateNextPeriodDate(rawLogs)
+    }
+  }, [rawLogs]);
+
 
   return (
     <div className="space-y-8">
@@ -72,13 +103,26 @@ export default function DashboardPage() {
           <CardTitle>Today at a glance</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-lg">🌸 You’re likely in your follicular phase.</p>
-          <div className="mt-4 flex gap-4">
-            <Button>
-              <Plus className="mr-2" /> Log today’s symptoms
-            </Button>
-            <Button variant="outline">Add a period day</Button>
-          </div>
+            {isLoadingLogs ? (
+                 <p className="text-lg">🌸 Loading your cycle data...</p>
+            ): rawLogs && rawLogs.length > 0 ? (
+                 <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
+            ) : (
+                <p className="text-lg">🌸 Start by telling us how your body feels today.</p>
+            )}
+           
+            <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                <Button asChild>
+                    <Link href="/dashboard/cycle-log">
+                        <Plus className="mr-2" /> Log today’s symptoms
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                    <Link href="/dashboard/cycle-log">
+                        Add a period day
+                    </Link>
+                </Button>
+            </div>
         </CardContent>
       </Card>
 
@@ -112,13 +156,30 @@ export default function DashboardPage() {
         <div className="lg:col-span-1 space-y-4">
             <h2 className="text-xl font-bold font-headline">Your cycle overview</h2>
             <Card>
-                <CardContent className="pt-6">
-                <p className="text-muted-foreground">
-                    You haven’t logged any cycle data yet.
-                </p>
-                <p className="text-muted-foreground mt-2">
-                    👉 Start with “Add your last period” or “Log today” to see patterns here.
-                </p>
+                <CardContent className="pt-6 space-y-3">
+                {isLoadingLogs ? (
+                    <p className="text-muted-foreground">Loading cycle data...</p>
+                ) : !rawLogs || rawLogs.length === 0 ? (
+                    <>
+                        <p className="text-muted-foreground">
+                            You haven’t logged any cycle data yet.
+                        </p>
+                        <p className="text-muted-foreground mt-2">
+                            👉 Start with “Add your last period” or “Log today” to see patterns here.
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Next Predicted Period</span>
+                            <span className="font-semibold">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd, yyyy') : 'N/A'}</span>
+                        </div>
+                         <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Current Phase</span>
+                            <span className="font-semibold">{currentPhase}</span>
+                        </div>
+                    </>
+                )}
                 </CardContent>
             </Card>
         </div>
@@ -154,3 +215,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

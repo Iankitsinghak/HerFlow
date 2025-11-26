@@ -1,3 +1,7 @@
+
+'use client';
+
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,92 +28,200 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, CalendarDays, Droplets, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, addDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
+import { useCollection, WithId } from "@/firebase/firestore/use-collection";
+import { format, parseISO } from 'date-fns';
+import {
+    calculateAverageCycleLength,
+    estimateNextPeriodDate,
+    getCurrentCycleDay,
+    getCurrentCyclePhase,
+    groupLogsIntoCycles,
+    type CycleLog
+} from '@/lib/cycle-service';
+import { useToast } from "@/hooks/use-toast";
 
-const mockLogs = [
-  { id: 1, startDate: "2024-04-15", endDate: "2024-04-19", duration: 5, symptoms: ["Cramps", "Bloating"] },
-  { id: 2, startDate: "2024-03-17", endDate: "2024-03-21", duration: 5, symptoms: ["Headache"] },
-  { id: 3, startDate: "2024-02-18", endDate: "2024-02-22", duration: 5, symptoms: ["Cramps", "Fatigue"] },
-];
+type CycleLogWithId = WithId<CycleLog>;
 
 export default function CycleLogPage() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const logsCollectionRef = useMemoFirebase(
+        () => (user && firestore ? collection(firestore, `users/${user.uid}/cycleLogs`) : null),
+        [user, firestore]
+    );
+
+    const logsQuery = useMemoFirebase(
+        () => (logsCollectionRef ? query(logsCollectionRef, orderBy('date', 'asc')) : null),
+        [logsCollectionRef]
+    )
+
+    const { data: rawLogs, isLoading } = useCollection<CycleLog>(logsQuery);
+
+    const groupedCycles = useMemo(() => {
+        return rawLogs ? groupLogsIntoCycles(rawLogs) : [];
+    }, [rawLogs]);
+
+    const averageCycleLength = useMemo(() => {
+        return rawLogs ? calculateAverageCycleLength(rawLogs) : 28;
+    }, [rawLogs]);
+
+    const nextPeriodDate = useMemo(() => {
+        return rawLogs ? estimateNextPeriodDate(rawLogs) : null;
+    }, [rawLogs]);
+
+    const currentPhase = useMemo(() => {
+        return rawLogs ? getCurrentCyclePhase(rawLogs) : 'Unknown';
+    }, [rawLogs]);
+
+    const handleAddPeriodDay = async () => {
+        if (!user || !firestore) return;
+        setIsSubmitting(true);
+        try {
+            await addDoc(collection(firestore, `users/${user.uid}/cycleLogs`), {
+                userId: user.uid,
+                date: new Date().toISOString(),
+                isPeriodDay: true,
+                symptoms: [],
+                createdAt: serverTimestamp()
+            });
+            toast({
+                title: "Log Added!",
+                description: "Today has been marked as a period day.",
+            });
+        } catch (error) {
+            console.error("Error adding period day:", error);
+            toast({
+                variant: 'destructive',
+                title: "Error",
+                description: "Could not add period day. Please try again.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold font-headline">Cycle Log</h1>
-          <p className="text-muted-foreground">
-            Track and manage your menstrual cycle history.
-          </p>
-        </div>
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add New Log
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New Cycle Log</DialogTitle>
-                    <DialogDescription>
-                        Enter the details of your cycle.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="start-date" className="text-right">Start Date</Label>
-                        <Input id="start-date" type="date" className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="end-date" className="text-right">End Date</Label>
-                        <Input id="end-date" type="date" className="col-span-3" />
-                    </div>
-                </div>
-                <Button>Save Log</Button>
-            </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-3xl font-bold font-headline">Cycle Log</h1>
+        <p className="text-muted-foreground">
+          Track and manage your menstrual cycle history.
+        </p>
       </div>
+
+      <Card className="bg-secondary/50 border-primary/20">
+        <CardHeader>
+          <CardTitle className="font-headline text-xl">Today at a glance</CardTitle>
+        </CardHeader>
+        <CardContent className="grid sm:grid-cols-3 gap-6">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+                <div className="bg-accent/10 text-accent p-3 rounded-full">
+                    <Activity className="h-6 w-6" />
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground">Current Phase</p>
+                    <p className="font-bold text-lg">{currentPhase}</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+                <div className="bg-primary/10 text-primary p-3 rounded-full">
+                    <CalendarDays className="h-6 w-6" />
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground">Next Period</p>
+                    <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
+                </div>
+            </div>
+             <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+                <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
+                    <Droplets className="h-6 w-6" />
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground">Avg. Cycle</p>
+                    <p className="font-bold text-lg">{averageCycleLength} days</p>
+                </div>
+            </div>
+        </CardContent>
+        <CardContent className="flex gap-4">
+             <Dialog>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Log Today's Symptoms
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Log Today's Symptoms</DialogTitle>
+                        <DialogDescription>
+                            This feature is coming soon!
+                        </DialogDescription>
+                    </DialogHeader>
+                </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={handleAddPeriodDay} disabled={isSubmitting}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                 {isSubmitting ? 'Adding...' : 'Add a Period Day'}
+            </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Log History</CardTitle>
-          <CardDescription>A record of your past cycles.</CardDescription>
+          <CardDescription>A record of your past period cycles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Symptoms</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.startDate}</TableCell>
-                  <TableCell>{log.endDate}</TableCell>
-                  <TableCell>{log.duration} days</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {log.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            {isLoading ? (
+                <p>Loading cycle history...</p>
+            ) : groupedCycles.length === 0 ? (
+                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">No period logs found.</p>
+                    <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
+                </div>
+            ) : (
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Start Date</TableHead>
+                        <TableHead>End Date</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Symptoms</TableHead>
+                        <TableHead><span className="sr-only">Actions</span></TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {groupedCycles.map((cycle, index) => (
+                        <TableRow key={index}>
+                        <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>{cycle.duration} days</TableCell>
+                        <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                            {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                            </div>
+                        </TableCell>
+                        <TableCell>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </TableCell>
+                        </TableRow>
+                    ))}
+                    </TableBody>
+                </Table>
+            )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    

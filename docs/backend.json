@@ -76,36 +76,49 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CycleLog",
       "type": "object",
-      "description": "Represents a user's menstrual cycle log.",
+      "description": "Represents a single day's log entry for a user's menstrual cycle.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the CycleLog entity."
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to the UserProfile. (Relationship: UserProfile 1:N CycleLog)"
+          "description": "The ID of the user this log belongs to."
         },
-        "startDate": {
+        "date": {
           "type": "string",
-          "description": "The start date of the cycle log.",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "The specific date for this log entry (ISO 8601)."
         },
-        "endDate": {
+        "isPeriodDay": {
+          "type": "boolean",
+          "description": "True if the user was on their period on this day."
+        },
+        "flow": {
           "type": "string",
-          "description": "The end date of the cycle log.",
-          "format": "date-time"
+          "enum": ["Light", "Medium", "Heavy", "Spotting"],
+          "description": "The menstrual flow level for the day."
+        },
+        "mood": {
+          "type": "string",
+          "enum": ["Happy", "Sad", "Anxious", "Energetic", "Calm", "Irritable"],
+          "description": "The user's mood on this day."
+        },
+        "symptoms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of symptoms experienced on this day (e.g., 'Cramps', 'Bloating')."
         },
         "notes": {
           "type": "string",
-          "description": "Any notes associated with the cycle log."
+          "description": "Any additional notes for the day."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the log entry was created."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "startDate"
-      ]
+      "required": ["userId", "date", "isPeriodDay"]
     },
     "BlogPost": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -256,7 +269,7 @@
           "schema": {
             "$ref": "#/backend/entities/CycleLog"
           },
-          "description": "Stores user's cycle logs. Includes 'userId' for authorization independence.",
+          "description": "Stores user's daily cycle logs. Includes 'userId' for authorization independence.",
           "params": [
             {
               "name": "userId",
@@ -325,3 +338,5 @@
     "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization and structural segregation to achieve these goals.\n\n**Authorization Independence:** Authorization data is denormalized to avoid hierarchical `get()` calls in security rules. This ensures atomic operations and simplifies debugging.  For example, the `CycleLog` collection includes the `userId`, directly enabling security rules based on the requesting user's ID without needing to fetch the UserProfile.\n\n**Structural Segregation:** Each collection houses documents with uniform security requirements. User-specific data is stored under `/users/{userId}` to enforce ownership-based access control.\n\n**Access Modeling:**\n*   **Private Data:** Path-based ownership is used for private user data like `CycleLog` entries, ensuring only the user can access their own data.\n*   **Collaborative Data:** Although not present in this data model, if collaborative features were added, a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) would be used and denormalized where necessary.\n*   **Global Roles:** Existence over content is used. For example, a collection `/roles_admin/{uid}` would signify admin access, but this is not part of the specified data model.\n\n**QAPs (Rules are not Filters):** The structure facilitates secure `list` operations by segregating data based on ownership. Listing cycle logs is restricted to the specific user's path, preventing unauthorized access to other users' data. Similarly, blog posts and community posts, while potentially public, maintain the `authorId` to allow filtering and management by the author.\n\nIn summary, this structure prioritizes security by enforcing clear ownership and access control rules at the path level, while also enabling efficient data retrieval and management."
   }
 }
+
+    
