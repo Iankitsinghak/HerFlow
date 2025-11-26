@@ -54,10 +54,8 @@ IMPORTANT: You are not a doctor and must not provide medical advice. Always pref
 
 Keep your answers concise, easy to understand, and supportive.`;
 
-    const model = ai.getModel('googleai/gemini-2.5-flash');
-
     const { stream, response } = await ai.generate({
-        model,
+        model: 'googleai/gemini-2.5-flash',
         prompt: [
             { role: 'system', content: systemInstruction },
             ...request.history,
