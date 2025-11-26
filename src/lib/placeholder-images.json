@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "A diverse group of smiling women.",
+      "imageUrl": "https://images.unsplash.com/photo-1607960402358-a5ceb04ebeb3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkaXZlcnNlJTIwd29tZW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2NDE1NDc5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diverse women smiling"
+    },
+    {
+      "id": "feature-1",
+      "description": "An abstract representation of a calendar and health icons.",
+      "imageUrl": "https://images.unsplash.com/photo-1667473916565-6fd552001ba2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoZWFsdGglMjBjYWxlbmRhcnxlbnwwfHx8fDE3NjQxNTQ3OTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "health calendar"
+    },
+    {
+      "id": "feature-2",
+      "description": "People sitting in a circle, supporting each other.",
+      "imageUrl": "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdXBwb3J0JTIwZ3JvdXB8ZW58MHx8fHwxNzY0MTU0Nzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "support group"
+    },
+    {
+      "id": "feature-3",
+      "description": "A friendly doctor listening to a patient.",
+      "imageUrl": "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkb2N0b3IlMjBjb25zdWx0YXRpb258ZW58MHx8fHwxNzY0MTU0Nzk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "doctor consultation"
+    },
+    {
+      "id": "profile-avatar-1",
+      "description": "Default user profile avatar.",
+      "imageUrl": "https://images.unsplash.com/photo-1640960543409-dbe56ccc30e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHJvZmlsZSUyMGF2YXRhcnxlbnwwfHx8fDE3NjQwNDYyNjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "profile avatar"
+    }
+  ]
 }
