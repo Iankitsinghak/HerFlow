@@ -27,10 +27,17 @@ export default function CycleStatusPage() {
 
   const [periodStatus, setPeriodStatus] = useState(onboardingData.periodStatus || "");
   const [cycleLength, setCycleLength] = useState(onboardingData.cycleLength || "");
-  const [lastPeriodDate, setLastPeriodDate] = useState<Date | undefined>(
-    onboardingData.lastPeriodDate ? new Date(onboardingData.lastPeriodDate) : undefined
-  );
-  const [dontRemember, setDontRemember] = useState(false);
+  const [lastPeriodDate, setLastPeriodDate] = useState<Date | undefined>(() => {
+    if (onboardingData.lastPeriodDate && onboardingData.lastPeriodDate !== 'unknown') {
+        try {
+            return new Date(onboardingData.lastPeriodDate);
+        } catch (e) {
+            return undefined;
+        }
+    }
+    return undefined;
+  });
+  const [dontRemember, setDontRemember] = useState(onboardingData.lastPeriodDate === 'unknown');
 
   const handleNext = () => {
     setOnboardingData({ 
@@ -123,7 +130,13 @@ export default function CycleStatusPage() {
                 </PopoverContent>
             </Popover>
             <div className="flex items-center space-x-2">
-                <input type="checkbox" id="dont-remember" checked={dontRemember} onChange={(e) => setDontRemember(e.target.checked)} />
+                <input type="checkbox" id="dont-remember" checked={dontRemember} onChange={(e) => {
+                    const checked = e.target.checked;
+                    setDontRemember(checked);
+                    if (checked) {
+                        setLastPeriodDate(undefined);
+                    }
+                }} />
                 <Label htmlFor="dont-remember" className="text-sm font-normal">I don’t remember</Label>
             </div>
         </div>
