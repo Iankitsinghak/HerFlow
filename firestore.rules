@@ -1,200 +1,157 @@
 /**
- * Core Philosophy: This ruleset enforces a strict, user-centric security model. User-specific data
- * (profiles, cycle logs, doctor questions) is private and accessible only by the owning user.
- * Publicly shared content (blog posts, community posts) is readable by anyone but can only be
- * created, modified, or deleted by the original author.
+ * Core Philosophy: This ruleset enforces a dual security model. For sensitive, personal data
+ * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
+ * the creator can access their data. For public content (blog posts, community posts), it
+ * employs a "public read, owner write" model, allowing anyone to view the content but
+ * restricting modifications to the original author.
  *
- * Data Structure: A hybrid model is used. All private user data is structurally segregated and
- * nested under the `/users/{userId}` path, creating a secure data boundary for each user.
- * Public content is stored in top-level collections like `/blogPosts` and `/communityPosts`
- * for efficient public querying.
+ * Data Structure: The data is structurally segregated based on access patterns. All private
+ * user data is nested within a user-specific path, `/users/{userId}`, which simplifies and
+ * strengthens ownership rules. Publicly-contributed content resides in top-level collections
+ * like `/blogPosts` and `/communityPosts`.
  *
  * Key Security Decisions:
- * - Default Deny: All operations are denied by default. Access is granted only through explicit `allow` statements.
- * - Strict Ownership: User-private data is protected using path-based security (`/users/{userId}/...`). A user can only access documents within their own path segment.
- * - No User Listing: The top-level `/users` collection is not listable to protect user privacy.
- * - Author-Controlled Public Content: For public collections, write access is tied to an `authorId` field within the document, ensuring only the creator can manage their content.
+ * - Default Deny: All access is denied by default unless explicitly granted.
+ * - No User Listing: It is not possible to list documents in the top-level `/users` collection.
+ * - Private Data Isolation: Data in `/users/{userId}` subcollections is strictly confined to the
+ *   owner, preventing any cross-user data leakage.
+ * - Public Content Integrity: While `blogPosts` and `communityPosts` are publicly readable,
+ *   only the authenticated author can create, update, or delete their own posts.
+ * - Read-Only Tags: The `/tags` collection is publicly readable but not writable by clients to
+ *   prevent spam and maintain data quality. Tag management should be handled by a trusted
+ *   backend process or admin role (not defined in this ruleset).
  *
- * Denormalization for Authorization: To ensure fast and simple security checks, authorization-critical
- * data is denormalized. For example, `blogPosts` documents contain an `authorId` and `cycleLogs`
- * documents contain a `userId`. This avoids slow and costly `get()` calls to other documents
- * during rule evaluation, adhering to best practices for performance and security.
+ * Denormalization for Authorization: To ensure fast and simple authorization checks, this
+ * ruleset relies on denormalized ownership fields. For example, `blogPosts` and `communityPosts`
+ * contain an `authorId`, and all documents within the `/users/{userId}` path contain a `userId`.
+ * This avoids costly and complex cross-collection `get()` calls in rules.
  *
- * Structural Segregation: The ruleset leverages separate collections for data with different
- * security needs. Private data (`cycleLogs`) is in a user-owned subcollection, while public
- * data (`blogPosts`) is in a top-level collection. This is more secure and performant than using
- * a single collection with a 'isPublic' flag, especially for list operations.
+ * Structural Segregation: The separation of private data into user subcollections (`/users/{userId}/cycleLogs`)
+ * and public data into top-level collections (`/blogPosts`) is a deliberate design choice. It makes
+ * list operations more secure and performant, as rules can safely grant list access on an entire
+ * collection without needing to filter the results.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------------------------------------------------------------------------
-    // Helper Functions
-    // ------------------------------------------------------------------------
-
-    /**
-     * Checks if the user is authenticated.
-     */
+    // Helper functions for reusable logic
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the foundation of the user-ownership model.
-     */
+    // Checks if the requesting user's UID matches the provided userId.
+    // Used for path-based ownership checks.
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks if a document already exists. Used for update and delete operations.
-     */
-    function isExistingDoc() {
-      return resource != null;
-    }
-
-    /**
-     * A composite check for update/delete operations to verify both
-     * ownership and the existence of the document being modified.
-     */
+    // Checks for ownership on an existing document.
+    // CRITICAL: Used for update/delete to prevent acting on non-existent data.
     function isExistingOwner(userId) {
-      return isOwner(userId) && isExistingDoc();
+      return isOwner(userId) && resource != null;
     }
 
-    /**
-     * On create, validates that the incoming document's 'userId' field
-     * matches the owner's UID from the path. This enforces relational integrity.
-     */
-    function hasCorrectUserId(userId) {
+    // Validates that the incoming document's userId field matches the userId from the path.
+    // Enforces relational integrity on document creation.
+    function incomingDataMatchesOwnershipPath(userId) {
       return request.resource.data.userId == userId;
     }
 
-    /**
-     * On update, ensures the 'userId' field cannot be changed, preventing
-     * a document from being reassigned to another user.
-     */
-    function isUserIdImmutable() {
-      return request.resource.data.userId == resource.data.userId;
+    // Validates that an ownership field (e.g., userId, authorId) is not being changed.
+    // Enforces immutability of ownership on document updates.
+    function isOwnershipFieldImmutable(fieldName) {
+      return request.resource.data[fieldName] == resource.data[fieldName];
     }
 
     /**
-     * On create, validates that the incoming document's 'authorId' field
-     * is set to the currently authenticated user's UID.
+     * @description Controls access to a user's private profile. Only the owner can read or write their own profile.
+     * @path /users/{userId}/userProfiles/{profileId}
+     * @allow (auth.uid="user123") -> (create) /users/user123/userProfiles/user123 with {userId: "user123"}
+     * @deny  (auth.uid="user456") -> (get) /users/user123/userProfiles/user123
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
-    function isNewAuthor() {
-      return request.resource.data.authorId == request.auth.uid;
-    }
-
-    /**
-     * On update, ensures the 'authorId' field cannot be changed.
-     */
-    function isAuthorIdImmutable() {
-      return request.resource.data.authorId == resource.data.authorId;
-    }
-
-    // ------------------------------------------------------------------------
-    // User-Private Collections
-    // ------------------------------------------------------------------------
-
-    /**
-     * @description A placeholder rule to prevent any operations on the top-level user path segment.
-     * @path /users/{userId}
-     * @allow (none) - This rule block explicitly denies all direct operations on a user's root document placeholder.
-     * @deny (list) - An attacker attempting to list all documents in the `/users` collection.
-     * @principle Prevents enumeration of all application users, protecting user privacy.
-     */
-    match /users/{userId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Secures a user's own profile document.
-     * @path /users/{userId}/userProfiles/{userProfileId}
-     * @allow (create) - A new user (auth.uid=`user-123`) creating their own profile at `/users/user-123/userProfiles/profile-abc`.
-     * @allow (get) - User `user-123` reading their own profile.
-     * @deny (update) - User `user-456` trying to update the profile for `user-123`.
-     * @principle Enforces strict data ownership within a user's private data tree.
-     */
-    match /users/{userId}/userProfiles/{userProfileId} {
+    match /users/{userId}/userProfiles/{profileId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasCorrectUserId(userId);
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
+      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Secures a user's private menstrual cycle logs.
+     * @description Controls access to a user's private cycle logs. This data is highly sensitive and strictly owned.
      * @path /users/{userId}/cycleLogs/{cycleLogId}
-     * @allow (create) - User `user-123` creating a new cycle log in their own subcollection.
-     * @allow (list) - User `user-123` listing all of their past cycle logs.
-     * @deny (get) - User `user-456` attempting to read a cycle log belonging to `user-123`.
-     * @principle Protects sensitive personal health information by restricting all access to the data owner.
+     * @allow (auth.uid="user123") -> (get) /users/user123/cycleLogs/log-abc
+     * @deny  (auth.uid="user456") -> (list) /users/user123/cycleLogs
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
     match /users/{userId}/cycleLogs/{cycleLogId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasCorrectUserId(userId);
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
+      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Secures questions a user has asked a doctor.
-     * @path /users/{userId}/doctorQuestions/{doctorQuestionId}
-     * @allow (create) - User `user-123` submitting a new question at `/users/user-123/doctorQuestions/q-abc`.
-     * @allow (get) - User `user-123` reading their own question and its answer.
-     * @deny (list) - Any user trying to list questions, even their own, if that were the policy (here it's allowed).
-     * @principle Protects sensitive health-related questions by restricting access to the user who asked them.
+     * @description Controls access to a user's private questions for doctors. This data is sensitive and strictly owned.
+     * @path /users/{userId}/doctorQuestions/{questionId}
+     * @allow (auth.uid="user123") -> (delete) /users/user123/doctorQuestions/q-abc
+     * @deny  (auth.uid="user456") -> (create) /users/user123/doctorQuestions/q-def with {userId: "user123"}
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
-    match /users/{userId}/doctorQuestions/{doctorQuestionId} {
+    match /users/{userId}/doctorQuestions/{questionId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasCorrectUserId(userId);
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
+      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
     }
 
-    // ------------------------------------------------------------------------
-    // Public-Read / Owner-Write Collections
-    // ------------------------------------------------------------------------
-
     /**
-     * @description Allows anyone to read blog posts, but only authors to write them.
+     * @description Publicly readable blog posts. Any signed-in user can create a post, but only the author can edit or delete it.
      * @path /blogPosts/{blogPostId}
-     * @allow (list) - Any user, authenticated or not, listing all blog posts.
-     * @allow (create) - An authenticated user creating a new post, ensuring the post data's `authorId` matches their UID.
-     * @deny (update) - A user trying to edit a blog post where `resource.data.authorId` does not match their own UID.
-     * @principle Implements a "Public Read, Owner Write" pattern, common for content platforms.
+     * @allow (unauthenticated) -> (get) /blogPosts/post-abc
+     * @deny  (auth.uid="user456") -> (update) /blogPosts/post-abc (where post-abc has authorId: "user123")
+     * @principle Enforces document ownership for writes while allowing public read access.
      */
     match /blogPosts/{blogPostId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && isNewAuthor();
-      allow update: if isExistingOwner(resource.data.authorId) && isAuthorIdImmutable();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
       allow delete: if isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description Allows anyone to read community posts, but only authors to manage their own posts.
+     * @description Publicly readable community posts. Any signed-in user can create a post, but only the author can edit or delete it.
      * @path /communityPosts/{communityPostId}
-     * @allow (get) - Any user, authenticated or not, reading a specific community post.
-     * @allow (create) - An authenticated user (auth.uid=`user-123`) creating a new post with `authorId: 'user-123'`.
-     * @deny (delete) - User `user-456` attempting to delete a post created by `user-123`.
-     * @principle Implements a "Public Read, Owner Write" pattern for user-generated community content.
+     * @allow (auth.uid="user123") -> (create) /communityPosts/post-xyz with {authorId: "user123"}
+     * @deny  (auth.uid="user456") -> (delete) /communityPosts/post-xyz (where post-xyz has authorId: "user123")
+     * @principle Enforces document ownership for writes while allowing public read access.
      */
     match /communityPosts/{communityPostId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn() && isNewAuthor();
-      allow update: if isExistingOwner(resource.data.authorId) && isAuthorIdImmutable();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
       allow delete: if isExistingOwner(resource.data.authorId);
+    }
+
+    /**
+     * @description Globally readable tags for categorizing content. No client-side writes are allowed to maintain data quality.
+     * @path /tags/{tagId}
+     * @allow (any user) -> (list) /tags
+     * @deny  (any user) -> (create, update, delete) /tags/new-tag
+     * @principle Secures a global, read-only collection to prevent client-side data pollution.
+     */
+    match /tags/{tagId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
