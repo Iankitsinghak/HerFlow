@@ -2,8 +2,41 @@
 'use server';
 
 import { redirect } from "next/navigation";
-import { getAdminAuth, getAdminFirestore } from './firebase-admin';
 import * as admin from 'firebase-admin';
+
+// --- Firebase Admin Initialization ---
+// This function ensures the Firebase Admin app is initialized only once.
+function getInitializedAdminApp(): admin.app.App {
+  // If the app is already initialized, return it.
+  if (admin.apps.length > 0) {
+    return admin.apps[0]!;
+  }
+
+  // If not initialized, initialize it now with application default credentials.
+  // This is the standard and most robust way to handle credentials in a server environment.
+  try {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+    });
+  } catch (e: any) {
+    console.error('Firebase Admin SDK initialization error:', e);
+    // Throw a clear error if initialization fails.
+    throw new Error('Failed to initialize Firebase Admin SDK. Please ensure server environment is configured correctly.');
+  }
+
+  // Return the newly initialized app.
+  return admin.app();
+}
+
+function getAdminAuth(): admin.auth.Auth {
+  return getInitializedAdminApp().auth();
+}
+
+function getAdminFirestore(): admin.firestore.Firestore {
+  return getInitializedAdminApp().firestore();
+}
+// --- End of Firebase Admin Initialization ---
+
 
 export async function signup(userData: any) {
   const { email, password, ...profileData } = userData;
