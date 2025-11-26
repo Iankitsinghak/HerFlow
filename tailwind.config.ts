@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -88,10 +89,28 @@ export default {
             height: '0',
           },
         },
+        'background-shine': {
+          from: {
+            backgroundPosition: '200% 0',
+          },
+          to: {
+            backgroundPosition: '-200% 0',
+          },
+        },
+        'pulse-heart': {
+          '0%, 100%': {
+            transform: 'scale(1)',
+          },
+          '50%': {
+            transform: 'scale(1.2)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'background-shine': 'background-shine 3s linear infinite',
+        'pulse-heart': 'pulse-heart 2s ease-in-out infinite',
       },
     },
   },

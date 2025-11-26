@@ -124,7 +124,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Today at a glance / Onboarding CTA */}
-      <Card className="bg-secondary/60 relative overflow-hidden animate-background-shine bg-[linear-gradient(110deg,#F8E0E8,45%,#FDF6F8,55%,#F8E0E8)] bg-[length:250%_100%]">
+      <Card className="bg-secondary/60 relative overflow-hidden animate-background-shine bg-[linear-gradient(110deg,#FCE4EC,45%,#FDF6F8,55%,#FCE4EC)] bg-[length:250%_100%]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {hasCompletedOnboarding ? (
