@@ -79,7 +79,7 @@ export async function signup(userData: any) {
   } catch (error: any) {
     console.error("Signup/Profile Update Error:", error);
     // Be careful not to leak sensitive implementation details in error messages.
-    return { error: `An error occurred during signup. Please try again.` };
+    return { error: `An error occurred during signup. Please try again. Details: ${error.message}` };
   }
 
   redirect('/dashboard');

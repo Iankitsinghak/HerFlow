@@ -1,36 +1,30 @@
 
 import * as admin from 'firebase-admin';
 
-let adminApp: admin.app.App;
-
+// This guard prevents re-initializing the app in serverless environments
 if (!admin.apps.length) {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        adminApp = admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        });
-    } catch (e) {
-        console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT or initialize admin app", e);
-    }
-  } else {
-    // This warning is helpful for local development if the env var is missing
-    console.warn("FIREBASE_SERVICE_ACCOUNT environment variable not set. Firebase Admin SDK not initialized.");
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string);
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+    });
+  } catch (e) {
+    console.error("Firebase Admin SDK initialization error:", e);
   }
-} else {
-  adminApp = admin.app();
 }
+
+const adminApp = admin.app();
 
 function getAdminAuth() {
     if (!admin.apps.length) {
-        throw new Error('Firebase Admin SDK has not been initialized. FIREBASE_SERVICE_ACCOUNT environment variable might be missing.');
+        throw new Error('Firebase Admin SDK has not been initialized.');
     }
     return admin.auth();
 }
 
 function getAdminFirestore() {
     if (!admin.apps.length) {
-        throw new Error('Firebase Admin SDK has not been initialized. FIREBASE_SERVICE_ACCOUNT environment variable might be missing.');
+        throw new Error('Firebase Admin SDK has not been initialized.');
     }
     return admin.firestore();
 }
