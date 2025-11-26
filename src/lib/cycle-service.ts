@@ -133,50 +133,73 @@ export function getCurrentCyclePhase(logs: CycleLog[]): string {
 }
 
 /**
- * Groups raw, daily log entries into distinct period cycles.
+ * Groups raw, daily log entries into distinct, consecutive period cycles.
  * @param logs - A sorted array of CycleLog objects.
  * @returns An array of GroupedCycle objects.
  */
 export function groupLogsIntoCycles(logs: CycleLog[]): GroupedCycle[] {
-  const cycles: GroupedCycle[] = [];
-  if (!logs || logs.length === 0) return cycles;
+    const cycles: GroupedCycle[] = [];
+    if (!logs || logs.length === 0) return cycles;
 
-  let currentCycleLogs: CycleLog[] = [];
+    let currentCycleLogs: CycleLog[] = [];
 
-  for (const log of logs) {
-    if (log.isPeriodDay) {
-        currentCycleLogs.push(log);
-    } else {
-        if (currentCycleLogs.length > 0) {
-            const startDate = parseISO(currentCycleLogs[0].date);
-            const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
-            const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
+    for (let i = 0; i < logs.length; i++) {
+        const log = logs[i];
+        if (log.isPeriodDay) {
+            const prevLog = logs[i - 1];
+            // Start a new cycle if it's the first log, or if it's not consecutive
+            if (currentCycleLogs.length === 0 || !prevLog || differenceInDays(parseISO(log.date), parseISO(prevLog.date)) > 1) {
+                // If there's a cycle being tracked, push it to the cycles array first
+                if (currentCycleLogs.length > 0) {
+                    const startDate = parseISO(currentCycleLogs[0].date);
+                    const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
+                    const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
+                    cycles.push({
+                        startDate: startOfDay(startDate),
+                        endDate: startOfDay(endDate),
+                        duration: differenceInDays(endDate, startDate) + 1,
+                        symptoms: symptoms,
+                        logs: currentCycleLogs
+                    });
+                }
+                // Start the new cycle
+                currentCycleLogs = [log];
+            } else {
+                // Continue the current cycle
+                currentCycleLogs.push(log);
+            }
+        } else {
+             // If we encounter a non-period day, the current period cycle ends.
+             if (currentCycleLogs.length > 0) {
+                const startDate = parseISO(currentCycleLogs[0].date);
+                const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
+                const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
 
-            cycles.push({
-                startDate: startOfDay(startDate),
-                endDate: startOfDay(endDate),
-                duration: differenceInDays(endDate, startDate) + 1,
-                symptoms: symptoms,
-                logs: currentCycleLogs
-            });
-            currentCycleLogs = [];
+                cycles.push({
+                    startDate: startOfDay(startDate),
+                    endDate: startOfDay(endDate),
+                    duration: differenceInDays(endDate, startDate) + 1,
+                    symptoms: symptoms,
+                    logs: currentCycleLogs
+                });
+                currentCycleLogs = [];
+            }
         }
     }
-  }
+    
+    // Add the last cycle if it's still being tracked
+    if (currentCycleLogs.length > 0) {
+        const startDate = parseISO(currentCycleLogs[0].date);
+        const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
+        const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
+        cycles.push({
+            startDate: startOfDay(startDate),
+            endDate: startOfDay(endDate),
+            duration: differenceInDays(endDate, startDate) + 1,
+            symptoms: symptoms,
+            logs: currentCycleLogs
+        });
+    }
 
-  // Add the last cycle if it's still being tracked
-  if (currentCycleLogs.length > 0) {
-     const startDate = parseISO(currentCycleLogs[0].date);
-     const endDate = parseISO(currentCycleLogs[currentCycleLogs.length - 1].date);
-     const symptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
-     cycles.push({
-        startDate: startOfDay(startDate),
-        endDate: startOfDay(endDate),
-        duration: differenceInDays(endDate, startDate) + 1,
-        symptoms: symptoms,
-        logs: currentCycleLogs
-     });
-  }
-
-  return cycles.reverse(); // Show most recent first
+    return cycles.reverse(); // Show most recent first
 }
