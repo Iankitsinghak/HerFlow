@@ -15,8 +15,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { clientSignup } from "@/lib/auth-client";
-import { googleSignIn } from "@/lib/auth-client";
+import { clientSignup, googleSignIn } from "@/lib/auth-client";
 import { useState, useTransition } from "react";
 import {
   Form,
@@ -67,8 +66,10 @@ export default function SignupPage() {
             const result = await googleSignIn();
             if (result?.error) {
                 setError(result.error);
-            } else {
+            } else if (result.isNewUser) {
                 router.push('/onboarding/start');
+            } else {
+                router.push('/dashboard');
             }
         });
     }

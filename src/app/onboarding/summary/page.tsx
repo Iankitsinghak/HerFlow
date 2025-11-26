@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useOnboarding } from "../provider";
-import { signup } from "@/lib/auth";
+import { completeOnboarding } from "@/lib/auth-client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -16,34 +16,24 @@ import { useUser } from "@/firebase";
 export default function SummaryPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { onboardingData, setOnboardingData } = useOnboarding();
-    const { user } = useUser();
+    const { onboardingData } = useOnboarding();
+    const { user, isUserLoading } = useUser();
     const [isPending, startTransition] = useTransition();
     
-    // Use existing user's email if available (e.g. from Google Sign-In)
-    useEffect(() => {
-        if (user && !onboardingData.email) {
-            setOnboardingData({ ...onboardingData, email: user.email! });
-        }
-    }, [user, onboardingData, setOnboardingData]);
-
     const handleFinish = () => {
+        if (!user) {
+            toast({
+                variant: 'destructive',
+                title: 'Authentication Error',
+                description: 'You are not logged in. Please sign up or log in again.',
+            });
+            router.push('/signup');
+            return;
+        }
+
         startTransition(async () => {
             try {
-                // The user object from the useUser hook is the source of truth.
-                // It will contain the email from either Google sign-in or the email/password signup flow.
-                if (!user?.email) {
-                     toast({
-                        variant: 'destructive',
-                        title: 'Uh oh! Something went wrong.',
-                        description: 'Your email is not available. Please try signing up again.',
-                    });
-                    return;
-                }
-
-                const finalData = { ...onboardingData, email: user.email };
-                
-                const result = await signup(finalData);
+                const result = await completeOnboarding(user, onboardingData);
 
                 if (result?.error) {
                     toast({
@@ -51,8 +41,13 @@ export default function SummaryPage() {
                         title: 'Uh oh! Something went wrong.',
                         description: result.error,
                     });
-                } 
-                // The server action will handle the redirect on success.
+                } else {
+                    toast({
+                        title: 'Welcome to Woomania!',
+                        description: 'Your profile has been set up successfully.',
+                    });
+                    router.push('/dashboard');
+                }
             } catch (error) {
                 console.error(error);
                 toast({
@@ -106,7 +101,7 @@ export default function SummaryPage() {
                 )}
             </CardContent>
             <CardFooter>
-                <Button onClick={handleFinish} disabled={isPending || !user?.email} className="w-full">
+                <Button onClick={handleFinish} disabled={isPending || isUserLoading} className="w-full">
                     {isPending ? 'Setting things up...' : 'Go to my Woomania'}
                 </Button>
             </CardFooter>

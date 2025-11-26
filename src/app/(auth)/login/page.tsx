@@ -30,6 +30,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -39,6 +40,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,7 +57,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
       }
     });
   };
@@ -66,8 +68,10 @@ export default function LoginPage() {
         const result = await googleSignIn();
         if (result?.error) {
             setError(result.error);
+        } else if (result.isNewUser) {
+            router.push('/onboarding/start');
         } else {
-            window.location.href = '/dashboard';
+            router.push('/dashboard');
         }
     });
   }
