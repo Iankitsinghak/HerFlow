@@ -1,26 +1,58 @@
 
+'use client';
+
+import { useState } from "react";
 import Header from "@/components/layout/header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, ThumbsUp, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-  } from "@/components/ui/dialog";
+} from "@/components/ui/dialog";
+import { CreatePostForm } from "@/components/create-post-form";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, WithId } from "@/firebase/firestore/use-collection";
+import { CommunityPostCard } from "@/components/community-post-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const mockPosts = [
-    { id: 1, author: "Sarah J.", avatar: "https://picsum.photos/seed/avatar1/40/40", title: "First time tracking my cycle, any tips?", content: "I've just started using Woomania to track my cycle and I'm a bit overwhelmed. Does anyone have advice on what to look out for or what's been most helpful for them?", likes: 12, comments: 5 },
-    { id: 2, author: "Maria G.", avatar: "https://picsum.photos/seed/avatar2/40/40", title: "Looking for recommendations for managing period cramps.", content: "My cramps have been really bad lately. Heating pads help a little, but I'm looking for other natural remedies. What works for you all?", likes: 28, comments: 15 },
-    { id: 3, author: "Chloe B.", avatar: "https://picsum.photos/seed/avatar3/40/40", title: "Success story with dietary changes for PCOS!", content: "Just wanted to share that after 3 months of a low-GI diet, my symptoms have improved so much! Happy to share what I've learned if anyone is interested.", likes: 55, comments: 22 },
-]
+export interface CommunityPost {
+    id?: string;
+    authorId: string;
+    authorName: string;
+    authorAvatar?: string;
+    title: string;
+    content: string;
+    likes: number;
+    likedBy: string[];
+    commentCount: number;
+    createdAt: any; // Allow server timestamp
+}
+
+type CommunityPostWithId = WithId<CommunityPost>;
+
 
 export default function CommunityPage() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+    
+    const postsCollectionRef = useMemoFirebase(
+        () => (firestore ? collection(firestore, 'communityPosts') : null),
+        [firestore]
+    );
+
+    const postsQuery = useMemoFirebase(
+        () => (postsCollectionRef ? query(postsCollectionRef, orderBy('createdAt', 'desc')) : null),
+        [postsCollectionRef]
+    );
+
+    const { data: posts, isLoading } = useCollection<CommunityPost>(postsQuery);
+
   return (
     <div className="flex flex-col min-h-screen">
         <Header />
@@ -30,58 +62,49 @@ export default function CommunityPage() {
                     <h1 className="text-4xl md:text-5xl font-bold font-headline">Community Forum</h1>
                     <p className="text-lg text-muted-foreground mt-2">Connect, share, and support each other.</p>
                 </div>
-                 <Dialog>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Create a Post
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Feature Coming Soon!</DialogTitle>
-                            <DialogDescription>
-                                The ability to create community posts is under development. Stay tuned!
-                            </DialogDescription>
-                        </DialogHeader>
-                    </DialogContent>
-                </Dialog>
+                {user ? (
+                    <Dialog open={isCreatePostOpen} onOpenChange={setIsCreatePostOpen}>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Create a Post
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create a new post</DialogTitle>
+                            </DialogHeader>
+                            <CreatePostForm onPostCreated={() => setIsCreatePostOpen(false)} />
+                        </DialogContent>
+                    </Dialog>
+                ) : (
+                    <Button asChild>
+                        <Link href="/login">Log in to post</Link>
+                    </Button>
+                )}
             </div>
             
             <div className="space-y-6">
-                {mockPosts.map(post => (
-                    <Card key={post.id}>
-                        <CardHeader>
-                            <div className="flex items-start gap-4">
-                                <Avatar>
-                                    <AvatarImage src={post.avatar} />
-                                    <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <Link href="#" className="hover:underline">
-                                        <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
-                                    </Link>
-                                    <CardDescription>Posted by {post.author}</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-foreground/90 mb-4">{post.content}</p>
-                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                                <button className="flex items-center gap-1 hover:text-primary">
-                                    <ThumbsUp className="h-4 w-4" />
-                                    <span>{post.likes} Likes</span>
-                                </button>
-                                <div className="flex items-center gap-1">
-                                    <MessageSquare className="h-4 w-4" />
-                                    <span>{post.comments} Comments</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                {isLoading ? (
+                    <>
+                        <Skeleton className="h-40 w-full" />
+                        <Skeleton className="h-40 w-full" />
+                        <Skeleton className="h-40 w-full" />
+                    </>
+                ) : posts && posts.length > 0 ? (
+                    posts.map(post => (
+                        <CommunityPostCard key={post.id} post={post as CommunityPostWithId} />
+                    ))
+                ) : (
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                        <h3 className="text-xl font-semibold">No posts yet</h3>
+                        <p className="text-muted-foreground mt-2">Be the first one to share something with the community! 💬</p>
+                    </div>
+                )}
             </div>
         </div>
     </div>
   )
 }
+
+    
