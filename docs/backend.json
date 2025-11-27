@@ -159,6 +159,7 @@
       "properties": {
         "id": { "type": "string" },
         "postId": { "type": "string", "description": "The ID of the parent CommunityPost." },
+        "parentId": { "type": ["string", "null"], "description": "The ID of the parent comment, if this is a reply." },
         "authorId": { "type": "string" },
         "authorName": { "type": "string" },
         "authorAvatar": { "type": "string", "format": "uri" },
