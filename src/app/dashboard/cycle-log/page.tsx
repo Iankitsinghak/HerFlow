@@ -32,6 +32,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { PlusCircle, CalendarDays, Droplets, Waves, MoreHorizontal, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
@@ -176,15 +178,29 @@ export default function CycleLogPage() {
                 </Tooltip>
             </TooltipProvider>
 
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
-                <div className="bg-primary/10 text-primary p-3 rounded-full">
-                    <CalendarDays className="h-6 w-6" />
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Next Period</p>
-                    <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
-                </div>
-            </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted">
+                        <div className="bg-primary/10 text-primary p-3 rounded-full">
+                            <CalendarDays className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Next Period</p>
+                            <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
+                        </div>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={nextPeriodDate || undefined}
+                        month={nextPeriodDate || new Date()}
+                        modifiers={{ predicted: nextPeriodDate ? [nextPeriodDate] : [] }}
+                        modifiersStyles={{ predicted: { fontWeight: 'bold', color: 'hsl(var(--primary))' } }}
+                    />
+                </PopoverContent>
+            </Popover>
+
              <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
                     <Droplets className="h-6 w-6" />
