@@ -7,13 +7,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ThumbsUp } from "lucide-react";
 import Link from "next/link";
-import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { CommentSection } from './comment-section';
 
 type CommunityPostWithId = WithId<CommunityPost>;
 
@@ -25,6 +26,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const { user } = useUser();
     const firestore = useFirestore();
     const [isLiking, setIsLiking] = useState(false);
+    const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
 
@@ -68,9 +70,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                         <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                        <Link href="#" className="hover:underline">
-                            <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
-                        </Link>
+                        <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
                         <CardDescription>
                             Posted by {post.authorName} &bull; {postDate}
                         </CardDescription>
@@ -93,20 +93,18 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                         <ThumbsUp className="h-4 w-4" />
                         <span>{post.likes || 0}</span>
                     </Button>
-                    <Dialog>
+                    <Dialog open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
                         <DialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1">
                                 <MessageSquare className="h-4 w-4" />
                                 <span>{post.commentCount || 0} Comments</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
                             <DialogHeader>
-                                <DialogTitle>Comments</DialogTitle>
-                                <DialogDescription>
-                                    Viewing and adding comments is coming soon. Stay tuned!
-                                </DialogDescription>
+                                <DialogTitle>{post.title}</DialogTitle>
                             </DialogHeader>
+                            <CommentSection postId={post.id} />
                         </DialogContent>
                     </Dialog>
                 </div>

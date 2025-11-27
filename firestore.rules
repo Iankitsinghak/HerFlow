@@ -2,28 +2,28 @@
 /**
  * Core Philosophy: This ruleset enforces a dual security model. For sensitive, personal data
  * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
- * the creator can access their data. For public content (community posts), it
+ * the creator can access their data. For public content (community posts, comments), it
  * employs a "public read, owner write" model, allowing anyone to view the content but
  * restricting modifications to the original author.
  *
  * Data Structure: The data is structurally segregated based on access patterns. All private
  * user data is nested within a user-specific path, `/users/{userId}`, which simplifies and
  * strengthens ownership rules. Publicly-contributed content resides in top-level collections
- * like `/communityPosts`.
+ * like `/communityPosts` and their subcollections.
  *
  * Key Security Decisions:
  * - Default Deny: All access is denied by default unless explicitly granted.
  * - No User Listing: It is not possible to list documents in the top-level `/users` collection.
  * - Private Data Isolation: Data in `/users/{userId}` subcollections is strictly confined to the
  *   owner, preventing any cross-user data leakage.
- * - Public Content Integrity: While `communityPosts` are publicly readable,
- *   only the authenticated author can create, update, or delete their own posts.
+ * - Public Content Integrity: While `communityPosts` and their `comments` are publicly readable,
+ *   only the authenticated author can create, update, or delete their own posts/comments.
  * - Read-Only Tags: The `/tags` collection is publicly readable but not writable by clients to
  *   prevent spam and maintain data quality. Tag management should be handled by a trusted
  *   backend process or admin role (not defined in this ruleset).
  *
  * Denormalization for Authorization: To ensure fast and simple authorization checks, this
- * ruleset relies on denormalized ownership fields. For example, `communityPosts`
+ * ruleset relies on denormalized ownership fields. For example, `communityPosts` and `comments`
  * contain an `authorId`, and all documents within the `/users/{userId}` path contain a `userId`.
  * This avoids costly and complex cross-collection `get()` calls in rules.
  *
@@ -32,7 +32,7 @@
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v5 - Removing blog feature
+ * v6 - Added rules for comments subcollection
  */
 rules_version = '2';
 service cloud.firestore {
@@ -60,6 +60,11 @@ service cloud.firestore {
     function incomingDataMatchesOwnershipPath(userId) {
       return request.resource.data.userId == userId;
     }
+    
+    // Validates that the incoming document's authorId field matches the user's auth UID.
+    function isIncomingDataAuthor() {
+      return isSignedIn() && request.resource.data.authorId == request.auth.uid;
+    }
 
     // Validates that an ownership field (e.g., userId, authorId) is not being changed.
     // Enforces immutability of ownership on document updates.
@@ -75,8 +80,7 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
     match /users/{userId}/userProfiles/{profileId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
       allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
@@ -90,8 +94,7 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
     match /users/{userId}/cycleLogs/{cycleLogId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
       allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
@@ -105,8 +108,7 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree and enforces relational integrity.
      */
     match /users/{userId}/doctorQuestions/{questionId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
       allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
@@ -120,11 +122,21 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes while allowing public read access.
      */
     match /communityPosts/{communityPostId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow get, list: if true;
+      allow create: if isIncomingDataAuthor();
       allow update: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
       allow delete: if isExistingOwner(resource.data.authorId);
+
+      /**
+       * @description Publicly readable comments. Any signed-in user can create a comment, but only the author can modify it.
+       * @path /communityPosts/{communityPostId}/comments/{commentId}
+       * @principle Secures a subcollection with public read and owner-only writes.
+       */
+      match /comments/{commentId} {
+        allow get, list: if true;
+        allow create: if isIncomingDataAuthor();
+        allow update, delete: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
+      }
     }
 
     /**
@@ -135,11 +147,8 @@ service cloud.firestore {
      * @principle Secures a global, read-only collection to prevent client-side data pollution.
      */
     match /tags/{tagId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
   }
 }
