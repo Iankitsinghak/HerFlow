@@ -6,7 +6,7 @@
  * - generatePlanner - Generates a wellness plan.
  */
 
-import { ai, googleAI } from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { PlannerRequest, PlannerRequestSchema, PlannerResponse, PlannerResponseSchema } from './planner-types';
 
 const plannerPrompt = ai.definePrompt({
