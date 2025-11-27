@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MoreHorizontal, PlusCircle, CalendarDays, Droplets, Activity } from "lucide-react";
+import { PlusCircle, CalendarDays, Droplets, Activity, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc } from "firebase/firestore";
@@ -38,12 +38,14 @@ import {
     estimateNextPeriodDate,
     getCurrentCyclePhase,
     groupLogsIntoCycles,
-    type CycleLog
+    type CycleLog,
+    type GroupedCycle
 } from '@/lib/cycle-service';
 import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { SymptomsForm } from "@/components/symptoms-form";
+import { DailyPlanner } from "@/components/daily-planner";
 
 type CycleLogWithId = WithId<CycleLog>;
 
@@ -53,6 +55,7 @@ export default function CycleLogPage() {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSymptomsDialogOpen, setIsSymptomsDialogOpen] = useState(false);
+    const [selectedCycle, setSelectedCycle] = useState<GroupedCycle | null>(null);
 
     const userProfileRef = useMemoFirebase(
       () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
@@ -134,7 +137,7 @@ export default function CycleLogPage() {
         </p>
       </div>
 
-      <Card className="bg-secondary/50 border-primary/20">
+      <Card className="bg-secondary/60 border-primary/20">
         <CardHeader>
           <CardTitle className="font-headline text-xl">Today at a glance</CardTitle>
         </CardHeader>
@@ -210,36 +213,52 @@ export default function CycleLogPage() {
                     <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
                 </div>
             ) : (
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Symptoms</TableHead>
-                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {groupedCycles.map((cycle, index) => (
-                        <TableRow key={index}>
-                        <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
-                        <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                            {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </TableCell>
+                <Dialog onOpenChange={(open) => !open && setSelectedCycle(null)}>
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>End Date</TableHead>
+                            <TableHead>Duration</TableHead>
+                            <TableHead>Symptoms</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                        {groupedCycles.map((cycle, index) => (
+                            <TableRow key={index}>
+                            <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
+                            <TableCell>
+                                <div className="flex flex-wrap gap-1 max-w-xs">
+                                {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" onClick={() => setSelectedCycle(cycle)}>
+                                        <WandSparkles className="mr-2 h-4 w-4" />
+                                        Get Plan
+                                    </Button>
+                                </DialogTrigger>
+                            </TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    {selectedCycle && (
+                         <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="font-headline text-2xl">Your Daily Wellness Plan</DialogTitle>
+                                <DialogDescription>
+                                    Based on your symptoms for the cycle starting {format(selectedCycle.startDate, 'MMM dd')}.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DailyPlanner cycle={selectedCycle} />
+                        </DialogContent>
+                    )}
+                </Dialog>
             )}
         </CardContent>
       </Card>
