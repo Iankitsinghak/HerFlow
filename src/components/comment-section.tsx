@@ -54,11 +54,11 @@ function CommentForm({ postId, parentId = null, onCommentPosted }: { postId: str
                 parentId: parentId,
             });
 
-            if (!parentId) { // Only increment for top-level comments
-                await updateDoc(postRef, {
-                    commentCount: increment(1)
-                });
-            }
+            // Only increment for top-level comments
+            await updateDoc(postRef, {
+                commentCount: increment(1)
+            });
+            
 
             setComment('');
             onCommentPosted();
@@ -136,10 +136,11 @@ function CommentItem({ comment, postId, replies }: { comment: CommentWithId, pos
 
 export function CommentSection({ postId }: CommentSectionProps) {
     const { user } = useUser();
+    const firestore = useFirestore();
     
     const commentsCollectionRef = useMemoFirebase(
-        () => (collection(useFirestore(), `communityPosts/${postId}/comments`)),
-        [postId]
+        () => (firestore ? collection(firestore, `communityPosts/${postId}/comments`) : null),
+        [firestore, postId]
     );
 
     const commentsQuery = useMemoFirebase(
