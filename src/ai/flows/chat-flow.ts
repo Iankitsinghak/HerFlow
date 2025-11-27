@@ -9,7 +9,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { ChatRequest, ChatRequestSchema } from '@/ai/types';
-import { Readable } from 'stream';
 
 const systemInstruction = `You are Woomania AI, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the Woomania app.
 
@@ -42,7 +41,7 @@ const chatFlow = ai.defineFlow(
     
     // Iterate through the Genkit stream and send chunks to the Flow's streamingCallback
     for await (const chunk of stream) {
-        const chunkText = chunk.text();
+        const chunkText = chunk.text;
         if (chunkText && streamingCallback) {
             streamingCallback(chunkText);
         }
@@ -59,15 +58,15 @@ export async function streamChat(request: ChatRequest) {
     
     const textEncoder = new TextEncoder();
 
-    const readableStream = new Readable({
-        async read() {
+    const readableStream = new ReadableStream({
+        async start(controller) {
             // response.stream contains the data passed to streamingCallback above
             for await (const chunk of response.stream) {
                 if (chunk) {
-                    this.push(textEncoder.encode(chunk));
+                    controller.enqueue(textEncoder.encode(chunk));
                 }
             }
-            this.push(null); // Signal the end of the stream
+            controller.close(); // Signal the end of the stream
         },
     });
 
