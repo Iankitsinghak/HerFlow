@@ -46,12 +46,13 @@ import {
     calculateAverageCycleLength,
     estimateNextPeriodDate,
     getCurrentCyclePhase,
-    groupLogsIntoCycles,
+    groupLogsIntoCycles as groupLogsIntoCyclesLegacy,
     type CycleLog,
     type GroupedCycle,
     getCurrentCycleDay,
     getPhaseInfo,
 } from '@/lib/cycle-service';
+import { groupLogsIntoCycles } from '@/lib/cycle-analytics';
 import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -85,11 +86,13 @@ export default function CycleLogPage() {
     )
 
     const { data: rawLogs, isLoading } = useCollection<CycleLog>(logsQuery);
-
-    const groupedCycles = useMemo(() => {
-        return rawLogs ? groupLogsIntoCycles(rawLogs, userProfile) : [];
-    }, [rawLogs, userProfile]);
-
+    
+    // Use the new, more robust grouping logic
+    const cycles = useMemo(() => {
+        return rawLogs ? groupLogsIntoCycles(rawLogs) : [];
+    }, [rawLogs]);
+    
+    // Legacy calculations for the top banner (can be updated later)
     const averageCycleLength = useMemo(() => {
         return rawLogs ? calculateAverageCycleLength(rawLogs) : 28;
     }, [rawLogs]);
@@ -120,6 +123,8 @@ export default function CycleLogPage() {
             date: new Date().toISOString(),
             isPeriodDay: true,
             symptoms: [],
+            mood: null,
+            flow: 'light', // Default flow
             createdAt: serverTimestamp()
         };
 
@@ -165,7 +170,7 @@ export default function CycleLogPage() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help">
+                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help transition-transform hover:scale-105">
                             <div className="bg-accent/10 text-accent p-3 rounded-full">
                                 <Waves className="h-6 w-6" />
                             </div>
@@ -183,7 +188,7 @@ export default function CycleLogPage() {
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted">
+                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer transition-transform hover:scale-105">
                         <div className="bg-primary/10 text-primary p-3 rounded-full">
                             <CalendarDays className="h-6 w-6" />
                         </div>
@@ -204,7 +209,7 @@ export default function CycleLogPage() {
                 </PopoverContent>
             </Popover>
 
-             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
+             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm transition-transform hover:scale-105">
                 <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
                     <Droplets className="h-6 w-6" />
                 </div>
@@ -213,7 +218,7 @@ export default function CycleLogPage() {
                     <p className="font-bold text-lg">{averageCycleLength} days</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm transition-transform hover:scale-105">
                 <div className="bg-teal-500/10 text-teal-500 p-3 rounded-full">
                     <MoreHorizontal className="h-6 w-6" />
                 </div>
@@ -228,14 +233,14 @@ export default function CycleLogPage() {
                 <DialogTrigger asChild>
                     <Button>
                         <span className="mr-2">➕💗</span>
-                        Log Today's Symptoms
+                        Log Today's Details
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>How are you feeling today?</DialogTitle>
                         <DialogDescription>
-                            Select any symptoms you&apos;re experiencing. This will be saved for today&apos;s log.
+                            Log your symptoms, flow, mood, and any notes for today.
                         </DialogDescription>
                     </DialogHeader>
                     <SymptomsForm 
@@ -267,7 +272,7 @@ export default function CycleLogPage() {
                 <CardContent>
                     {isLoading ? (
                         <p>Loading cycle history...</p>
-                    ) : groupedCycles.length === 0 ? (
+                    ) : cycles.length === 0 ? (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No period logs found.</p>
                             <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
@@ -277,22 +282,23 @@ export default function CycleLogPage() {
                             <Table>
                                 <TableHeader>
                                 <TableRow>
-                                    <TableHead>Start Date</TableHead>
-                                    <TableHead>End Date</TableHead>
-                                    <TableHead>Duration</TableHead>
+                                    <TableHead>Cycle</TableHead>
+                                    <TableHead>Period Duration</TableHead>
+                                    <TableHead>Cycle Length</TableHead>
                                     <TableHead>Symptoms</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                {groupedCycles.map((cycle, index) => (
-                                    <TableRow key={index}>
+                                {cycles.map((cycle) => (
+                                    <TableRow key={cycle.cycleIndex}>
                                     <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
-                                    <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
-                                    <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
+                                    <TableCell>{`${cycle.duration} days`}</TableCell>
+                                    <TableCell>{cycle.cycleLength ? `${cycle.cycleLength} days` : 'In Progress'}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1 max-w-xs">
-                                        {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                        {cycle.symptoms.length > 0 ? cycle.symptoms.slice(0,3).map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                        {cycle.symptoms.length > 3 && <Badge variant="outline">+{cycle.symptoms.length - 3} more</Badge>}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -324,10 +330,10 @@ export default function CycleLogPage() {
             </Card>
         </TabsContent>
         <TabsContent value="graphs">
-            <CycleGraphs />
+            <CycleGraphs cycles={cycles} />
         </TabsContent>
         <TabsContent value="insights">
-            <CycleInsights />
+            <CycleInsights cycles={cycles} />
         </TabsContent>
       </Tabs>
     </div>

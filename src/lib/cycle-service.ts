@@ -14,13 +14,19 @@ export interface CycleLog {
   date: string; // ISO String
   isPeriodDay: boolean;
   symptoms?: string[];
+  flow?: 'light' | 'medium' | 'heavy';
+  mood?: number;
+  notes?: string;
   createdAt: FieldValue;
+  updatedAt?: FieldValue;
 }
 
 export interface GroupedCycle {
+  cycleIndex: number;
   startDate: Date;
-  endDate: Date;
-  duration: number | string; // Can be a number or a string like "4-5"
+  endDate: Date; // End of period
+  duration: number | string; // Period duration
+  cycleLength: number | null; // Full cycle length
   symptoms: string[];
   logs: CycleLog[];
 }
@@ -123,11 +129,14 @@ export function getCurrentCyclePhase(logs: CycleLog[]): string {
   if (cycleDay === null) {
     return 'Unknown';
   }
+  
+  // Use a fallback average cycle length if calculation isn't possible
+  const avgCycleLength = calculateAverageCycleLength(logs) || 28;
 
   if (cycleDay <= 5) return 'Menstrual';
   if (cycleDay <= 13) return 'Follicular';
   if (cycleDay <= 16) return 'Ovulation';
-  if (cycleDay <= calculateAverageCycleLength(logs)) return 'Luteal'; // Use average length
+  if (cycleDay <= avgCycleLength) return 'Luteal';
   
   return 'Unknown'; // If cycle day is beyond average, we're in a new cycle but waiting for log
 }
@@ -154,13 +163,13 @@ export function getPhaseInfo(phase: string): string {
 
 
 /**
- * Groups raw, daily log entries into distinct, consecutive period cycles.
+ * Groups raw, daily log entries into distinct, consecutive period cycles. (Legacy)
  * If only one log exists (from onboarding), it uses the estimated period duration.
  * @param logs - A sorted array of CycleLog objects.
  * @param userProfile - The user's profile data, containing onboarding estimates.
  * @returns An array of GroupedCycle objects.
  */
-export function groupLogsIntoCycles(logs: CycleLog[], userProfile?: { periodDuration?: string }): GroupedCycle[] {
+export function groupLogsIntoCyclesLegacy(logs: CycleLog[], userProfile?: { periodDuration?: string }): GroupedCycle[] {
     if (!logs || logs.length === 0) return [];
 
     // Special case: if there's only one period day log, it's likely from onboarding.
@@ -169,16 +178,17 @@ export function groupLogsIntoCycles(logs: CycleLog[], userProfile?: { periodDura
         const singleLog = periodDays[0];
         const startDate = startOfDay(parseISO(singleLog.date));
         
-        // Estimate end date from periodDuration string (e.g., "4-5" -> 4 days)
         const durationEstimate = parseInt(userProfile.periodDuration, 10);
         const endDate = addDays(startDate, Math.max(0, durationEstimate - 1));
 
         return [{
+            cycleIndex: 1,
             startDate: startDate,
             endDate: endDate,
             duration: userProfile.periodDuration, // Use the string from onboarding, e.g., "4-5"
             symptoms: logs.flatMap(l => l.symptoms || []),
-            logs: logs
+            logs: logs,
+            cycleLength: null,
         }];
     }
 
@@ -203,11 +213,13 @@ export function groupLogsIntoCycles(logs: CycleLog[], userProfile?: { periodDura
                 const allSymptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
                 
                 cycles.push({
+                    cycleIndex: cycles.length + 1,
                     startDate,
                     endDate,
                     duration: differenceInDays(endDate, startDate) + 1,
                     symptoms: allSymptoms,
-                    logs: currentCycleLogs
+                    logs: currentCycleLogs,
+                    cycleLength: null // This logic is incomplete for legacy function
                 });
 
                 // Reset for the next cycle
@@ -227,11 +239,13 @@ export function groupLogsIntoCycles(logs: CycleLog[], userProfile?: { periodDura
         const allSymptoms = [...new Set(currentCycleLogs.flatMap(l => l.symptoms || []))];
 
         cycles.push({
+            cycleIndex: cycles.length + 1,
             startDate,
             endDate,
             duration: differenceInDays(endDate, startDate) + 1,
             symptoms: allSymptoms,
-            logs: currentCycleLogs
+            logs: currentCycleLogs,
+            cycleLength: null
         });
     }
 
