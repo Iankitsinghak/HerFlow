@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { ChatRequest, ChatRequestSchema, MessageSchema } from '@/ai/types';
+import { ChatRequest, ChatRequestSchema } from '@/ai/types';
 import { Readable } from 'stream';
 
 const systemInstruction = `You are Woomania AI, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the Woomania app.
@@ -27,35 +27,44 @@ const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
     inputSchema: ChatRequestSchema,
-    outputSchema: z.string(),
-    stream: true,
+    outputSchema: z.string(), // The flow ultimately returns a full string
+    stream: true,             // Enable streaming support
   },
-  async (request) => {
+  async (request, streamingCallback) => {
     // The system prompt must be the first message in the history.
     const systemPrompt = { role: 'system', content: systemInstruction } as const;
     
-    const { stream } = await ai.generate({
+    const { stream, output } = await ai.generate({
         prompt: request.message,
         history: [systemPrompt, ...request.history],
         stream: true,
     });
     
-    // This is a special case for streaming. We return the raw stream.
-    return stream;
+    // Iterate through the Genkit stream and send chunks to the Flow's streamingCallback
+    for await (const chunk of stream) {
+        const chunkText = chunk.text();
+        if (chunkText && streamingCallback) {
+            streamingCallback(chunkText);
+        }
+    }
+    
+    // Return the final complete text to satisfy the outputSchema: z.string()
+    return (await output).text;
   }
 );
 
-
 export async function streamChat(request: ChatRequest) {
-    const stream = await chatFlow(request);
+    // We invoke the flow using .stream()
+    const response = await chatFlow.stream(request);
     
     const textEncoder = new TextEncoder();
 
     const readableStream = new Readable({
         async read() {
-            for await (const chunk of stream) {
-                if (chunk.text) {
-                    this.push(textEncoder.encode(chunk.text));
+            // response.stream contains the data passed to streamingCallback above
+            for await (const chunk of response.stream) {
+                if (chunk) {
+                    this.push(textEncoder.encode(chunk));
                 }
             }
             this.push(null); // Signal the end of the stream
