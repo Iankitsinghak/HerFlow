@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DashboardSidebar from '@/components/layout/dashboard-sidebar';
 import Header from '@/components/layout/header';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function DashboardLayout({
@@ -42,9 +48,15 @@ export default function DashboardLayout({
     return (
       <div className="flex min-h-screen">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" className="p-0 w-72 bg-card">
-              <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
-            </SheetContent>
+          <SheetContent side="left" className="p-0 w-72 bg-card">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>
+                Main navigation links for the HerFlow application.
+              </SheetDescription>
+            </SheetHeader>
+            <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
+          </SheetContent>
         </Sheet>
         <div className="flex-1 flex flex-col">
           <Header showLogo={false} onMobileMenuClick={() => setMobileMenuOpen(true)} />
@@ -53,7 +65,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-    )
+    );
   }
 
   return (
