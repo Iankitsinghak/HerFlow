@@ -100,8 +100,8 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                                 <span>{post.commentCount || 0} Comments</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
-                            <DialogHeader>
+                        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
+                            <DialogHeader className="p-6 pb-0">
                                 <DialogTitle>{post.title}</DialogTitle>
                             </DialogHeader>
                             <CommentSection postId={post.id} />

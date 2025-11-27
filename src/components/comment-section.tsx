@@ -78,8 +78,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
     const getInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
 
     return (
-        <div className="flex flex-col h-full">
-            <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex flex-col h-full flex-1">
+            <ScrollArea className="flex-1 px-6">
                 <div className="space-y-6">
                     {isLoading ? (
                         <>
@@ -114,7 +114,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                 </div>
             </ScrollArea>
             
-            <div className="mt-auto pt-4 border-t">
+            <div className="mt-auto p-4 border-t bg-background">
                 {user ? (
                     <form onSubmit={handleSubmitComment} className="flex items-start gap-3">
                         <Avatar className="h-9 w-9 mt-1">
