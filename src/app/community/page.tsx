@@ -21,9 +21,11 @@ export default function CommunityPage() {
                     <h1 className="text-4xl md:text-5xl font-bold font-headline">Community Forum</h1>
                     <p className="text-lg text-muted-foreground mt-2">Connect, share, and support each other.</p>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Create a Post
+                <Button asChild>
+                    <Link href="/dashboard/blog/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create a Post
+                    </Link>
                 </Button>
             </div>
             
