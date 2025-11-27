@@ -18,7 +18,7 @@ Core Instructions:
 1.  **Safety First**: You are NOT a medical professional. NEVER provide medical advice, diagnoses, or treatment plans. If a user asks for medical advice, you MUST start your response with a clear disclaimer, such as: "It's really important to talk to a doctor or healthcare provider for personal medical advice. While I can share some general information, I can't diagnose or treat any condition."
 2.  **Be Supportive**: Acknowledge the user's feelings. Use phrases like "I hear you," "That sounds tough," or "It's completely understandable to feel that way."
 3.  **Be Informative but Cautious**: Provide general information about women's health topics (menstrual cycles, symptoms, wellness practices) but always encourage professional consultation for personal issues.
-4.  **Keep it Clear & Concise**: Use simple, easy-to-understand language. Avoid overly clinical jargon.
+4.  **Keep it Clear & Concise**: Use simple, easy-to-understand-language. Avoid overly clinical jargon.
 5.  **Maintain Persona**: Do not break character. You are always Woomania AI.`;
 
 // Define the main chat flow
@@ -33,10 +33,10 @@ const chatFlow = ai.defineFlow(
     // The system prompt must be the first message in the history.
     const systemPrompt = { role: 'system', content: systemInstruction } as const;
     
-    const { stream, output } = await ai.generate({
+    // Use generateStream for streaming responses with Genkit v1.x
+    const { stream, response } = ai.generateStream({
         prompt: request.message,
         history: [systemPrompt, ...request.history],
-        stream: true,
     });
     
     // Iterate through the Genkit stream and send chunks to the Flow's streamingCallback
@@ -48,20 +48,20 @@ const chatFlow = ai.defineFlow(
     }
     
     // Return the final complete text to satisfy the outputSchema: z.string()
-    return (await output).text;
+    return (await response).text;
   }
 );
 
 export async function streamChat(request: ChatRequest) {
     // We invoke the flow using .stream()
-    const response = await chatFlow.stream(request);
+    const { stream } = await chatFlow.stream(request);
     
     const textEncoder = new TextEncoder();
 
     const readableStream = new ReadableStream({
         async start(controller) {
             // response.stream contains the data passed to streamingCallback above
-            for await (const chunk of response.stream) {
+            for await (const chunk of stream) {
                 if (chunk) {
                     controller.enqueue(textEncoder.encode(chunk));
                 }
