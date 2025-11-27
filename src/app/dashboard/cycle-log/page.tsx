@@ -165,7 +165,7 @@ export default function CycleLogPage() {
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help hover:scale-105 transition-transform">
+                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help">
                             <div className="bg-accent/10 text-accent p-3 rounded-full">
                                 <Waves className="h-6 w-6" />
                             </div>
@@ -183,7 +183,7 @@ export default function CycleLogPage() {
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted">
                         <div className="bg-primary/10 text-primary p-3 rounded-full">
                             <CalendarDays className="h-6 w-6" />
                         </div>
@@ -204,7 +204,7 @@ export default function CycleLogPage() {
                 </PopoverContent>
             </Popover>
 
-             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm hover:scale-105 transition-transform">
+             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
                     <Droplets className="h-6 w-6" />
                 </div>
@@ -213,7 +213,7 @@ export default function CycleLogPage() {
                     <p className="font-bold text-lg">{averageCycleLength} days</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm hover:scale-105 transition-transform">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-teal-500/10 text-teal-500 p-3 rounded-full">
                     <MoreHorizontal className="h-6 w-6" />
                 </div>
@@ -333,4 +333,3 @@ export default function CycleLogPage() {
     </div>
   );
 }
-
