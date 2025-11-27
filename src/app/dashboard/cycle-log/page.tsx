@@ -47,8 +47,6 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { SymptomsForm } from "@/components/symptoms-form";
 import { DailyPlanner } from "@/components/daily-planner";
 
-type CycleLogWithId = WithId<CycleLog>;
-
 export default function CycleLogPage() {
     const { user } = useUser();
     const firestore = useFirestore();
