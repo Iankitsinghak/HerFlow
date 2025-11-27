@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -8,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface BlogPost {
     title: string;
@@ -43,7 +45,7 @@ export default function BlogPostPage() {
         return (
             <div className="flex flex-col min-h-screen">
                 <Header />
-                <div className="container mx-auto px-4 md:px-6 py-12 max-w-4xl">
+                <div className="container mx-auto px-4 md:px-6 py-12 max-w-3xl">
                     <Skeleton className="h-10 w-3/4 mb-4" />
                     <Skeleton className="h-6 w-1/2 mb-8" />
                     <Skeleton className="w-full aspect-[16/9] rounded-lg mb-8" />
@@ -74,36 +76,55 @@ export default function BlogPostPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
-            <article className="container mx-auto px-4 md:px-6 py-12 max-w-4xl">
-                <header className="mb-8">
-                    <h1 className="text-4xl md:text-5xl font-extrabold font-headline leading-tight mb-4">{post.title}</h1>
-                    <div className="flex items-center gap-4 text-muted-foreground">
-                        <Avatar>
+            <div className="container mx-auto px-4 md:px-6 py-12 max-w-3xl">
+                <article>
+                    <header className="mb-8">
+                        <h1 className="text-4xl md:text-5xl font-extrabold font-headline leading-tight mb-4">{post.title}</h1>
+                        <div className="flex items-center gap-4 text-muted-foreground">
+                            <Avatar>
+                                <AvatarImage />
+                                <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold text-foreground">{post.authorName}</p>
+                                <p className="text-sm">Published on {formatDate(post.createdAt)}</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    {post.imageUrl && (
+                        <Image
+                            src={post.imageUrl}
+                            alt={post.title}
+                            width={1200}
+                            height={675}
+                            className="w-full aspect-[16/9] object-cover rounded-lg mb-8 shadow-lg"
+                            priority
+                        />
+                    )}
+
+                    <div 
+                        className="prose prose-lg dark:prose-invert max-w-none mx-auto text-foreground/90 whitespace-pre-wrap"
+                        style={{ lineHeight: 1.7, fontSize: '1.125rem' }}
+                    >
+                        {post.content}
+                    </div>
+                </article>
+
+                 <Card className="mt-16 bg-muted/50">
+                    <CardContent className="p-6 flex items-center gap-4">
+                         <Avatar className="h-16 w-16">
                             <AvatarImage />
-                            <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>
+                            <AvatarFallback className="text-2xl">{getInitials(post.authorName)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-foreground">{post.authorName}</p>
-                            <p className="text-sm">Published on {formatDate(post.createdAt)}</p>
+                            <p className="text-sm text-muted-foreground">Written by</p>
+                            <h3 className="text-xl font-bold font-headline">{post.authorName}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">Community Contributor</p>
                         </div>
-                    </div>
-                </header>
-
-                {post.imageUrl && (
-                    <Image
-                        src={post.imageUrl}
-                        alt={post.title}
-                        width={1200}
-                        height={675}
-                        className="w-full aspect-[16/9] object-cover rounded-lg mb-8 shadow-lg"
-                        priority
-                    />
-                )}
-
-                <div className="prose prose-lg dark:prose-invert max-w-none mx-auto text-foreground/90 whitespace-pre-wrap">
-                    {post.content}
-                </div>
-            </article>
+                    </CardContent>
+                 </Card>
+            </div>
         </div>
     )
 }

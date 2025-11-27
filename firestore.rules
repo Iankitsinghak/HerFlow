@@ -32,7 +32,7 @@
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v2 - Force redeploy
+ * v3 - Forcing a redeploy to fix permissions.
  */
 rules_version = '2';
 service cloud.firestore {

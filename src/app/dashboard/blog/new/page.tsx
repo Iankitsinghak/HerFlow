@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -7,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -70,29 +72,32 @@ export default function NewPostPage() {
   };
 
   return (
-    <div className="space-y-6">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/dashboard/blog">
-                    <ArrowLeft />
-                </Link>
-            </Button>
-            <div>
-                <h1 className="text-3xl font-bold font-headline">Create New Post</h1>
-                <p className="text-muted-foreground">Share your story with the community.</p>
-            </div>
-        </div>
-
+    <div className="max-w-3xl mx-auto">
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="flex items-center justify-between">
+                    <Button variant="ghost" size="sm" asChild className="-ml-3">
+                        <Link href="/dashboard/blog">
+                            <ArrowLeft className="mr-2" />
+                            Back to Posts
+                        </Link>
+                    </Button>
+                    <Button type="submit" disabled={isPending}>
+                        {isPending ? 'Publishing...' : 'Publish Post'}
+                    </Button>
+                </div>
+                
                 <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Post Title</FormLabel>
                             <FormControl>
-                                <Input placeholder="A catchy title for your article" {...field} />
+                                <Input 
+                                    placeholder="A catchy title for your article" 
+                                    {...field} 
+                                    className="border-none text-3xl md:text-4xl font-extrabold font-headline h-auto p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -104,10 +109,9 @@ export default function NewPostPage() {
                     name="content"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Content</FormLabel>
                             <FormControl>
-                                <textarea
-                                    className="flex min-h-[200px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                <Textarea
+                                    className="border-none min-h-[400px] p-0 text-lg resize-none focus-visible:ring-0 focus-visible:ring-offset-0"
                                     placeholder="Write your heart out..."
                                     {...field}
                                 />
@@ -122,7 +126,7 @@ export default function NewPostPage() {
                     name="imageUrl"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Header Image URL (Optional)</FormLabel>
+                            <FormLabel className="font-semibold">Header Image URL (Optional)</FormLabel>
                             <FormControl>
                                 <Input placeholder="https://example.com/image.jpg" {...field} />
                             </FormControl>
@@ -130,10 +134,6 @@ export default function NewPostPage() {
                         </FormItem>
                     )}
                 />
-                
-                <Button type="submit" disabled={isPending}>
-                    {isPending ? 'Publishing...' : 'Publish Post'}
-                </Button>
             </form>
         </Form>
     </div>
