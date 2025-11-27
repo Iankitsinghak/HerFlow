@@ -47,7 +47,7 @@ export default function WelcomePage() {
         />
         <Logo />
         <h1 className="text-3xl sm:text-4xl font-bold font-headline mt-6">
-          Welcome to Woomania 💗
+          Welcome to HerFlow 💗
         </h1>
         <p className="text-lg text-muted-foreground mt-2 mb-8">
           Your safe space for periods, hormones, health &amp; honest stories.

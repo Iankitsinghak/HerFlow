@@ -6,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { OnboardingProvider } from './onboarding/provider';
 
 export const metadata: Metadata = {
-  title: 'Woomania',
+  title: 'HerFlow',
   description: 'Empowering women through every phase of life.',
 };
 

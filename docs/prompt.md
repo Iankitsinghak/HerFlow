@@ -1,8 +1,8 @@
-# Prompt to Rebuild the Woomania Web Application
+# Prompt to Rebuild the HerFlow Web Application
 
 ## High-Level Goal
 
-Your primary objective is to build a complete, production-ready web application called "Woomania". This application is a supportive and empowering health and wellness platform for women. It should be built as a Next.js application using the App Router.
+Your primary objective is to build a complete, production-ready web application called "HerFlow". This application is a supportive and empowering health and wellness platform for women. It should be built as a Next.js application using the App Router.
 
 ## 1. Technology Stack & Core Principles
 
@@ -45,15 +45,15 @@ Your primary objective is to build a complete, production-ready web application 
     2.  **Cycle Status (`/onboarding/cycle-status`):** Asks about period regularity, cycle length, period duration, and last period start date (using a calendar picker).
     3.  **Focus Areas (`/onboarding/focus`):** Allows users to select their health goals (e.g., "Tracking my periods", "PCOS", "Fertility").
     4.  **Privacy (`/onboarding/privacy`):** Asks about comfort with online doctors and sharing preferences.
-    5.  **Summary (`/onboarding/summary`):** Shows a summary of the collected data and a final "Go to my Woomania" button.
+    5.  **Summary (`/onboarding/summary`):** Shows a summary of the collected data and a final "Go to my HerFlow" button.
 -   Upon completion, all onboarding data must be saved to a `UserProfile` document in Firestore under `/users/{userId}/userProfiles/{userId}`.
 
 ### c. Dashboard (`src/app/dashboard/page.tsx`)
 -   This is the main hub for authenticated users.
--   It must greet the user by name (e.g., "Hi Sarah, welcome to Woomania 💗").
+-   It must greet the user by name (e.g., "Hi Sarah, welcome to HerFlow 💗").
 -   It should display a prominent CTA to complete the onboarding process if their profile is missing key cycle data.
 -   If onboarding is complete, it should display "Today at a glance" showing the user's current cycle phase (e.g., "Follicular phase").
--   Include a "Quick Actions" section with links to key features like "Track my cycle," "Chat with Woomania AI," etc.
+-   Include a "Quick Actions" section with links to key features like "Track my cycle," "Chat with HerFlow AI," etc.
 -   Display sections for "Recommended for you" (mock blog posts) and a "Community Teaser".
 
 ### d. Cycle Log (`src/app/dashboard/cycle-log/page.tsx`)
@@ -80,7 +80,7 @@ Your primary objective is to build a complete, production-ready web application 
 -   **AI Chat (`/ai-chat`):**
     -   Implement a full-screen chat interface.
     -   Create a Genkit flow (`chat-flow.ts`) that takes the conversation history and a new message.
-    -   The flow must use a system prompt that defines the persona of "Woomania AI": a warm, empathetic, and supportive companion who **must not give medical advice** and must include a disclaimer if asked.
+    -   The flow must use a system prompt that defines the persona of "HerFlow AI": a warm, empathetic, and supportive companion who **must not give medical advice** and must include a disclaimer if asked.
     -   The response from the model should be streamed back to the UI.
 -   **Wellness Planner (`planner-flow.ts`):**
     -   Create a Genkit flow that accepts a list of symptoms as input.

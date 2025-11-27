@@ -100,7 +100,7 @@ export default function DashboardPage() {
       {/* Welcome Header */}
       <div>
         <h1 className="text-3xl font-bold font-headline">
-          Hi {displayName}, welcome to Woomania 💗
+          Hi {displayName}, welcome to HerFlow 💗
         </h1>
         <p className="text-muted-foreground mt-1">
           Based on your info, we’ll help you track your cycle, understand

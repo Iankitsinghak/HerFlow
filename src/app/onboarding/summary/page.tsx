@@ -43,7 +43,7 @@ export default function SummaryPage() {
                     });
                 } else {
                     toast({
-                        title: 'Welcome to Woomania!',
+                        title: 'Welcome to HerFlow!',
                         description: 'Your profile has been set up successfully.',
                     });
                     router.push('/dashboard');
@@ -103,7 +103,7 @@ export default function SummaryPage() {
             </CardContent>
             <CardFooter>
                 <Button onClick={handleFinish} disabled={isPending || isUserLoading} className="w-full">
-                    {isPending ? 'Setting things up...' : 'Go to my Woomania'}
+                    {isPending ? 'Setting things up...' : 'Go to my HerFlow'}
                 </Button>
             </CardFooter>
         </Card>

@@ -39,7 +39,7 @@ export default function FocusPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">What do you want Woomania to focus on for you? 💡</CardTitle>
+        <CardTitle className="font-headline text-2xl">What do you want HerFlow to focus on for you? 💡</CardTitle>
         <CardDescription>
             This helps us show you the most relevant tips, blogs and tools. Select as many as you like.
         </CardDescription>

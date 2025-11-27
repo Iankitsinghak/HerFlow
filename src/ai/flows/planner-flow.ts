@@ -13,7 +13,7 @@ const plannerPrompt = ai.definePrompt({
     name: 'wellnessPlannerPrompt',
     input: { schema: PlannerRequestSchema },
     output: { schema: PlannerResponseSchema },
-    prompt: `You are Woomania AI, a caring and knowledgeable women's health companion.
+    prompt: `You are Aura, a caring and knowledgeable women's health companion.
     A user is reporting the following symptoms: {{{symptoms}}}.
 
     Your task is to create a supportive, simple, and actionable daily wellness plan to help them manage these symptoms. The plan should be gentle and focus on self-care.
@@ -54,4 +54,3 @@ const plannerFlow = ai.defineFlow(
 export async function generatePlanner(request: PlannerRequest): Promise<PlannerResponse> {
     return await plannerFlow(request);
 }
-
