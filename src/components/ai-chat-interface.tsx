@@ -110,7 +110,7 @@ export function AiChatInterface() {
                   </Avatar>
                 )}
                 <div
-                  className={`p-3 rounded-lg max-w-sm prose-p:my-0 prose-p:leading-normal prose dark:prose-invert ${
+                  className={`p-3 rounded-lg max-w-xl prose-p:my-0 prose-p:leading-normal prose dark:prose-invert ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-none'
                       : 'bg-muted rounded-bl-none'

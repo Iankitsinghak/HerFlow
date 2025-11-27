@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A conversational AI flow for the Woomania app.
@@ -34,7 +33,9 @@ const chatFlow = ai.defineFlow(
     const systemPrompt = { role: 'system', content: systemInstruction } as const;
     
     // Use generateStream for streaming responses with Genkit v1.x
-    const { stream, response } = ai.generateStream({
+    const { stream, response } = await ai.generateStream({
+        // FIX: Explicitly specify the model with the 'googleai/' prefix
+        model: 'googleai/gemini-2.5-flash', 
         prompt: request.message,
         history: [systemPrompt, ...request.history],
     });
