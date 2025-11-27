@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 
 type CommunityPostWithId = WithId<CommunityPost>;
 
@@ -92,14 +93,24 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                         <ThumbsUp className="h-4 w-4" />
                         <span>{post.likes || 0}</span>
                     </Button>
-                    <div className="flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{post.commentCount || 0} Comments</span>
-                    </div>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1">
+                                <MessageSquare className="h-4 w-4" />
+                                <span>{post.commentCount || 0} Comments</span>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Comments</DialogTitle>
+                                <DialogDescription>
+                                    Viewing and adding comments is coming soon. Stay tuned!
+                                </DialogDescription>
+                            </DialogHeader>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </CardContent>
         </Card>
     );
 }
-
-    

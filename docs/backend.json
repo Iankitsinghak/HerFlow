@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -82,54 +83,6 @@
         "startDate"
       ]
     },
-    "BlogPost": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "BlogPost",
-      "type": "object",
-      "description": "Represents a blog post related to women's health.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the blog post."
-        },
-        "authorId": {
-          "type": "string",
-          "description": "Reference to the user who authored the post. (Relationship: User 1:N BlogPost)"
-        },
-        "title": {
-          "type": "string",
-          "description": "The title of the blog post."
-        },
-        "content": {
-          "type": "string",
-          "description": "The main content of the blog post."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the blog post's image.",
-          "format": "uri"
-        },
-        "tags": {
-          "type": "array",
-          "description": "An array of tags associated with the blog post.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp of when the blog post was created.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "authorId",
-        "title",
-        "content",
-        "createdAt"
-      ]
-    },
     "CommunityPost": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CommunityPost",
@@ -197,6 +150,22 @@
         "content",
         "createdAt"
       ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment on a community post.",
+      "properties": {
+        "id": { "type": "string" },
+        "postId": { "type": "string", "description": "The ID of the parent CommunityPost." },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string", "format": "uri" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "postId", "authorId", "authorName", "content", "createdAt"]
     },
     "DoctorQuestion": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -303,22 +272,6 @@
         }
       },
       {
-        "path": "/blogPosts/{blogPostId}",
-        "definition": {
-          "entityName": "BlogPost",
-          "schema": {
-            "$ref": "#/backend/entities/BlogPost"
-          },
-          "description": "Stores blog posts related to women's health.  The `authorId` field inside the blogPost document is used for authorization to simplify rules.  The rule `request.auth.uid == resource.data.authorId` gives create/update/delete access to the author.",
-          "params": [
-            {
-              "name": "blogPostId",
-              "description": "The unique ID of the blog post."
-            }
-          ]
-        }
-      },
-      {
         "path": "/communityPosts/{communityPostId}",
         "definition": {
           "entityName": "CommunityPost",
@@ -331,6 +284,20 @@
               "name": "communityPostId",
               "description": "The unique ID of the community post."
             }
+          ]
+        }
+      },
+      {
+        "path": "/communityPosts/{communityPostId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments for a specific community post.",
+          "params": [
+            { "name": "communityPostId", "description": "The ID of the parent post." },
+            { "name": "commentId", "description": "The unique ID of the comment." }
           ]
         }
       },
@@ -371,7 +338,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization for authorization, structural segregation based on access needs, and consistent access modeling. \n\nAuthorization Independence is achieved by denormalizing authorization-related data. For example, the `CycleLog`, `BlogPost`, `CommunityPost`, and `DoctorQuestion` collections each contain the `userId` or `authorId` field, eliminating the need to perform `get()` operations to verify ownership. This ensures that security rules can be atomic and efficient, and it simplifies transactions and batch operations. Global roles aren't part of the data model given the instructions, but they could easily be added using Existence over Content strategy.\n\nStructural Segregation is applied by using path-based ownership for user-specific data (e.g., `/users/{userId}/cycleLogs/{cycleLogId}`). This allows for simple security rules that grant users full access to data under their respective paths. Public content, if any, would reside in separate collections without user-specific paths.\n\nAccess Modeling is standardized around path-based ownership for private user data, such as cycle logs and doctor questions. Collaborative data is not explicitly modeled in this design based on the app requirements, but if present, would use a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) for authorization. Global roles are not present.\n\nThis structure facilitates secure `list` operations (QAPs) because collections are segregated based on access control requirements. Rules can allow listing of items in `/users/{userId}/cycleLogs` only if the requesting user's `uid` matches the `userId` parameter, preventing unauthorized listing of cycle logs. Similarly, listing of community posts would be allowed based on separate criteria, as those posts are not owned by a single user.\n\nThe explicit modeling of data with dedicated `status` fields (if applicable in the future) and predictable schemas contributes to data clarity and debuggability. Standardized naming conventions (e.g., `userId` for user references, `{cycleLogId}` for cycle log IDs) enhance consistency across the database."
+    "reasoning": "The Firestore data structure is designed to ensure security, scalability, and ease of debugging, adhering to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters). It leverages denormalization for authorization, structural segregation based on access needs, and consistent access modeling. \n\nAuthorization Independence is achieved by denormalizing authorization-related data. For example, the `CycleLog`, `CommunityPost`, and `DoctorQuestion` collections each contain the `userId` or `authorId` field, eliminating the need to perform `get()` operations to verify ownership. This ensures that security rules can be atomic and efficient, and it simplifies transactions and batch operations. Global roles aren't part of the data model given the instructions, but they could easily be added using Existence over Content strategy.\n\nStructural Segregation is applied by using path-based ownership for user-specific data (e.g., `/users/{userId}/cycleLogs/{cycleLogId}`). This allows for simple security rules that grant users full access to data under their respective paths. Public content, if any, would reside in separate collections without user-specific paths.\n\nAccess Modeling is standardized around path-based ownership for private user data, such as cycle logs and doctor questions. Collaborative data is not explicitly modeled in this design based on the app requirements, but if present, would use a membership map (`members: {uid1: \"role\", uid2: \"role\"}`) for authorization. Global roles are not present.\n\nThis structure facilitates secure `list` operations (QAPs) because collections are segregated based on access control requirements. Rules can allow listing of items in `/users/{userId}/cycleLogs` only if the requesting user's `uid` matches the `userId` parameter, preventing unauthorized listing of cycle logs. Similarly, listing of community posts would be allowed based on separate criteria, as those posts are not owned by a single user.\n\nThe explicit modeling of data with dedicated `status` fields (if applicable in the future) and predictable schemas contributes to data clarity and debuggability. Standardized naming conventions (e.g., `userId` for user references, `{cycleLogId}` for cycle log IDs) enhance consistency across the database."
   }
 }
-    
