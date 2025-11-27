@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, CalendarDays, Droplets, Waves, MoreHorizontal, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
@@ -56,6 +57,8 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { SymptomsForm } from "@/components/symptoms-form";
 import { DailyPlanner } from "@/components/daily-planner";
+import { CycleInsights } from "@/components/cycle-insights";
+import { CycleGraphs } from "@/components/cycle-graphs";
 
 export default function CycleLogPage() {
     const { user } = useUser();
@@ -148,7 +151,7 @@ export default function CycleLogPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-headline">Cycle Log</h1>
+        <h1 className="text-3xl font-bold font-headline">Cycle Log 🌸</h1>
         <p className="text-muted-foreground">
           Track and manage your menstrual cycle history.
         </p>
@@ -156,13 +159,13 @@ export default function CycleLogPage() {
 
       <Card className="bg-secondary/60 border-primary/20">
         <CardHeader>
-          <CardTitle className="font-headline text-xl">Today at a glance</CardTitle>
+          <CardTitle className="font-headline text-xl">Today at a glance ✨</CardTitle>
         </CardHeader>
         <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help">
+                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help hover:scale-105 transition-transform">
                             <div className="bg-accent/10 text-accent p-3 rounded-full">
                                 <Waves className="h-6 w-6" />
                             </div>
@@ -180,7 +183,7 @@ export default function CycleLogPage() {
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted">
+                    <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-pointer hover:bg-muted hover:scale-105 transition-transform">
                         <div className="bg-primary/10 text-primary p-3 rounded-full">
                             <CalendarDays className="h-6 w-6" />
                         </div>
@@ -201,7 +204,7 @@ export default function CycleLogPage() {
                 </PopoverContent>
             </Popover>
 
-             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
+             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm hover:scale-105 transition-transform">
                 <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
                     <Droplets className="h-6 w-6" />
                 </div>
@@ -210,7 +213,7 @@ export default function CycleLogPage() {
                     <p className="font-bold text-lg">{averageCycleLength} days</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm hover:scale-105 transition-transform">
                 <div className="bg-teal-500/10 text-teal-500 p-3 rounded-full">
                     <MoreHorizontal className="h-6 w-6" />
                 </div>
@@ -224,7 +227,7 @@ export default function CycleLogPage() {
              <Dialog open={isSymptomsDialogOpen} onOpenChange={setIsSymptomsDialogOpen}>
                 <DialogTrigger asChild>
                     <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <span className="mr-2">➕💗</span>
                         Log Today's Symptoms
                     </Button>
                 </DialogTrigger>
@@ -243,75 +246,91 @@ export default function CycleLogPage() {
                 </DialogContent>
             </Dialog>
             <Button variant="outline" onClick={handleAddPeriodDay} disabled={isSubmitting}>
-                <PlusCircle className="mr-2 h-4 w-4" />
+                <span className="mr-2">➕🩸</span>
                  {isSubmitting ? 'Adding...' : 'Add a Period Day'}
             </Button>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Log History</CardTitle>
-          <CardDescription>A record of your past period cycles.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            {isLoading ? (
-                <p>Loading cycle history...</p>
-            ) : groupedCycles.length === 0 ? (
-                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                    <p className="text-muted-foreground">No period logs found.</p>
-                    <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
-                </div>
-            ) : (
-                <Dialog onOpenChange={(open) => !open && setSelectedCycle(null)}>
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Start Date</TableHead>
-                            <TableHead>End Date</TableHead>
-                            <TableHead>Duration</TableHead>
-                            <TableHead>Symptoms</TableHead>
-                            <TableHead>Actions</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {groupedCycles.map((cycle, index) => (
-                            <TableRow key={index}>
-                            <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
-                            <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
-                            <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
-                            <TableCell>
-                                <div className="flex flex-wrap gap-1 max-w-xs">
-                                {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <DialogTrigger asChild>
-                                    <Button variant="ghost" onClick={() => setSelectedCycle(cycle)}>
-                                        <WandSparkles className="mr-2 h-4 w-4" />
-                                        Get Plan
-                                    </Button>
-                                </DialogTrigger>
-                            </TableCell>
-                            </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
-                    {selectedCycle && (
-                         <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                                <DialogTitle className="font-headline text-2xl">Your Daily Wellness Plan</DialogTitle>
-                                <DialogDescription>
-                                    Based on your symptoms for the cycle starting {format(selectedCycle.startDate, 'MMM dd')}.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <DailyPlanner cycle={selectedCycle} />
-                        </DialogContent>
+      <Tabs defaultValue="table" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="table">Table View</TabsTrigger>
+            <TabsTrigger value="graphs">Graph View</TabsTrigger>
+            <TabsTrigger value="insights">Insights View</TabsTrigger>
+        </TabsList>
+        <TabsContent value="table">
+            <Card>
+                <CardHeader>
+                <CardTitle>Log History</CardTitle>
+                <CardDescription>A record of your past period cycles.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                        <p>Loading cycle history...</p>
+                    ) : groupedCycles.length === 0 ? (
+                        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">No period logs found.</p>
+                            <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
+                        </div>
+                    ) : (
+                        <Dialog onOpenChange={(open) => !open && setSelectedCycle(null)}>
+                            <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead>Start Date</TableHead>
+                                    <TableHead>End Date</TableHead>
+                                    <TableHead>Duration</TableHead>
+                                    <TableHead>Symptoms</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {groupedCycles.map((cycle, index) => (
+                                    <TableRow key={index}>
+                                    <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
+                                    <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
+                                    <TableCell>{typeof cycle.duration === 'string' ? cycle.duration : `${cycle.duration} days`}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1 max-w-xs">
+                                        {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" onClick={() => setSelectedCycle(cycle)}>
+                                                <WandSparkles className="mr-2 h-4 w-4" />
+                                                Get Plan
+                                            </Button>
+                                        </DialogTrigger>
+                                    </TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                            {selectedCycle && (
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-headline text-2xl">Your Daily Wellness Plan</DialogTitle>
+                                        <DialogDescription>
+                                            Based on your symptoms for the cycle starting {format(selectedCycle.startDate, 'MMM dd')}.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DailyPlanner cycle={selectedCycle} />
+                                </DialogContent>
+                            )}
+                        </Dialog>
                     )}
-                </Dialog>
-            )}
-        </CardContent>
-      </Card>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="graphs">
+            <CycleGraphs />
+        </TabsContent>
+        <TabsContent value="insights">
+            <CycleInsights />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
