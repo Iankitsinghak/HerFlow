@@ -72,22 +72,8 @@ export default function DashboardSidebar({ onLinkClick, isSheet = false }: Dashb
 
   return (
     <div className="border-r bg-card shadow-sm h-full flex flex-col">
-        {isSheet && (
-             <div className="flex h-16 items-center border-b px-6">
-                <Logo />
-            </div>
-        )}
-        <div className="p-4 border-b">
-            <Link href="/dashboard/profile" className="flex items-center gap-3" onClick={() => handleLinkClick('/dashboard/profile')}>
-                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={user?.photoURL ?? ""} />
-                    <AvatarFallback>{getInitials(user?.displayName ?? user?.email)}</AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="font-semibold text-sm">{user?.displayName ?? "User"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                </div>
-            </Link>
+        <div className="flex h-16 items-center border-b px-6">
+            <Logo />
         </div>
         <div className="flex-1 overflow-auto py-2">
             <nav className="grid items-start px-4 text-sm font-medium">
