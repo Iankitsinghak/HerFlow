@@ -36,7 +36,7 @@ const quickActions = [
   {
     href: '/ai-chat',
     icon: <MessageCircle />,
-    title: 'Chat with Woomania AI',
+    title: 'Chat with Aura',
     description: 'Ask anything about your health',
   },
   {
@@ -259,5 +259,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

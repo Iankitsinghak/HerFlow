@@ -24,7 +24,7 @@ const navLinks = [
     { href: "/blog", label: "Blog" },
     { href: "/community", label: "Community" },
     { href: "/ask-doctor", label: "Ask a Doctor" },
-    { href: "/ai-chat", label: "AI Chat" },
+    { href: "/ai-chat", label: "Aura" },
 ]
 
 export default function Header() {
