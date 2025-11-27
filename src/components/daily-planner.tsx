@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { generatePlanner, type PlannerResponse, type PlannerRequest } from '@/ai/flows/planner-flow';
+import { generatePlanner } from '@/ai/flows/planner-flow';
+import type { PlannerResponse, PlannerRequest } from '@/ai/flows/planner-types';
 import { GroupedCycle } from '@/lib/cycle-service';
 import { AlertCircle, CheckCircle, Clock, Loader, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
