@@ -139,7 +139,7 @@ export default function CycleLogPage() {
           <CardTitle className="font-headline text-xl">Today at a glance</CardTitle>
         </CardHeader>
         <CardContent className="grid sm:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-accent/10 text-accent p-3 rounded-full">
                     <Activity className="h-6 w-6" />
                 </div>
@@ -148,7 +148,7 @@ export default function CycleLogPage() {
                     <p className="font-bold text-lg">{currentPhase}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-primary/10 text-primary p-3 rounded-full">
                     <CalendarDays className="h-6 w-6" />
                 </div>
@@ -157,7 +157,7 @@ export default function CycleLogPage() {
                     <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
                 </div>
             </div>
-             <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
+             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-fuchsia-500/10 text-fuchsia-500 p-3 rounded-full">
                     <Droplets className="h-6 w-6" />
                 </div>
