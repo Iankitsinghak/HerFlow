@@ -133,6 +133,27 @@ export function getCurrentCyclePhase(logs: CycleLog[]): string {
 }
 
 /**
+ * Gets a brief description for a given cycle phase.
+ * @param phase - The name of the cycle phase.
+ * @returns A descriptive string for the phase.
+ */
+export function getPhaseInfo(phase: string): string {
+    switch (phase) {
+        case 'Menstrual':
+            return "This is your period. The uterine lining is shedding. It's common to feel tired or have cramps.";
+        case 'Follicular':
+            return "After your period, your body prepares to release an egg. Energy levels may start to rise.";
+        case 'Ovulation':
+            return "Your ovary releases an egg. This is your most fertile time. You might feel a peak in energy.";
+        case 'Luteal':
+            return "The second half of your cycle. If the egg isn't fertilized, you may experience PMS symptoms as hormone levels decline.";
+        default:
+            return "Your cycle information is being calculated. Log your period to get started.";
+    }
+}
+
+
+/**
  * Groups raw, daily log entries into distinct, consecutive period cycles.
  * If only one log exists (from onboarding), it uses the estimated period duration.
  * @param logs - A sorted array of CycleLog objects.

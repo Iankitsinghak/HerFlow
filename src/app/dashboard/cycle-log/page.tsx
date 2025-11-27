@@ -26,7 +26,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusCircle, CalendarDays, Droplets, Activity, WandSparkles } from "lucide-react";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { PlusCircle, CalendarDays, Droplets, Waves, MoreHorizontal, WandSparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, serverTimestamp, query, orderBy, FirestoreError, doc } from "firebase/firestore";
@@ -39,7 +45,9 @@ import {
     getCurrentCyclePhase,
     groupLogsIntoCycles,
     type CycleLog,
-    type GroupedCycle
+    type GroupedCycle,
+    getCurrentCycleDay,
+    getPhaseInfo,
 } from '@/lib/cycle-service';
 import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -88,6 +96,15 @@ export default function CycleLogPage() {
     const currentPhase = useMemo(() => {
         return rawLogs ? getCurrentCyclePhase(rawLogs) : 'Unknown';
     }, [rawLogs]);
+
+    const cycleDay = useMemo(() => {
+        return rawLogs ? getCurrentCycleDay(rawLogs) : null;
+    }, [rawLogs]);
+
+    const phaseInfo = useMemo(() => {
+        return getPhaseInfo(currentPhase);
+    }, [currentPhase]);
+
 
     const handleAddPeriodDay = async () => {
         if (!logsCollectionRef || !user) return;
@@ -139,16 +156,26 @@ export default function CycleLogPage() {
         <CardHeader>
           <CardTitle className="font-headline text-xl">Today at a glance</CardTitle>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
-                <div className="bg-accent/10 text-accent p-3 rounded-full">
-                    <Activity className="h-6 w-6" />
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground">Current Phase</p>
-                    <p className="font-bold text-lg">{currentPhase}</p>
-                </div>
-            </div>
+        <CardContent className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm cursor-help">
+                            <div className="bg-accent/10 text-accent p-3 rounded-full">
+                                <Waves className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Current Phase</p>
+                                <p className="font-bold text-lg">{currentPhase}</p>
+                            </div>
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{phaseInfo}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
                 <div className="bg-primary/10 text-primary p-3 rounded-full">
                     <CalendarDays className="h-6 w-6" />
@@ -165,6 +192,15 @@ export default function CycleLogPage() {
                 <div>
                     <p className="text-sm text-muted-foreground">Avg. Cycle</p>
                     <p className="font-bold text-lg">{averageCycleLength} days</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
+                <div className="bg-teal-500/10 text-teal-500 p-3 rounded-full">
+                    <MoreHorizontal className="h-6 w-6" />
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground">Cycle Day</p>
+                    <p className="font-bold text-lg">{cycleDay ?? 'N/A'}</p>
                 </div>
             </div>
         </CardContent>
