@@ -27,7 +27,7 @@ const navLinks = [
     { href: "/ai-chat", label: "Aura" },
 ]
 
-export default function Header() {
+export default function Header({ showLogo = true }: { showLogo?: boolean }) {
   const { user, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -42,26 +42,39 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container flex h-16 items-center px-4 md:px-6">
-        <div className="md:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-64 bg-card">
-                   <DashboardSidebar />
-                </SheetContent>
-            </Sheet>
-        </div>
-        <div className="mx-auto md:mx-0">
-          <Logo />
-        </div>
+        {/* Mobile Menu Trigger for Dashboard */}
+        {!showLogo && (
+            <div className="md:hidden">
+                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Menu />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="p-0 w-64 bg-card">
+                    <DashboardSidebar />
+                    </SheetContent>
+                </Sheet>
+            </div>
+        )}
+
+        {/* Centered Logo on main pages (mobile), or hidden on dashboard pages */}
+        {showLogo && (
+            <div className="flex-1 md:flex-none">
+                 <div className="flex justify-center md:justify-start">
+                    <Logo />
+                </div>
+            </div>
+        )}
+        
+        {/* Main Navigation for Desktop */}
         <nav className="hidden md:flex gap-6 ml-10">
             {navLinks.map(link => (
                  <Link key={link.href} href={link.href} className="text-sm font-medium hover:text-primary transition-colors">{link.label}</Link>
             ))}
         </nav>
+
+        {/* User Menu / Auth Buttons */}
         <div className="ml-auto flex items-center gap-4">
           {loading ? (
             <div className="flex items-center gap-4">
@@ -106,14 +119,14 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
+            <div className="hidden sm:flex items-center gap-2">
               <Button variant="ghost" asChild>
                 <Link href="/login">Log In</Link>
               </Button>
               <Button asChild>
                 <Link href="/signup">Sign Up</Link>
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
