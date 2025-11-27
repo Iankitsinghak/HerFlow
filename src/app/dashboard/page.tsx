@@ -18,6 +18,7 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import {
     getCurrentCyclePhase,
     estimateNextPeriodDate,
+    getCurrentCycleDay,
     type CycleLog
 } from '@/lib/cycle-service';
 import { format } from 'date-fns';
@@ -69,12 +70,13 @@ export default function DashboardPage() {
 
   const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
 
-  const { currentPhase, nextPeriodDate } = useMemo(() => {
-    if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) return { currentPhase: 'Unknown', nextPeriodDate: null };
+  const { currentPhase, nextPeriodDate, cycleDay } = useMemo(() => {
+    if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) return { currentPhase: 'Unknown', nextPeriodDate: null, cycleDay: null };
     
     return {
         currentPhase: getCurrentCyclePhase(rawLogs),
-        nextPeriodDate: estimateNextPeriodDate(rawLogs)
+        nextPeriodDate: estimateNextPeriodDate(rawLogs),
+        cycleDay: getCurrentCycleDay(rawLogs)
     }
   }, [rawLogs, hasCompletedOnboarding]);
 
@@ -206,6 +208,10 @@ export default function DashboardPage() {
                          <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Current Phase</span>
                             <span className="font-semibold">{currentPhase}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Cycle Day</span>
+                            <span className="font-semibold">{cycleDay ?? 'N/A'}</span>
                         </div>
                     </>
                 )}
