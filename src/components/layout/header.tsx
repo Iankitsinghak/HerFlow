@@ -23,7 +23,7 @@ import DashboardSidebar from "./dashboard-sidebar";
 const navLinks = [
     { href: "/community", label: "Community" },
     { href: "/ask-doctor", label: "Ask a Doctor" },
-    { href: "/ai-chat", label: "Aura" },
+    { href: "/ai-chat", label: "Woomania" },
 ]
 
 export default function Header({ showLogo = true }: { showLogo?: boolean }) {

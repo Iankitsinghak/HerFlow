@@ -33,7 +33,7 @@ const quickActions = [
   {
     href: '/ai-chat',
     icon: <MessageCircle />,
-    title: 'Chat with Aura',
+    title: 'Chat with Woomania',
     description: 'Ask anything about your health',
   },
   {
