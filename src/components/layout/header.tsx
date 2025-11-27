@@ -26,7 +26,7 @@ const navLinks = [
     { href: "/ai-chat", label: "Woomania" },
 ]
 
-export default function Header({ showLogo = true }: { showLogo?: boolean }) {
+export default function Header({ showLogo = true, onMobileMenuClick }: { showLogo?: boolean, onMobileMenuClick?: () => void }) {
   const { user, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -34,30 +34,40 @@ export default function Header({ showLogo = true }: { showLogo?: boolean }) {
     await logout();
   };
 
-  const getInitials = (email?: string | null) => {
-    return email ? email.charAt(0).toUpperCase() : "?";
+  const getInitials = (name?: string | null) => {
+    if (!name) return "?";
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container flex h-16 items-center px-4 md:px-6">
-        {/* Mobile Menu Trigger for Dashboard */}
-        {!showLogo && (
+        
+        {onMobileMenuClick ? (
+           <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={onMobileMenuClick}>
+              <Menu />
+           </Button>
+        ) : (
             <div className="md:hidden">
+              {showLogo && (
                 <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon">
                             <Menu />
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="p-0 w-64 bg-card">
-                    <DashboardSidebar />
+                    <SheetContent side="left" className="p-0 w-72 bg-card">
+                       <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} isSheet={true} />
                     </SheetContent>
                 </Sheet>
+              )}
             </div>
         )}
 
-        {/* Centered Logo on main pages (mobile), or hidden on dashboard pages */}
         {showLogo && (
             <div className="flex-1 md:flex-none">
                  <div className="flex justify-center md:justify-start">
@@ -66,14 +76,12 @@ export default function Header({ showLogo = true }: { showLogo?: boolean }) {
             </div>
         )}
         
-        {/* Main Navigation for Desktop */}
         <nav className="hidden md:flex gap-6 ml-10">
             {navLinks.map(link => (
                  <Link key={link.href} href={link.href} className="text-sm font-medium hover:text-primary transition-colors">{link.label}</Link>
             ))}
         </nav>
 
-        {/* User Menu / Auth Buttons */}
         <div className="ml-auto flex items-center gap-4">
           {loading ? (
             <div className="flex items-center gap-4">
@@ -86,7 +94,7 @@ export default function Header({ showLogo = true }: { showLogo?: boolean }) {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
                     <AvatarImage src={user.photoURL ?? ""} alt={user.displayName ?? ""} />
-                    <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                    <AvatarFallback>{getInitials(user.displayName ?? user.email)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
