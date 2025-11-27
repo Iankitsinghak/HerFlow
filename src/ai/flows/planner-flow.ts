@@ -11,6 +11,7 @@ import { PlannerRequest, PlannerRequestSchema, PlannerResponse, PlannerResponseS
 
 const plannerPrompt = ai.definePrompt({
     name: 'wellnessPlannerPrompt',
+    model: 'gemini-1.5-flash-latest',
     input: { schema: PlannerRequestSchema },
     output: { schema: PlannerResponseSchema },
     prompt: `You are Woomania AI, a caring and knowledgeable women's health companion.

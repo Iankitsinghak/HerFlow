@@ -35,6 +35,7 @@ const chatFlow = ai.defineFlow(
     const systemPrompt = { role: 'system', content: systemInstruction } as const;
     
     const { stream } = await ai.generate({
+        model: 'gemini-1.5-flash-latest',
         prompt: request.message,
         history: [systemPrompt, ...request.history],
         stream: true,
