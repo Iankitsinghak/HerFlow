@@ -68,8 +68,6 @@ export default function LoginPage() {
         const result = await googleSignIn();
         if (result?.error) {
             setError(result.error);
-        } else if (result.isNewUser) {
-            router.push('/onboarding/start');
         } else {
             router.push('/dashboard');
         }

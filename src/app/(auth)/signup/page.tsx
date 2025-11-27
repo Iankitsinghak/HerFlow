@@ -55,7 +55,7 @@ export default function SignupPage() {
             if (result?.error) {
                 setError(result.error);
             } else {
-                router.push('/onboarding/start');
+                router.push('/dashboard');
             }
         });
     }
@@ -66,8 +66,6 @@ export default function SignupPage() {
             const result = await googleSignIn();
             if (result?.error) {
                 setError(result.error);
-            } else if (result.isNewUser) {
-                router.push('/onboarding/start');
             } else {
                 router.push('/dashboard');
             }
