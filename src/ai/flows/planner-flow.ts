@@ -6,11 +6,12 @@
  * - generatePlanner - Generates a wellness plan.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, googleAI } from '@/ai/genkit';
 import { PlannerRequest, PlannerRequestSchema, PlannerResponse, PlannerResponseSchema } from './planner-types';
 
 const plannerPrompt = ai.definePrompt({
     name: 'wellnessPlannerPrompt',
+    model: googleAI.model('gemini-pro'),
     input: { schema: PlannerRequestSchema },
     output: { schema: PlannerResponseSchema },
     prompt: `You are Woomania AI, a caring and knowledgeable women's health companion.
