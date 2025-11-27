@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a dual security model. For sensitive, personal data
  * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
@@ -30,6 +31,8 @@
  * and public data into top-level collections (`/blogPosts`) is a deliberate design choice. It makes
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
+ *
+ * v2 - Force redeploy
  */
 rules_version = '2';
 service cloud.firestore {

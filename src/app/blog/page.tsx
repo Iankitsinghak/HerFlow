@@ -1,3 +1,4 @@
+
 'use client';
 
 import Header from "@/components/layout/header";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Image from "next/image";
 import Link from "next/link";
 import { useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, Timestamp } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
@@ -23,14 +24,9 @@ type BlogPostWithId = WithId<BlogPost>;
 export default function BlogPage() {
     const firestore = useFirestore();
 
-    const postsCollectionRef = useMemoFirebase(
+    const postsQuery = useMemoFirebase(
         () => (firestore ? collection(firestore, 'blogPosts') : null),
         [firestore]
-    );
-
-    const postsQuery = useMemoFirebase(
-        () => (postsCollectionRef ? query(postsCollectionRef, orderBy('createdAt', 'desc')) : null),
-        [postsCollectionRef]
     );
 
     const { data: posts, isLoading } = useCollection<BlogPost>(postsQuery);
