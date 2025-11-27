@@ -86,7 +86,7 @@ export function AiChatInterface() {
   }, [messages]);
 
   return (
-    <Card className="h-[70vh] flex flex-col shadow-lg border-primary/10">
+    <Card className="min-h-[70vh] flex flex-col shadow-lg border-primary/10">
       <CardContent className="flex-1 flex flex-col p-0">
         <ScrollArea className="flex-1 p-4 sm:p-6" ref={scrollAreaRef}>
           <div className="space-y-6">
