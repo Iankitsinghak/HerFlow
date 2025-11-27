@@ -6,5 +6,5 @@ export const googleAI = googleAIGenAI();
 
 export const ai = genkit({
   plugins: [googleAI],
-  model: googleAI.model('gemini-pro'),
+  model: 'gemini-pro',
 });
