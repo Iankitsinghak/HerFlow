@@ -2,37 +2,37 @@
 /**
  * Core Philosophy: This ruleset enforces a dual security model. For sensitive, personal data
  * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
- * the creator can access their data. For public content (blog posts, community posts), it
+ * the creator can access their data. For public content (community posts), it
  * employs a "public read, owner write" model, allowing anyone to view the content but
  * restricting modifications to the original author.
  *
  * Data Structure: The data is structurally segregated based on access patterns. All private
  * user data is nested within a user-specific path, `/users/{userId}`, which simplifies and
  * strengthens ownership rules. Publicly-contributed content resides in top-level collections
- * like `/blogPosts` and `/communityPosts`.
+ * like `/communityPosts`.
  *
  * Key Security Decisions:
  * - Default Deny: All access is denied by default unless explicitly granted.
  * - No User Listing: It is not possible to list documents in the top-level `/users` collection.
  * - Private Data Isolation: Data in `/users/{userId}` subcollections is strictly confined to the
  *   owner, preventing any cross-user data leakage.
- * - Public Content Integrity: While `blogPosts` and `communityPosts` are publicly readable,
+ * - Public Content Integrity: While `communityPosts` are publicly readable,
  *   only the authenticated author can create, update, or delete their own posts.
  * - Read-Only Tags: The `/tags` collection is publicly readable but not writable by clients to
  *   prevent spam and maintain data quality. Tag management should be handled by a trusted
  *   backend process or admin role (not defined in this ruleset).
  *
  * Denormalization for Authorization: To ensure fast and simple authorization checks, this
- * ruleset relies on denormalized ownership fields. For example, `blogPosts` and `communityPosts`
+ * ruleset relies on denormalized ownership fields. For example, `communityPosts`
  * contain an `authorId`, and all documents within the `/users/{userId}` path contain a `userId`.
  * This avoids costly and complex cross-collection `get()` calls in rules.
  *
  * Structural Segregation: The separation of private data into user subcollections (`/users/{userId}/cycleLogs`)
- * and public data into top-level collections (`/blogPosts`) is a deliberate design choice. It makes
+ * and public data into top-level collections (`/communityPosts`) is a deliberate design choice. It makes
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v3 - Forcing a redeploy to fix permissions.
+ * v5 - Removing blog feature
  */
 rules_version = '2';
 service cloud.firestore {
@@ -110,20 +110,6 @@ service cloud.firestore {
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
       allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
       allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Publicly readable blog posts. Any signed-in user can create a post, but only the author can edit or delete it.
-     * @path /blogPosts/{blogPostId}
-     * @allow (unauthenticated) -> (get) /blogPosts/post-abc
-     * @deny  (auth.uid="user456") -> (update) /blogPosts/post-abc (where post-abc has authorId: "user123")
-     * @principle Enforces document ownership for writes while allowing public read access.
-     */
-    match /blogPosts/{blogPostId} {
-      allow read: if request.auth != null;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
-      allow delete: if isExistingOwner(resource.data.authorId);
     }
 
     /**

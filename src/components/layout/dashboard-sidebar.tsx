@@ -5,7 +5,6 @@ import {
   Home,
   User,
   Calendar,
-  BookOpen,
   Users,
   MessageSquare,
   CircleHelp,
@@ -18,7 +17,6 @@ const navItems = [
   { href: "/dashboard", icon: <Home className="h-5 w-5" />, label: "Dashboard" },
   { href: "/dashboard/profile", icon: <User className="h-5 w-5" />, label: "Profile" },
   { href: "/dashboard/cycle-log", icon: <Calendar className="h-5 w-5" />, label: "Cycle Log" },
-  { href: "/dashboard/blog", icon: <BookOpen className="h-5 w-5" />, label: "My Blog Posts" },
 ];
 
 const mainNavItems = [

@@ -10,12 +10,9 @@ import {
   CircleHelp,
   Heart,
   MessageCircle,
-  Newspaper,
   Plus,
-  Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import {
@@ -40,24 +37,12 @@ const quickActions = [
     description: 'Ask anything about your health',
   },
   {
-    href: '/blog',
-    icon: <Newspaper />,
-    title: 'Read stories & blogs',
-    description: 'See real experiences & doctor tips',
-  },
-  {
     href: '/ask-doctor',
     icon: <CircleHelp />,
     title: 'Ask a doctor',
     description: 'Share your concern privately',
   },
 ];
-
-const recommendedPosts = [
-    { id: 1, title: "Living with PCOS: One girl’s story", image: "https://picsum.photos/seed/pcos1/400/225", imageHint: "woman portrait thoughtful" },
-    { id: 2, title: "Period pain vs PCOS pain – what’s the difference?", image: "https://picsum.photos/seed/pcos2/400/225", imageHint: "health infographic" },
-    { id: 3, title: "5 small habits to support your hormones", image: "https://picsum.photos/seed/pcos3/400/225", imageHint: "healthy food" },
-]
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -173,7 +158,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {quickActions.map((action) => (
           <Link href={action.href} key={action.title}>
             <Card className="h-full hover:bg-muted/50 transition-colors">
@@ -228,22 +213,6 @@ export default function DashboardPage() {
             </Card>
         </div>
 
-        {/* Recommended for you */}
-        <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-bold font-headline">Recommended for you 💌</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recommendedPosts.map(post => (
-                     <Link href={`/blog/${post.id}`} key={post.id} className="group">
-                        <Card className="h-full overflow-hidden transition-all duration-300 group-hover:shadow-xl">
-                            <Image src={post.image} alt={post.title} width={400} height={225} className="w-full object-cover aspect-video" data-ai-hint={post.imageHint} />
-                            <CardContent className="p-4">
-                                <h3 className="font-headline text-sm font-semibold group-hover:text-primary transition-colors">{post.title}</h3>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                ))}
-            </div>
-        </div>
       </div>
 
       {/* Community Teaser */}

@@ -1,9 +1,18 @@
+
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, ThumbsUp, PlusCircle } from "lucide-react";
 import Link from "next/link";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog";
 
 const mockPosts = [
     { id: 1, author: "Sarah J.", avatar: "https://picsum.photos/seed/avatar1/40/40", title: "First time tracking my cycle, any tips?", content: "I've just started using Woomania to track my cycle and I'm a bit overwhelmed. Does anyone have advice on what to look out for or what's been most helpful for them?", likes: 12, comments: 5 },
@@ -21,12 +30,22 @@ export default function CommunityPage() {
                     <h1 className="text-4xl md:text-5xl font-bold font-headline">Community Forum</h1>
                     <p className="text-lg text-muted-foreground mt-2">Connect, share, and support each other.</p>
                 </div>
-                <Button asChild>
-                    <Link href="/dashboard/blog/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create a Post
-                    </Link>
-                </Button>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Create a Post
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Feature Coming Soon!</DialogTitle>
+                            <DialogDescription>
+                                The ability to create community posts is under development. Stay tuned!
+                            </DialogDescription>
+                        </DialogHeader>
+                    </DialogContent>
+                </Dialog>
             </div>
             
             <div className="space-y-6">
