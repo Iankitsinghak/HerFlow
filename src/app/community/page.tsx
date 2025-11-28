@@ -75,7 +75,7 @@ export default function CommunityPage() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Share your thoughts</DialogTitle>
+                                <DialogTitle>Create a new post</DialogTitle>
                                 <DialogDescription>
                                     Your story matters. Please be kind and respectful of others.
                                 </DialogDescription>
