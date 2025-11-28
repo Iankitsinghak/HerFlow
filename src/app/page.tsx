@@ -10,8 +10,10 @@ import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { FloatingPetalsBackground } from '@/components/floating-petals-background';
+import { CheckCircle, Heart, Users, Bot } from 'lucide-react';
+import Image from 'next/image';
 
-const FeatureCard = ({ icon, title, text }: { icon: string, title: string, text: string }) => (
+const FeatureCard = ({ icon, title, text }: { icon: React.ReactNode, title: string, text: string }) => (
     <motion.div 
         className="relative bg-white/60 dark:bg-black/20 backdrop-blur-md rounded-3xl p-6 shadow-lg border border-pink-100/50 dark:border-pink-900/20 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
@@ -20,12 +22,43 @@ const FeatureCard = ({ icon, title, text }: { icon: string, title: string, text:
         viewport={{ once: true, amount: 0.5 }}
     >
         <div className="relative z-10 flex flex-col items-center text-center">
-            <span className="text-4xl mb-4">{icon}</span>
+            <div className="text-4xl mb-4 text-primary">{icon}</div>
             <h3 className="font-headline text-xl font-semibold text-foreground mb-2">{title}</h3>
             <p className="text-muted-foreground">{text}</p>
         </div>
     </motion.div>
-)
+);
+
+const TestimonialCard = ({ quote, author, role }: { quote: string, author: string, role: string }) => (
+    <motion.div
+        className="bg-white/80 dark:bg-black/30 backdrop-blur-xl rounded-2xl p-6 shadow-md border border-pink-100/50 dark:border-pink-900/20"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true, amount: 0.3 }}
+    >
+        <p className="text-foreground/80 italic">"{quote}"</p>
+        <p className="mt-4 font-semibold text-primary">{author}</p>
+        <p className="text-sm text-muted-foreground">{role}</p>
+    </motion.div>
+);
+
+const StepCard = ({ step, title, description }: { step: string, title: string, description: string }) => (
+    <motion.div
+        className="flex flex-col items-center text-center"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: parseFloat(step) * 0.1 }}
+        viewport={{ once: true, amount: 0.5 }}
+    >
+        <div className="flex items-center justify-center h-16 w-16 bg-primary/10 text-primary rounded-full font-bold text-2xl font-headline mb-4">
+            {step}
+        </div>
+        <h3 className="font-headline text-lg font-semibold">{title}</h3>
+        <p className="text-muted-foreground mt-1">{description}</p>
+    </motion.div>
+);
+
 
 export default function WelcomePage() {
   const { user, loading } = useAuth();
@@ -75,7 +108,7 @@ export default function WelcomePage() {
                 </p>
                 <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Button asChild size="lg" className="w-full sm:w-auto hover:scale-[1.02] transition-transform duration-200 shadow-lg">
-                        <Link href="/signup">Sign Up</Link>
+                        <Link href="/signup">Create Your Free Account</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full sm:w-auto hover:scale-[1.02] transition-transform duration-200">
                         <Link href="/login">Log In</Link>
@@ -83,19 +116,114 @@ export default function WelcomePage() {
                 </div>
             </motion.section>
 
-            {/* Feature Showcase */}
+            {/* How It Works Section */}
             <section className="w-full max-w-5xl mx-auto py-24">
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <FeatureCard icon="🌸" title="Gentle Cycle Tracking" text="Understand your flow, phases, and patterns with clarity." />
-                    <FeatureCard icon="💕" title="Supportive Community" text="Share, learn, and feel understood — without judgment." />
-                    <FeatureCard icon="🧘‍♀️" title="AI Comfort & Insights" text="Get soft, personalized guidance based on your rhythm." />
-                    <FeatureCard icon="🩺" title="Ask a Doctor" text="Connect with trusted experts when you need help." />
-                 </div>
+                <h2 className="text-3xl font-headline font-semibold text-foreground mb-4">Your Journey to Wellness in 3 Simple Steps</h2>
+                <p className="text-muted-foreground mb-12 max-w-2xl mx-auto">Start feeling more in tune with your body’s natural rhythm today.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
+                    <div className="absolute top-8 left-0 w-full h-0.5 bg-border -z-10 hidden md:block"></div>
+                    <StepCard step="1" title="Create Your Profile" description="Answer a few simple questions to personalize your experience. It's quick, easy, and secure." />
+                    <StepCard step="2" title="Track Your Cycle" description="Log symptoms, mood, and period days. The more you share, the smarter Woomania gets." />
+                    <StepCard step="3" title="Receive Insights" description="Unlock personalized AI plans, understand your cycle phases, and connect with a supportive community." />
+                </div>
+            </section>
+            
+            {/* Detailed Feature Section 1: Cycle Tracking */}
+            <section className="w-full max-w-6xl mx-auto py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                 <motion.div
+                    className="text-left"
+                    initial={{ opacity: 0, x: -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                >
+                    <h2 className="text-3xl sm:text-4xl font-headline font-bold text-foreground">Gentle Tracking, Powerful Insights.</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">Woomania transforms cycle tracking from a chore into a moment of self-care. Understand your body’s signals without the complexity.</p>
+                    <ul className="mt-6 space-y-3">
+                        <li className="flex items-start gap-3">
+                            <CheckCircle className="h-6 w-6 text-primary mt-1 shrink-0" />
+                            <span><strong className="text-foreground">Log with Ease:</strong> Quickly record symptoms, mood, and flow with our simple, intuitive interface.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="h-6 w-6 text-primary mt-1 shrink-0" />
+                            <span><strong className="text-foreground">Visualize Your Phases:</strong> See at a glance whether you’re in your follicular, ovulation, or luteal phase.</span>
+                        </li>
+                         <li className="flex items-start gap-3">
+                            <CheckCircle className="h-6 w-6 text-primary mt-1 shrink-0" />
+                            <span><strong className="text-foreground">Predictive Accuracy:</strong> Get smarter predictions for your next period and fertile window over time.</span>
+                        </li>
+                    </ul>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                >
+                    <Image src="https://picsum.photos/seed/cycleapp/600/500" alt="Cycle tracking interface" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="cycle tracker app" />
+                </motion.div>
+            </section>
+
+             {/* Detailed Feature Section 2: AI & Community */}
+             <section className="w-full max-w-6xl mx-auto py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                 <motion.div
+                    className="lg:order-2 text-left"
+                    initial={{ opacity: 0, x: 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                >
+                    <h2 className="text-3xl sm:text-4xl font-headline font-bold text-foreground">A Companion Who Listens.</h2>
+                    <p className="mt-4 text-lg text-muted-foreground">You’re never alone on your wellness journey. Get AI-powered support and connect with others who understand.</p>
+                    <div className="mt-6 space-y-6">
+                        <div className="flex gap-4">
+                            <Bot className="h-8 w-8 text-primary shrink-0" />
+                            <div>
+                                <h4 className="font-semibold text-foreground">Your AI Wellness Guide</h4>
+                                <p className="text-muted-foreground">Based on your logged symptoms, our AI creates personalized daily wellness plans and offers gentle, supportive chat — anytime, anywhere.</p>
+                            </div>
+                        </div>
+                         <div className="flex gap-4">
+                            <Users className="h-8 w-8 text-primary shrink-0" />
+                            <div>
+                                <h4 className="font-semibold text-foreground">A Safe, Supportive Community</h4>
+                                <p className="text-muted-foreground">Share experiences, ask questions, and find comfort in our private forum. A space for real talk, without judgment.</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+                 <motion.div
+                    className="lg:order-1"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6 }}
+                    viewport={{ once: true, amount: 0.5 }}
+                >
+                     <Image src="https://picsum.photos/seed/aichat/600/500" alt="AI chat interface" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="ai chat interface" />
+                </motion.div>
+            </section>
+
+            {/* Testimonials Section */}
+            <section className="w-full max-w-5xl mx-auto py-24">
+                <h2 className="text-3xl font-headline font-semibold text-foreground mb-12">What Our Members Are Saying</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <TestimonialCard 
+                        quote="Woomania helped me finally understand my body. The daily plans are a game-changer for my PMS."
+                        author="Sarah J."
+                        role="Member since 2023"
+                    />
+                    <TestimonialCard 
+                        quote="I've never felt so seen. The community is so supportive, and the AI chat feels like talking to a kind friend."
+                        author="Maya R."
+                        role="Member since 2024"
+                    />
+                </div>
             </section>
 
              {/* Final CTA Section */}
             <section className="w-full max-w-3xl mx-auto py-32">
                  <motion.div
+                    className="bg-white/50 dark:bg-black/20 backdrop-blur-lg border border-pink-100/50 dark:border-pink-900/20 rounded-2xl p-8 sm:p-12 shadow-lg"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     transition={{ duration: 1 }}
@@ -104,17 +232,23 @@ export default function WelcomePage() {
                     <h2 className="text-3xl font-headline font-semibold text-foreground mb-6">
                         Your body has a story. Woomania helps you understand it.
                     </h2>
-                    <div className="flex items-center justify-center gap-4">
-                         <Button asChild size="lg" className="hover:scale-[1.02] transition-transform duration-200 shadow-lg">
-                            <Link href="/signup">Create an Account</Link>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                         <Button asChild size="lg" className="w-full sm:w-auto hover:scale-[1.02] transition-transform duration-200 shadow-lg">
+                            <Link href="/signup">Join Woomania for Free</Link>
                         </Button>
-                        <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                            Already have an account? Log in
-                        </Link>
                     </div>
+                     <Link href="/login" className="mt-4 inline-block text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                            Already have an account? Log in
+                    </Link>
                 </motion.div>
             </section>
+
+            <footer className="py-8 text-center text-muted-foreground text-sm">
+                <p>&copy; {new Date().getFullYear()} Woomania. All Rights Reserved.</p>
+            </footer>
         </main>
     </div>
   );
 }
+
+    
