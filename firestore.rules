@@ -33,7 +33,7 @@
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v9 - Allow updating 'updatedAt' field when liking a post.
+ * v10 - Correct the rule for liking a post. It should only check for 'likes' and 'likedBy'.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -140,9 +140,9 @@ service cloud.firestore {
       allow create: if isIncomingDataAuthor();
       // An update is allowed if one of two conditions is met:
       // 1. The user is the original author and is not changing the authorId.
-      // 2. The user is only changing the 'likes', 'likedBy', and 'updatedAt' fields (i.e., liking the post).
+      // 2. The user is only changing the 'likes' and 'likedBy' fields (i.e., liking the post).
       allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId')) ||
-                       (isSignedIn() && allFieldsUnchangedExcept(['likes', 'likedBy', 'updatedAt']));
+                       (isSignedIn() && allFieldsUnchangedExcept(['likes', 'likedBy']));
       allow delete: if isExistingOwner('authorId');
 
       /**
