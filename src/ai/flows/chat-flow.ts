@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview A conversational AI flow for the HerFlow app.
+ * @fileOverview A conversational AI flow for the Woomania app.
  *
  * - streamChat - A streaming function that takes conversation history and returns an AI response stream.
  */
@@ -10,18 +10,17 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { ChatRequest, ChatRequestSchema } from '@/ai/types';
 
-const systemInstruction = `You are Woomania, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the HerFlow app.
+const systemInstruction = `You are Woomania, a warm, gentle, and empathetic companion for women's health and well-being. Your purpose is to be a supportive and informative guide within the Woomania app.
 
 Your tone should always be reassuring, kind, and non-judgmental. Think of yourself as a knowledgeable and caring friend. Use natural, conversational language, including greetings like "Hello!" or "How can I help you today?".
 
 Core Instructions:
-1.  **Safety First**: You are NOT a medical professional. NEVER provide medical advice, diagnoses, or treatment plans. If a user asks for medical advice, you MUST start your response with a clear disclaimer, such as: "It's really important to talk to a doctor or healthcare provider for personal medical advice. While I can share some general information, I can't diagnose or treat any condition."
-2.  **Be Supportive**: Acknowledge the user's feelings. Use phrases like "I hear you," "That sounds tough," or "It's completely understandable to feel that way."
-3.  **Be Informative but Cautious**: Provide general information about women's health topics (menstrual cycles, symptoms, wellness practices) but always encourage professional consultation for personal issues.
-4.  **Keep it Clear & Concise**: Use simple, easy-to-understand-language. Avoid overly clinical jargon.
-5.  **Maintain Persona**: Do not break character. You are always Woomania.`;
+1. Safety First: You are NOT a medical professional. NEVER provide medical advice, diagnoses, or treatment plans. If a user asks for medical advice, you MUST start your response with a clear disclaimer, such as: "It's really important to talk to a doctor or healthcare provider for personal medical advice. While I can share some general information, I can't diagnose or treat any condition."
+2. Be Supportive: Acknowledge the user's feelings. Use phrases like "I hear you," "That sounds tough," or "It's completely understandable to feel that way."
+3. Be Informative but Cautious: Provide general information about women's health topics (menstrual cycles, symptoms, wellness practices) but always encourage professional consultation for personal issues.
+4. Keep it Clear & Concise: Use simple, easy-to-understand language. Avoid overly clinical jargon.
+5. Maintain Persona: Do not break character. You are always Woomania.`;
 
-// Define the main chat flow
 const chatFlow = ai.defineFlow(
   {
     name: 'chatFlow',
@@ -30,47 +29,48 @@ const chatFlow = ai.defineFlow(
     stream: true,             // Enable streaming support
   },
   async (request, streamingCallback) => {
-    // The system prompt must be the first message in the history.
+    // System message must be first in the history
     const systemPrompt = { role: 'system', content: systemInstruction } as const;
-    
-    // Use generateStream for streaming responses with Genkit v1.x
+
+    // Ensure history is always an array
+    const history = Array.isArray(request.history) ? request.history : [];
+
+    // Genkit generateStream – keeping your original pattern (prompt + history)
     const { stream, response } = await ai.generateStream({
-        // FIX: Explicitly specify the model with the 'googleai/' prefix
-        model: 'googleai/gemini-2.5-flash', 
-        prompt: request.message,
-        history: [systemPrompt, ...request.history],
+      model: 'googleai/gemini-2.5-flash',
+      prompt: request.message,
+      history: [systemPrompt, ...history],
     });
-    
-    // Iterate through the Genkit stream and send chunks to the Flow's streamingCallback
+
+    // Stream chunks to the flow's streamingCallback
     for await (const chunk of stream) {
-        const chunkText = chunk.text;
-        if (chunkText && streamingCallback) {
-            streamingCallback(chunkText);
-        }
+      const chunkText = (chunk as any)?.text;
+      if (chunkText && streamingCallback) {
+        streamingCallback(chunkText);
+      }
     }
-    
-    // Return the final complete text to satisfy the outputSchema: z.string()
-    return (await response).text;
+
+    // Return final full text
+    const finalResponse = await response;
+    return finalResponse?.text ?? '';
   }
 );
 
 export async function streamChat(request: ChatRequest) {
-    // We invoke the flow using .stream()
-    const { stream } = await chatFlow.stream(request);
-    
-    const textEncoder = new TextEncoder();
+  const { stream } = await chatFlow.stream(request);
 
-    const readableStream = new ReadableStream({
-        async start(controller) {
-            // response.stream contains the data passed to streamingCallback above
-            for await (const chunk of stream) {
-                if (chunk) {
-                    controller.enqueue(textEncoder.encode(chunk));
-                }
-            }
-            controller.close(); // Signal the end of the stream
-        },
-    });
+  const textEncoder = new TextEncoder();
 
-    return readableStream;
+  const readableStream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        if (chunk) {
+          controller.enqueue(textEncoder.encode(chunk));
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return readableStream;
 }
