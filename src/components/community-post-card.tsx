@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ThumbsUp, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
-import { useUser, useFirestore } from '@/firebase';
-import { doc, updateDoc, increment, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { doc, updateDoc, increment, arrayUnion, arrayRemove, deleteDoc, FirestoreError } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
@@ -78,26 +78,34 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
 
     const handleDelete = async () => {
         if (!isAuthor || !firestore) return;
-
+        
         setIsDeleting(true);
-        try {
-            const postRef = doc(firestore, 'communityPosts', post.id);
-            await deleteDoc(postRef);
-            toast({
-                title: 'Post Deleted',
-                description: 'Your post has been successfully removed.',
+        const postRef = doc(firestore, 'communityPosts', post.id);
+
+        deleteDoc(postRef)
+            .then(() => {
+                 toast({
+                    title: 'Post Deleted',
+                    description: 'Your post has been successfully removed.',
+                });
+            })
+            .catch((serverError: FirestoreError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: postRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'You do not have permission to delete this post.',
+                });
+            })
+            .finally(() => {
+                setIsDeleting(false);
+                setIsDeleteDialogOpen(false);
             });
-        } catch (error) {
-            console.error("Error deleting post:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Could not delete the post. Please try again.',
-            });
-        } finally {
-            setIsDeleting(false);
-            setIsDeleteDialogOpen(false);
-        }
     }
 
     const getInitials = (name: string) => {
@@ -107,19 +115,19 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const postDate = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : "just now";
 
     return (
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-primary/10 bg-white/50 dark:bg-card/50 backdrop-blur-lg rounded-2xl overflow-hidden">
             <Collapsible open={isCommentsOpen} onOpenChange={setIsCommentsOpen}>
                 <CardHeader>
                     <div className="flex items-start gap-4">
                         <Avatar>
                             <AvatarImage src={post.isAnonymous ? undefined : post.authorAvatar || undefined} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-secondary">
                                 {post.isAnonymous ? <UserCircle/> : getInitials(post.authorName)}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
-                            <CardDescription className="flex items-center gap-2">
+                            <CardDescription className="flex items-center gap-2 text-xs">
                                 <span>Posted by {post.isAnonymous ? 'Anonymous' : post.authorName} &bull; {postDate}</span>
                             </CardDescription>
                         </div>
@@ -157,7 +165,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-foreground/90 mb-4 whitespace-pre-wrap">{post.content}</p>
+                    <p className="text-foreground/90 mb-6 whitespace-pre-wrap">{post.content}</p>
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
                         <Button
                             variant="ghost"
@@ -165,7 +173,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                             onClick={handleLike}
                             disabled={!user || isLiking}
                             className={cn(
-                                "flex items-center gap-1 hover:text-primary px-1",
+                                "flex items-center gap-1 hover:text-primary px-1 h-auto py-1",
                                 hasLiked && "text-primary"
                             )}
                         >
@@ -173,7 +181,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                             <span>{post.likes || 0}</span>
                         </Button>
                         <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1">
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
                                 <MessageSquare className="h-4 w-4" />
                                 <span>{post.commentCount || 0} Comments</span>
                             </Button>
@@ -182,7 +190,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                 </CardContent>
 
                 <CollapsibleContent>
-                    <div className="border-t pt-4">
+                    <div className="border-t pt-4 bg-muted/30">
                       <CommentSection postId={post.id} />
                     </div>
                 </CollapsibleContent>
