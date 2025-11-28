@@ -55,9 +55,11 @@ function CommentForm({ postId, parentId = null, onCommentPosted }: { postId: str
             });
 
             // Only increment for top-level comments
-            await updateDoc(postRef, {
-                commentCount: increment(1)
-            });
+            if (!parentId) {
+                await updateDoc(postRef, {
+                    commentCount: increment(1)
+                });
+            }
             
 
             setComment('');

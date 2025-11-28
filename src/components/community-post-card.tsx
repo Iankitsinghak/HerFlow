@@ -39,10 +39,13 @@ interface CommunityPostCardProps {
     post: CommunityPostWithId;
 }
 
-export function CommunityPostCard({ post }: CommunityPostCardProps) {
+export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    
+    // Use local state for optimistic updates
+    const [post, setPost] = useState(initialPost);
     const [isLiking, setIsLiking] = useState(false);
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -55,22 +58,39 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
         if (!user || !firestore || isLiking) return;
 
         setIsLiking(true);
+
+        // Optimistic UI update
+        const newLikedState = !hasLiked;
+        const newLikeCount = post.likes + (newLikedState ? 1 : -1);
+        const newLikedBy = newLikedState
+            ? [...post.likedBy, user.uid]
+            : post.likedBy.filter(id => id !== user.uid);
+
+        setPost({
+            ...post,
+            likes: newLikeCount,
+            likedBy: newLikedBy,
+        });
+
         const postRef = doc(firestore, 'communityPosts', post.id);
 
         try {
-            if (hasLiked) {
-                await updateDoc(postRef, {
-                    likes: increment(-1),
-                    likedBy: arrayRemove(user.uid)
-                });
-            } else {
+            if (newLikedState) {
                 await updateDoc(postRef, {
                     likes: increment(1),
                     likedBy: arrayUnion(user.uid)
                 });
+            } else {
+                await updateDoc(postRef, {
+                    likes: increment(-1),
+                    likedBy: arrayRemove(user.uid)
+                });
             }
         } catch (error) {
             console.error("Error liking post:", error);
+            // Revert optimistic update on error
+            setPost(initialPost);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not update like.' });
         } finally {
             setIsLiking(false);
         }
