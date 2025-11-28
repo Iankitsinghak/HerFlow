@@ -3,15 +3,27 @@
 
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { useCollection, WithId } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Trash2 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import Link from 'next/link';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface Comment {
     authorId: string;
@@ -54,11 +66,9 @@ function CommentForm({ postId, parentId = null, onCommentPosted }: { postId: str
                 parentId: parentId,
             });
 
-            // Increment the comment count for every comment (top-level or reply)
             await updateDoc(postRef, {
                 commentCount: increment(1)
             });
-            
 
             setComment('');
             onCommentPosted();
@@ -92,11 +102,39 @@ function CommentForm({ postId, parentId = null, onCommentPosted }: { postId: str
     );
 }
 
-function CommentItem({ comment, postId, replies }: { comment: CommentWithId, postId: string, replies: CommentWithId[] }) {
+function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: CommentWithId, postId: string, replies: CommentWithId[], onCommentDeleted: () => void }) {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
     const [showReplyForm, setShowReplyForm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const isAuthor = user?.uid === comment.authorId;
+
+    const handleDelete = async () => {
+        if (!firestore || !isAuthor) return;
+        setIsDeleting(true);
+
+        const commentRef = doc(firestore, `communityPosts/${postId}/comments`, comment.id);
+        const postRef = doc(firestore, 'communityPosts', postId);
+
+        try {
+            await deleteDoc(commentRef);
+            await updateDoc(postRef, {
+                commentCount: increment(-1)
+            });
+            toast({ title: "Comment Deleted" });
+            onCommentDeleted();
+        } catch (error) {
+            console.error("Error deleting comment:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not delete comment." });
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+
 
     return (
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 group">
             <Avatar className="h-8 w-8">
                 <AvatarImage src={comment.authorAvatar} />
                 <AvatarFallback>{getInitials(comment.authorName)}</AvatarFallback>
@@ -109,10 +147,31 @@ function CommentItem({ comment, postId, replies }: { comment: CommentWithId, pos
                     </p>
                 </div>
                 <p className="text-sm text-foreground/90 mt-1">{comment.content}</p>
-                <div className="mt-1">
+                <div className="mt-1 flex items-center gap-2">
                     <Button variant="ghost" size="sm" className="text-xs h-auto px-1 py-0.5" onClick={() => setShowReplyForm(!showReplyForm)}>
                         Reply
                     </Button>
+                     {isAuthor && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-xs h-auto px-1 py-0.5 text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>This will permanently delete your comment.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                        {isDeleting ? 'Deleting...' : 'Delete'}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
                 </div>
 
                 {showReplyForm && (
@@ -124,7 +183,7 @@ function CommentItem({ comment, postId, replies }: { comment: CommentWithId, pos
                 {replies.length > 0 && (
                     <div className="mt-4 space-y-4 pl-6 border-l">
                         {replies.map(reply => (
-                            <CommentItem key={reply.id} comment={reply} postId={postId} replies={[]} /> // Replies don't have replies in this design
+                            <CommentItem key={reply.id} comment={reply} postId={postId} replies={[]} onCommentDeleted={onCommentDeleted} /> 
                         ))}
                     </div>
                 )}
@@ -137,6 +196,7 @@ function CommentItem({ comment, postId, replies }: { comment: CommentWithId, pos
 export function CommentSection({ postId }: CommentSectionProps) {
     const { user } = useUser();
     const firestore = useFirestore();
+    const [forceRerender, setForceRerender] = useState(0);
     
     const commentsCollectionRef = useMemoFirebase(
         () => (firestore ? collection(firestore, `communityPosts/${postId}/comments`) : null),
@@ -148,7 +208,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
         [commentsCollectionRef]
     );
 
-    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery);
+    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery, [forceRerender]);
 
     const { topLevelComments, repliesByParent } = useMemo(() => {
         if (!comments) return { topLevelComments: [], repliesByParent: {} };
@@ -190,7 +250,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
                     </>
                 ) : topLevelComments.length > 0 ? (
                     topLevelComments.map((c) => (
-                       <CommentItem key={c.id} comment={c} postId={postId} replies={repliesByParent[c.id] || []} />
+                       <CommentItem 
+                            key={c.id} 
+                            comment={c} 
+                            postId={postId} 
+                            replies={repliesByParent[c.id] || []} 
+                            onCommentDeleted={() => setForceRerender(v => v + 1)}
+                        />
                     ))
                 ) : (
                     <div className="text-center py-10">

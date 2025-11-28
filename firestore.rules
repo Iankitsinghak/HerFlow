@@ -20,6 +20,10 @@ service cloud.firestore {
     function isAuthor() {
       return isSignedIn() && request.auth.uid == resource.data.authorId;
     }
+    
+    function isCommentAuthor() {
+        return isSignedIn() && request.auth.uid == resource.data.authorId;
+    }
 
     // --- USER DATA RULES ---
 
@@ -30,24 +34,17 @@ service cloud.firestore {
     // --- COMMUNITY POSTS RULES ---
 
     match /communityPosts/{postId} {
-      // 1. Anyone can read
       allow read: if true;
-      
-      // 2. Only logged in users can create. 
-      // We ensure they set themselves as the author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-
-      // 3. Only the author can update their own post. No one else can.
       allow update: if isAuthor();
-      
-      // 4. Only author can delete
       allow delete: if isAuthor();
 
       // --- COMMENTS SUBCOLLECTION ---
       match /comments/{commentId} {
         allow read: if true;
         allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-        allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+        allow update: if isCommentAuthor();
+        allow delete: if isCommentAuthor();
       }
     }
 

@@ -1,14 +1,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { doc, updateDoc, increment, arrayUnion, arrayRemove, deleteDoc, FirestoreError } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
+import { doc, deleteDoc, FirestoreError } from 'firebase/firestore';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,25 +38,23 @@ interface CommunityPostCardProps {
     post: CommunityPostWithId;
 }
 
-export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps) {
+export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
     
-    // The post state is now managed directly by the props.
-    // The useCollection hook in the parent will trigger re-renders.
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
 
-    const isAuthor = user ? user.uid === initialPost.authorId : false;
+    const isAuthor = user ? user.uid === post.authorId : false;
 
     const handleDelete = async () => {
         if (!isAuthor || !firestore) return;
         
         setIsDeleting(true);
-        const postRef = doc(firestore, 'communityPosts', initialPost.id);
+        const postRef = doc(firestore, 'communityPosts', post.id);
 
         deleteDoc(postRef)
             .then(() => {
@@ -89,7 +86,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
         return name ? name.charAt(0).toUpperCase() : '?';
     }
     
-    const postDate = initialPost.createdAt?.toDate ? formatDistanceToNow(initialPost.createdAt.toDate(), { addSuffix: true }) : "just now";
+    const postDate = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : "just now";
 
     return (
         <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-primary/10 bg-white/50 dark:bg-card/50 backdrop-blur-lg rounded-2xl overflow-hidden">
@@ -97,15 +94,15 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                 <CardHeader>
                     <div className="flex items-start gap-4">
                         <Avatar>
-                            <AvatarImage src={initialPost.isAnonymous ? undefined : initialPost.authorAvatar || undefined} />
+                            <AvatarImage src={post.isAnonymous ? undefined : post.authorAvatar || undefined} />
                             <AvatarFallback className="bg-secondary">
-                                {initialPost.isAnonymous ? <UserCircle/> : getInitials(initialPost.authorName)}
+                                {post.isAnonymous ? <UserCircle/> : getInitials(post.authorName)}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                            <CardTitle className="font-headline text-lg">{initialPost.title}</CardTitle>
+                            <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
                             <CardDescription className="flex items-center gap-2 text-xs">
-                                <span>Posted by {initialPost.isAnonymous ? 'Anonymous' : initialPost.authorName} &bull; {postDate}</span>
+                                <span>Posted by {post.isAnonymous ? 'Anonymous' : post.authorName} &bull; {postDate}</span>
                             </CardDescription>
                         </div>
                         {isAuthor && (
@@ -127,7 +124,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete your post and any comments associated with it.
+                                            This action cannot be undone. This will permanently delete your post and all associated comments.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -142,12 +139,12 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-foreground/90 mb-6 whitespace-pre-wrap">{initialPost.content}</p>
+                    <p className="text-foreground/90 mb-6 whitespace-pre-wrap">{post.content}</p>
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
                                 <MessageSquare className="h-4 w-4" />
-                                <span>{initialPost.commentCount || 0} Comments</span>
+                                <span>{post.commentCount || 0} Comments</span>
                             </Button>
                         </CollapsibleTrigger>
                     </div>
@@ -155,7 +152,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
 
                 <CollapsibleContent>
                     <div className="border-t pt-4 bg-muted/30">
-                      <CommentSection postId={initialPost.id} />
+                      <CommentSection postId={post.id} />
                     </div>
                 </CollapsibleContent>
             </Collapsible>
