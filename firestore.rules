@@ -62,7 +62,7 @@ service cloud.firestore {
     
     // Checks if only a specific set of fields are being updated.
     function isOnlyHugFieldsChanging() {
-        let changedKeys = request.resource.data.diff(resource.data).affectedKeys;
+        let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
         return changedKeys.hasOnly(['hugs', 'huggedBy']);
     }
     
@@ -76,7 +76,9 @@ service cloud.firestore {
           // Ensure the hug count is only incremented by 1
           && incoming.hugs == existing.hugs + 1
           // Ensure the user's ID is being added to the huggedBy array and no one else's
-          && incoming.huggedBy == existing.huggedBy.union([request.auth.uid]);
+          && incoming.huggedBy.toSet().hasAll(existing.huggedBy.toSet())
+          && incoming.huggedBy.toSet().has(request.auth.uid)
+          && incoming.huggedBy.size() == existing.huggedBy.size() + 1;
     }
     
     // Checks if a user is removing a hug from a post
@@ -89,7 +91,9 @@ service cloud.firestore {
           // Ensure the hug count is only decremented by 1
           && incoming.hugs == existing.hugs - 1
           // Ensure the user's ID is being removed from the huggedBy array
-          && incoming.huggedBy == existing.huggedBy.difference(debug([request.auth.uid]));
+          && existing.huggedBy.toSet().hasAll(incoming.huggedBy.toSet())
+          && !incoming.huggedBy.toSet().has(request.auth.uid)
+          && incoming.huggedBy.size() == existing.huggedBy.size() - 1;
     }
 
     match /users/{userId}/userProfiles/{profileId} {
