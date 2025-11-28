@@ -171,7 +171,7 @@ export function TabbedFeatures() {
           </motion.div>
         ))}
       </div>
-      <div className="relative h-[450px]">
+      <div className="relative h-[500px]">
         <AnimatePresence mode="wait">
           {features.map(
             (feature) =>
