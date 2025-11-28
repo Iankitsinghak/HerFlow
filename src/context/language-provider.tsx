@@ -4,25 +4,33 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import en from '@/locales/en.json';
 import hi from '@/locales/hi.json';
+import bh from '@/locales/bh.json';
+import mai from '@/locales/mai.json';
+import ta from '@/locales/ta.json';
+import te from '@/locales/te.json';
+import kn from '@/locales/kn.json';
+import bn from '@/locales/bn.json';
 
 const translations: Record<string, any> = {
   en,
-  hi
+  hi,
+  bh,
+  mai,
+  ta,
+  te,
+  kn,
+  bn
 };
 
 const languages = [
     { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिन्दी' },
-    // Add more Indian languages here
-    // { code: 'bn', name: 'বাংলা' }, // Bengali
-    // { code: 'te', name: 'తెలుగు' }, // Telugu
-    // { code: 'mr', name: 'मराठी' }, // Marathi
-    // { code: 'ta', name: 'தமிழ்' }, // Tamil
-    // { code: 'gu', name: 'ગુજરાતી' }, // Gujarati
-    // { code: 'kn', name: 'ಕನ್ನಡ' }, // Kannada
-    // { code: 'ml', name: 'മലയാളം' }, // Malayalam
-    // { code: 'pa', name: 'ਪੰਜਾਬੀ' }, // Punjabi
-    // { code: 'or', name: 'ଓଡ଼ିଆ' }, // Odia
+    { code: 'hi', name: 'हिन्दी (Hindi)' },
+    { code: 'bh', name: 'भोजपुरी (Bhojpuri)' },
+    { code: 'mai', name: 'मैथिली (Maithili)' },
+    { code: 'bn', name: 'বাংলা (Bengali)' },
+    { code: 'te', name: 'తెలుగు (Telugu)' },
+    { code: 'ta', name: 'தமிழ் (Tamil)' },
+    { code: 'kn', name: 'ಕನ್ನಡ (Kannada)' },
 ];
 
 interface LanguageContextType {
@@ -39,13 +47,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const browserLang = navigator.language.split('-')[0];
-    if (translations[browserLang]) {
+    if (Object.keys(translations).includes(browserLang)) {
       setLanguageState(browserLang);
     }
   }, []);
 
   const setLanguage = (lang: string) => {
-    if (translations[lang]) {
+    if (Object.keys(translations).includes(lang)) {
       setLanguageState(lang);
     }
   };

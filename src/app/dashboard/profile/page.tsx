@@ -22,16 +22,25 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useEffect, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDoc } from '@/firebase/firestore/use-doc';
+import { useLanguage } from '@/context/language-provider';
 
 const formSchema = z.object({
   displayName: z.string().min(1, 'Display name is required.'),
   bio: z.string().max(160, 'Bio cannot be longer than 160 characters.'),
+  language: z.string(),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -41,6 +50,7 @@ export default function ProfilePage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { language, setLanguage, languages } = useLanguage();
 
   const userProfileRef = useMemoFirebase(
     () => (user && firestore ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
@@ -54,6 +64,7 @@ export default function ProfilePage() {
     defaultValues: {
       displayName: '',
       bio: '',
+      language: language,
     },
   });
 
@@ -62,9 +73,19 @@ export default function ProfilePage() {
       form.reset({
         displayName: userProfile.displayName || user?.displayName || '',
         bio: userProfile.bio || '',
+        language: userProfile.language || language,
       });
+      if (userProfile.language) {
+        setLanguage(userProfile.language);
+      }
+    } else {
+        form.reset({
+            displayName: user?.displayName || '',
+            bio: '',
+            language: language
+        })
     }
-  }, [userProfile, user, form]);
+  }, [userProfile, user, form, language, setLanguage]);
 
   const onSubmit = (values: ProfileFormValues) => {
     if (!userProfileRef) return;
@@ -72,6 +93,7 @@ export default function ProfilePage() {
     startTransition(async () => {
       try {
         await setDoc(userProfileRef, values, { merge: true });
+        setLanguage(values.language);
         toast({
           title: 'Success!',
           description: 'Your profile has been updated.',
@@ -180,6 +202,28 @@ export default function ProfilePage() {
                   Email address cannot be changed.
                 </p>
               </div>
+               <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                     <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a language" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {languages.map(lang => (
+                             <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="space-y-4">
                 <FormLabel>Profile Picture</FormLabel>
                 <div className="flex items-center gap-4">
