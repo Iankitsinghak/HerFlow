@@ -9,9 +9,6 @@ import Header from '@/components/layout/header';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
 } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -44,39 +41,19 @@ export default function DashboardLayout({
     );
   }
 
-  if (isMobile) {
-    return (
-      <div className="flex min-h-screen">
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetContent side="left" className="p-0 w-72 bg-card">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Navigation Menu</SheetTitle>
-              <SheetDescription>
-                Main navigation links for the HerFlow application.
-              </SheetDescription>
-            </SheetHeader>
-            <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
-          </SheetContent>
-        </Sheet>
-        <div className="flex-1 flex flex-col">
-          <Header showLogo={false} onMobileMenuClick={() => setMobileMenuOpen(true)} />
-          <main className="flex-1 p-6 md:p-8 lg:p-10 bg-background">
-            {children}
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col">
-        <Header showLogo={false} />
-        <main className="flex-1 p-6 md:p-8 lg:p-10 bg-background">
-          {children}
-        </main>
-      </div>
+    <div className="flex min-h-screen flex-col">
+       {isMobile && (
+         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetContent side="left" className="p-0 w-72 bg-card">
+              <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
+            </SheetContent>
+        </Sheet>
+       )}
+      <Header onMobileMenuClick={() => setMobileMenuOpen(true)} />
+      <main className="flex-1 p-6 md:p-8 lg:p-10 bg-background">
+        {children}
+      </main>
     </div>
   );
 }
