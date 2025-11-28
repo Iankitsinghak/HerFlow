@@ -228,7 +228,7 @@ export default function CycleLogPage() {
                 </div>
             </div>
         </CardContent>
-        <CardContent className="flex gap-4">
+        <CardContent className="flex flex-wrap gap-4">
              <Dialog open={isSymptomsDialogOpen} onOpenChange={setIsSymptomsDialogOpen}>
                 <DialogTrigger asChild>
                     <Button>

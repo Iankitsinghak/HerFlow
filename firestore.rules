@@ -27,19 +27,30 @@
  * v13 - Correctly implement hug/unhug security logic.
  */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    match /communityPosts/{postId} {
+      // 1. Anyone can view posts
+      allow read: if true;
+      
+      // 2. Only logged-in users can create posts
+      allow create: if request.auth != null;
 
-    // Helper functions for reusable logic
-    function isSignedIn() {
-      return request.auth != null;
+      // 3. The Update Rule (The Fix)
+      allow update: if request.auth != null && (
+        // Allow if the user is the Author
+        request.auth.uid == resource.data.userId || 
+        
+        // OR Allow if the user is just liking/hugging (only touching these two fields)
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hugs', 'huggedBy'])
+      );
     }
-
-    // Checks if the requesting user's UID matches the provided userId.
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
+    
+    // ... rest of your rules
+  }
+}
     // Checks for ownership on an existing document.
     function isExistingOwner(userIdField) {
       return isSignedIn() && request.auth.uid == resource.data[userIdField];
