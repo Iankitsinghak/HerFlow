@@ -56,35 +56,35 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
-      <div className="container flex h-16 items-center px-4 md:px-6">
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         
-        {isMobile && onMobileMenuClick && user && (
-           <Button variant="ghost" size="icon" className="mr-2" onClick={onMobileMenuClick}>
-              <Menu />
-           </Button>
-        )}
-
         <div className="flex items-center gap-6">
-            <Logo />
-            {!isMobile && user && (
-              <nav className="flex items-center gap-4">
-                {navItems.map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "text-sm font-medium transition-colors hover:text-primary",
-                      pathname === item.href ? "text-primary" : "text-muted-foreground"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-            )}
+          {isMobile && onMobileMenuClick && user && (
+            <Button variant="ghost" size="icon" className="mr-2" onClick={onMobileMenuClick}>
+                <Menu />
+            </Button>
+          )}
+          <Logo />
         </div>
         
-        <div className="ml-auto flex items-center gap-2">
+        {!isMobile && user && (
+          <nav className="flex items-center gap-4">
+            {navItems.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === item.href ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+        
+        <div className="flex items-center gap-2">
           {loading ? (
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
