@@ -193,7 +193,7 @@ export default function WelcomePage() {
                             Explore our curated library of articles on period products available in India, plus gentle, easy-to-understand awareness on topics like PCOS and Thyroid health. Knowledge is power.
                         </p>
                          <Button asChild variant="link" className="mt-4 text-lg">
-                            <Link href="/learn/products">Explore the Guide →</Link>
+                            <Link href="/signup">Explore the Guide →</Link>
                         </Button>
                     </motion.div>
                 </div>
@@ -259,6 +259,8 @@ export default function WelcomePage() {
     </div>
   );
 }
+
+    
 
     
 
