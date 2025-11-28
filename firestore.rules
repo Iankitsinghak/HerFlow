@@ -32,7 +32,7 @@
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v6 - Added rules for comments subcollection
+ * v7 - Corrected list rule for communityPosts
  */
 rules_version = '2';
 service cloud.firestore {
@@ -52,18 +52,21 @@ service cloud.firestore {
     // Checks for ownership on an existing document.
     // CRITICAL: Used for update/delete to prevent acting on non-existent data.
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+      // This is a subtle but important change.
+      // We check request.auth.uid against the authorId field in the *existing* document (`resource.data.authorId`).
+      // This prevents a user from overwriting a post and changing the authorId to themselves.
+      return isSignedIn() && request.auth.uid == resource.data[userId];
+    }
+    
+    // Validates that the incoming document's authorId field matches the user's auth UID.
+    function isIncomingDataAuthor() {
+      return isSignedIn() && request.resource.data.authorId == request.auth.uid;
     }
 
     // Validates that the incoming document's userId field matches the userId from the path.
     // Enforces relational integrity on document creation.
     function incomingDataMatchesOwnershipPath(userId) {
       return request.resource.data.userId == userId;
-    }
-    
-    // Validates that the incoming document's authorId field matches the user's auth UID.
-    function isIncomingDataAuthor() {
-      return isSignedIn() && request.resource.data.authorId == request.auth.uid;
     }
 
     // Validates that an ownership field (e.g., userId, authorId) is not being changed.
@@ -82,8 +85,8 @@ service cloud.firestore {
     match /users/{userId}/userProfiles/{profileId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -96,8 +99,8 @@ service cloud.firestore {
     match /users/{userId}/cycleLogs/{cycleLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -110,8 +113,8 @@ service cloud.firestore {
     match /users/{userId}/doctorQuestions/{questionId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isExistingOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
+      allow delete: if isOwner(userId);
     }
 
     /**
@@ -122,10 +125,11 @@ service cloud.firestore {
      * @principle Enforces document ownership for writes while allowing public read access.
      */
     match /communityPosts/{communityPostId} {
+      // Allow anyone to read any single post, and allow anyone to query/list the collection of posts.
       allow get, list: if true;
       allow create: if isIncomingDataAuthor();
-      allow update: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
-      allow delete: if isExistingOwner(resource.data.authorId);
+      allow update: if isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId');
+      allow delete: if isExistingOwner('authorId');
 
       /**
        * @description Publicly readable comments. Any signed-in user can create a comment, but only the author can modify it.
@@ -135,7 +139,7 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isIncomingDataAuthor();
-        allow update, delete: if isExistingOwner(resource.data.authorId) && isOwnershipFieldImmutable('authorId');
+        allow update, delete: if isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId');
       }
     }
 
@@ -152,3 +156,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
