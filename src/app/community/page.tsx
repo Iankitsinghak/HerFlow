@@ -31,7 +31,6 @@ export interface CommunityPost {
     likedBy: string[];
     commentCount: number;
     createdAt: any; // Allow server timestamp
-    category: string; // This field will no longer be used but is kept for schema compatibility
     isAnonymous?: boolean;
 }
 

@@ -59,7 +59,6 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 likedBy: [],
                 commentCount: 0,
                 createdAt: serverTimestamp(),
-                category: 'general', // Default category
             });
 
             toast({ title: 'Success!', description: 'Your post has been published.' });

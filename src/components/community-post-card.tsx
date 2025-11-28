@@ -66,7 +66,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                 <CardHeader>
                     <div className="flex items-start gap-4">
                         <Avatar>
-                            <AvatarImage src={post.authorAvatar || undefined} />
+                            <AvatarImage src={post.isAnonymous ? undefined : post.authorAvatar || undefined} />
                             <AvatarFallback>
                                 {post.isAnonymous ? <UserCircle/> : getInitials(post.authorName)}
                             </AvatarFallback>
