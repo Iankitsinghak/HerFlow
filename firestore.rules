@@ -24,7 +24,7 @@
  *   prevent spam and maintain data quality. Tag management should be handled by a trusted
  *   backend process or admin role (not defined in this ruleset).
  *
- * v12 - Replaced 'like' with 'hug' feature.
+ * v13 - Correctly implement hug/unhug security logic.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -61,9 +61,9 @@ service cloud.firestore {
     }
     
     // Checks if only a specific set of fields are being updated.
-    function allFieldsUnchangedExcept(allowedFields) {
+    function isOnlyHugFieldsChanging() {
         let changedKeys = request.resource.data.diff(resource.data).affectedKeys;
-        return changedKeys.hasOnly(allowedFields);
+        return changedKeys.hasOnly(['hugs', 'huggedBy']);
     }
     
     // Checks if a user is giving a hug to a post
@@ -72,17 +72,11 @@ service cloud.firestore {
       let existing = resource.data;
       
       // Ensure only hugs and huggedBy are being changed
-      if (!allFieldsUnchangedExcept(['hugs', 'huggedBy'])) {
-        return false;
-      }
-      
-      // Ensure the hug count is only incremented by 1
-      if (incoming.hugs != existing.hugs + 1) {
-        return false;
-      }
-      
-      // Ensure the user's ID is being added to the huggedBy array
-      return incoming.huggedBy.size() == existing.huggedBy.size() + 1 && incoming.huggedBy.hasAny([request.auth.uid]);
+      return isOnlyHugFieldsChanging()
+          // Ensure the hug count is only incremented by 1
+          && incoming.hugs == existing.hugs + 1
+          // Ensure the user's ID is being added to the huggedBy array and no one else's
+          && incoming.huggedBy == existing.huggedBy.union([request.auth.uid]);
     }
     
     // Checks if a user is removing a hug from a post
@@ -91,17 +85,11 @@ service cloud.firestore {
       let existing = resource.data;
       
       // Ensure only hugs and huggedBy are being changed
-       if (!allFieldsUnchangedExcept(['hugs', 'huggedBy'])) {
-        return false;
-      }
-      
-      // Ensure the hug count is only decremented by 1
-      if (incoming.hugs != existing.hugs - 1) {
-        return false;
-      }
-      
-      // Ensure the user's ID is being removed from the huggedBy array
-      return incoming.huggedBy.size() == existing.huggedBy.size() - 1 && !incoming.huggedBy.hasAny([request.auth.uid]);
+      return isOnlyHugFieldsChanging()
+          // Ensure the hug count is only decremented by 1
+          && incoming.hugs == existing.hugs - 1
+          // Ensure the user's ID is being removed from the huggedBy array
+          && incoming.huggedBy == existing.huggedBy.difference(debug([request.auth.uid]));
     }
 
     match /users/{userId}/userProfiles/{profileId} {
@@ -133,7 +121,7 @@ service cloud.firestore {
       // 1. The user is the original author and is not changing the authorId (for general edits).
       // 2. The user is giving a hug.
       // 3. The user is removing a hug.
-      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId') && !allFieldsUnchangedExcept(['hugs', 'huggedBy'])) || 
+      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId') && !isOnlyHugFieldsChanging()) || 
                        (isSignedIn() && (isGivingHug() || isRemovingHug()));
       
       allow delete: if isExistingOwner('authorId');
