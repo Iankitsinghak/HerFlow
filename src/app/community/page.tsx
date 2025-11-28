@@ -9,6 +9,7 @@ import Link from "next/link";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -74,7 +75,10 @@ export default function CommunityPage() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Create a new post</DialogTitle>
+                                <DialogTitle>Share your thoughts</DialogTitle>
+                                <DialogDescription>
+                                    Your story matters. Please be kind and respectful of others.
+                                </DialogDescription>
                             </DialogHeader>
                             <CreatePostForm onPostCreated={() => setIsCreatePostOpen(false)} />
                         </DialogContent>

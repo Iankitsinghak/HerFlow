@@ -8,11 +8,12 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { DialogFooter } from './ui/dialog';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.').max(100, 'Title is too long.'),
@@ -75,61 +76,65 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Post Title</FormLabel>
-                            <FormControl>
-                                <Input placeholder="A catchy title for your post" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-4 px-1">
+                    <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Post Title</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="A catchy title for your post" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Content</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Share your thoughts with the community..." className="min-h-[120px]" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                
-                <FormField
-                    control={form.control}
-                    name="isAnonymous"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                            <div className="space-y-0.5">
-                                <FormLabel>Post Anonymously</FormLabel>
-                                <p className="text-[0.8rem] text-muted-foreground">
-                                    Your name and avatar will be hidden.
-                                </p>
-                            </div>
-                            <FormControl>
-                                <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                />
-                            </FormControl>
-                        </FormItem>
-                    )}
-                />
-
-                <div className="flex justify-end">
-                    <Button type="submit" disabled={isSubmitting}>
+                    <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Content</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Share your thoughts with the community..." className="min-h-[120px]" {...field} />
+                                </FormControl>
+                                 <FormDescription>
+                                    Your story can help others.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    
+                    <FormField
+                        control={form.control}
+                        name="isAnonymous"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg bg-muted/50 p-3 mt-6">
+                                <div className="space-y-0.5">
+                                    <FormLabel>Post Anonymously</FormLabel>
+                                    <FormDescription className="text-xs">
+                                        Your name and avatar will be hidden.
+                                    </FormDescription>
+                                </div>
+                                <FormControl>
+                                    <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+                <DialogFooter>
+                    <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                         {isSubmitting ? 'Posting...' : 'Create Post'}
                     </Button>
-                </div>
+                </DialogFooter>
             </form>
         </Form>
     );
