@@ -13,21 +13,8 @@ import { FloatingPetalsBackground } from '@/components/floating-petals-backgroun
 import { CheckCircle, Heart, Users, Bot, Microscope, HeartHandshake, Lock } from 'lucide-react';
 import Image from 'next/image';
 import { TabbedFeatures } from '@/components/tabbed-features';
+import { TestimonialsCarousel } from '@/components/testimonials-carousel';
 
-
-const TestimonialCard = ({ quote, author, role }: { quote: string, author: string, role: string }) => (
-    <motion.div
-        className="bg-white/80 dark:bg-black/30 backdrop-blur-xl rounded-2xl p-6 shadow-md border border-pink-100/50 dark:border-pink-900/20"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true, amount: 0.3 }}
-    >
-        <p className="text-foreground/80 italic">"{quote}"</p>
-        <p className="mt-4 font-semibold text-primary">{author}</p>
-        <p className="text-sm text-muted-foreground">{role}</p>
-    </motion.div>
-);
 
 const StepCard = ({ step, title, description }: { step: string, title: string, description: string }) => (
     <motion.div
@@ -205,20 +192,9 @@ export default function WelcomePage() {
 
 
             {/* Testimonials Section */}
-            <section className="w-full max-w-5xl mx-auto py-24">
+            <section className="w-full max-w-6xl mx-auto py-24 overflow-hidden">
                 <h2 className="text-3xl font-headline font-semibold text-foreground mb-12">What Our Members Are Saying</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <TestimonialCard 
-                        quote="HerFlow helped me finally understand my body. The daily plans are a game-changer for my PMS."
-                        author="Sarah J."
-                        role="Member since 2023"
-                    />
-                    <TestimonialCard 
-                        quote="I've never felt so seen. The community is so supportive, and the AI chat feels like talking to a kind friend."
-                        author="Maya R."
-                        role="Member since 2024"
-                    />
-                </div>
+                <TestimonialsCarousel />
             </section>
 
              {/* Final CTA Section */}
