@@ -12,13 +12,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, Menu, Globe } from "lucide-react";
 import { Logo } from "../logo";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { useState } from "react";
 import DashboardSidebar from "./dashboard-sidebar";
+import { useLanguage } from "@/context/language-provider";
 
 const navLinks = [
     { href: "/community", label: "Community" },
@@ -29,6 +34,7 @@ const navLinks = [
 export default function Header({ showLogo = true, onMobileMenuClick }: { showLogo?: boolean, onMobileMenuClick?: () => void }) {
   const { user, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { setLanguage, languages } = useLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -82,7 +88,22 @@ export default function Header({ showLogo = true, onMobileMenuClick }: { showLog
             ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Globe className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {languages.map(lang => (
+                  <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)}>
+                    {lang.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          
           {loading ? (
             <div className="flex items-center gap-4">
               <div className="h-8 w-20 rounded-md bg-muted animate-pulse" />
