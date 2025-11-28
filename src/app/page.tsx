@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { FloatingPetalsBackground } from '@/components/floating-petals-background';
-import { CheckCircle, Heart, Users, Bot } from 'lucide-react';
+import { CheckCircle, Heart, Users, Bot, Microscope, HeartHandshake, Lock } from 'lucide-react';
 import Image from 'next/image';
 import { TabbedFeatures } from '@/components/tabbed-features';
 
@@ -44,6 +44,22 @@ const StepCard = ({ step, title, description }: { step: string, title: string, d
         <p className="text-muted-foreground mt-1">{description}</p>
     </motion.div>
 );
+
+const ValueCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
+     <motion.div
+        className="flex flex-col items-center text-center"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true, amount: 0.5 }}
+    >
+        <div className="flex items-center justify-center h-20 w-20 bg-primary/10 text-primary rounded-full mb-4">
+            {icon}
+        </div>
+        <h3 className="font-headline text-lg font-semibold">{title}</h3>
+        <p className="text-muted-foreground mt-1 max-w-xs">{description}</p>
+    </motion.div>
+)
 
 
 export default function WelcomePage() {
@@ -164,6 +180,29 @@ export default function WelcomePage() {
                      <Image src="https://picsum.photos/seed/women-supporting/600/500" alt="Two women supporting each other" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="women supporting" />
                 </motion.div>
             </section>
+            
+            {/* Trust & Values Section */}
+            <section className="w-full max-w-5xl mx-auto py-24">
+                 <h2 className="text-3xl font-headline font-semibold text-foreground mb-12">Built on a Foundation of Trust</h2>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                     <ValueCard 
+                        icon={<Microscope className="h-8 w-8" />}
+                        title="Science-based"
+                        description="Our insights are grounded in scientific research to provide you with reliable and accurate information."
+                     />
+                     <ValueCard 
+                        icon={<HeartHandshake className="h-8 w-8" />}
+                        title="From a women-led team"
+                        description="Created with empathy and understanding by a team that shares your experiences."
+                     />
+                     <ValueCard 
+                        icon={<Lock className="h-8 w-8" />}
+                        title="Strict data privacy"
+                        description="Your personal data is yours alone. We are committed to protecting your privacy with the highest standards."
+                     />
+                 </div>
+            </section>
+
 
             {/* Testimonials Section */}
             <section className="w-full max-w-5xl mx-auto py-24">
@@ -212,4 +251,3 @@ export default function WelcomePage() {
     </div>
   );
 }
-
