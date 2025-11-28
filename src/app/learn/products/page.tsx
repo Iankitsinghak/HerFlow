@@ -1,17 +1,27 @@
 
 import { PeriodProductsGuide } from "@/components/info/PeriodProductsGuide";
 import Header from "@/components/layout/header";
+import { HeartHandshake } from "lucide-react";
 
 export default function ProductsPage() {
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
-            <div className="container mx-auto px-4 md:px-6 py-12">
-                 <div className="text-center md:text-left mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold font-headline">Health Guide</h1>
-                    <p className="text-lg text-muted-foreground mt-2">An informational guide to products & common health topics in India.</p>
+            <div className="flex-1 bg-gradient-to-b from-background to-pink-50 dark:from-black dark:to-fuchsia-950/10">
+                <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
+                    <div className="text-center max-w-3xl mx-auto mb-12">
+                        <div className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full p-3 mb-4">
+                            <HeartHandshake className="h-8 w-8" />
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground">
+                            Your Gentle Health Guide
+                        </h1>
+                        <p className="text-lg text-muted-foreground mt-3">
+                            A supportive space to learn about your body. Explore common products and gentle health topics with clarity and confidence.
+                        </p>
+                    </div>
+                    <PeriodProductsGuide />
                 </div>
-                <PeriodProductsGuide />
             </div>
         </div>
     )
