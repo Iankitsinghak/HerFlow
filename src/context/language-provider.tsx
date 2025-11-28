@@ -10,6 +10,8 @@ import ta from '@/locales/ta.json';
 import te from '@/locales/te.json';
 import kn from '@/locales/kn.json';
 import bn from '@/locales/bn.json';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const translations: Record<string, any> = {
   en,
@@ -43,14 +45,33 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState('en');
+  const [language, setLanguageState] = useState('en'); // Default to English
+  const { user } = useUser();
+  const firestore = useFirestore();
 
+  // Reference to the user's profile to get their saved language
+  const userProfileRef = useMemoFirebase(
+    () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
+    [user, firestore]
+  );
+  const { data: userProfile } = useDoc<any>(userProfileRef);
+
+  // Effect to set the language based on a priority order
   useEffect(() => {
-    const browserLang = navigator.language.split('-')[0];
-    if (Object.keys(translations).includes(browserLang)) {
-      setLanguageState(browserLang);
+    // Priority 1: User's saved preference in their profile
+    if (userProfile?.language && translations[userProfile.language]) {
+      setLanguageState(userProfile.language);
+      return;
     }
-  }, []);
+    // Priority 2: Browser's language preference
+    const browserLang = navigator.language.split('-')[0];
+    if (translations[browserLang]) {
+      setLanguageState(browserLang);
+      return;
+    }
+    // Priority 3: Fallback to English
+    setLanguageState('en');
+  }, [userProfile]); // Re-run when the user profile (and their saved language) is loaded
 
   const setLanguage = (lang: string) => {
     if (Object.keys(translations).includes(lang)) {

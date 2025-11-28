@@ -39,7 +39,7 @@ import { useLanguage } from '@/context/language-provider';
 
 const formSchema = z.object({
   displayName: z.string().min(1, 'Display name is required.'),
-  bio: z.string().max(160, 'Bio cannot be longer than 160 characters.'),
+  bio: z.string().max(160, 'Bio cannot be longer than 160 characters.').optional(),
   language: z.string(),
 });
 
@@ -75,17 +75,14 @@ export default function ProfilePage() {
         bio: userProfile.bio || '',
         language: userProfile.language || language,
       });
-      if (userProfile.language) {
-        setLanguage(userProfile.language);
-      }
-    } else {
+    } else if (user) {
         form.reset({
-            displayName: user?.displayName || '',
+            displayName: user.displayName || '',
             bio: '',
             language: language
         })
     }
-  }, [userProfile, user, form, language, setLanguage]);
+  }, [userProfile, user, form, language]);
 
   const onSubmit = (values: ProfileFormValues) => {
     if (!userProfileRef) return;
@@ -93,7 +90,8 @@ export default function ProfilePage() {
     startTransition(async () => {
       try {
         await setDoc(userProfileRef, values, { merge: true });
-        setLanguage(values.language);
+        // This is the critical part: update the live language state
+        setLanguage(values.language); 
         toast({
           title: 'Success!',
           description: 'Your profile has been updated.',
