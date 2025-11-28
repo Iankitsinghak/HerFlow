@@ -75,7 +75,7 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col items-center space-y-6">
         <Logo />
-        <Card className="w-full max-w-sm">
+        <Card className="w-full max-w-sm bg-card/80 backdrop-blur-lg">
             <CardHeader>
                 <CardTitle className="text-2xl font-headline">Sign Up</CardTitle>
                 <CardDescription>
@@ -98,7 +98,7 @@ export default function SignupPage() {
                             <span className="w-full border-t" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                            <span className="bg-card/80 px-2 text-muted-foreground">Or continue with</span>
                         </div>
                     </div>
                 </div>
