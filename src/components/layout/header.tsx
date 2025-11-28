@@ -16,34 +16,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-    LayoutDashboard, 
     LogOut, 
     User as UserIcon, 
     Menu,
-    Home,
-    Calendar,
-    Users,
-    MessageSquare,
-    CircleHelp,
-    BookOpen
 } from "lucide-react";
 import { Logo } from "../logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+
 
 const navItems = [
-  { href: "/dashboard", icon: <Home className="h-4 w-4" />, label: "Dashboard" },
-  { href: "/dashboard/profile", icon: <UserIcon className="h-4 w-4" />, label: "Profile" },
-  { href: "/dashboard/cycle-log", icon: <Calendar className="h-4 w-4" />, label: "Cycle Log" },
-  { href: "/community", icon: <Users className="h-4 w-4" />, label: "Community" },
-  { href: "/ask-doctor", icon: <CircleHelp className="h-4 w-4" />, label: "Ask a Doctor" },
-  { href: "/ai-chat", icon: <MessageSquare className="h-4 w-4" />, label: "Woomania" },
-  { href: "/learn/products", icon: <BookOpen className="h-4 w-4" />, label: "Health Guide" },
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard/cycle-log", label: "Cycle Log" },
+  { href: "/community", label: "Community" },
+  { href: "/ask-doctor", label: "Ask a Doctor" },
+  { href: "/ai-chat", label: "Woomania" },
+  { href: "/learn/products", label: "Health Guide" },
 ];
 
 
 export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await logout();
@@ -52,7 +48,7 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
   const getInitials = (name?: string | null) => {
     if (!name) return "?";
     const parts = name.split(' ');
-    if (parts.length > 1) {
+    if (parts.length > 1 && parts[1]) {
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     return name.charAt(0).toUpperCase();
@@ -62,16 +58,30 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       <div className="container flex h-16 items-center px-4 md:px-6">
         
-        {isMobile && onMobileMenuClick && (
+        {isMobile && onMobileMenuClick && user && (
            <Button variant="ghost" size="icon" className="mr-2" onClick={onMobileMenuClick}>
               <Menu />
            </Button>
         )}
 
-        <div className="flex-1">
-            <div className="flex justify-center md:justify-start">
-                <Logo />
-            </div>
+        <div className="flex items-center gap-6">
+            <Logo />
+            {!isMobile && user && (
+              <nav className="flex items-center gap-4">
+                {navItems.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      pathname === item.href ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
         </div>
         
         <div className="ml-auto flex items-center gap-2">
@@ -98,14 +108,12 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    {navItems.map(item => (
-                         <DropdownMenuItem key={item.href} asChild>
-                            <Link href={item.href}>
-                                {item.icon}
-                                <span>{item.label}</span>
-                            </Link>
-                        </DropdownMenuItem>
-                    ))}
+                    <DropdownMenuItem asChild>
+                        <Link href="/dashboard/profile">
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            <span>Profile</span>
+                        </Link>
+                    </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -115,7 +123,7 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Button variant="ghost" asChild>
                 <Link href="/login">Log In</Link>
               </Button>

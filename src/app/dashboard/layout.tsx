@@ -51,8 +51,10 @@ export default function DashboardLayout({
         </Sheet>
        )}
       <Header onMobileMenuClick={() => setMobileMenuOpen(true)} />
-      <main className="flex-1 p-6 md:p-8 lg:p-10 bg-background">
-        {children}
+      <main className="flex-1">
+        <div className="container mx-auto p-6 md:p-8 lg:p-10">
+          {children}
+        </div>
       </main>
     </div>
   );
