@@ -12,21 +12,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { communityCategories } from '@/config/community';
-import { Alert, AlertDescription } from './ui/alert';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.').max(100, 'Title is too long.'),
   content: z.string().min(10, 'Post content must be at least 10 characters.').max(2000, 'Post is too long.'),
-  category: z.string().min(1, "Please select a category."),
   isAnonymous: z.boolean().default(false),
 });
 
@@ -45,12 +35,9 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
         defaultValues: {
             title: "",
             content: "",
-            category: "period-problems",
             isAnonymous: false,
         },
     });
-
-    const categoryWatcher = form.watch('category');
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         if (!user || !firestore) {
@@ -67,12 +54,12 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 authorAvatar: values.isAnonymous ? null : user.photoURL || null,
                 title: values.title,
                 content: values.content,
-                category: values.category,
                 isAnonymous: values.isAnonymous,
                 likes: 0,
                 likedBy: [],
                 commentCount: 0,
                 createdAt: serverTimestamp(),
+                category: 'general', // Default category
             });
 
             toast({ title: 'Success!', description: 'Your post has been published.' });
@@ -101,29 +88,6 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                             </FormControl>
                             <FormMessage />
                         </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {communityCategories.map(cat => (
-                               <SelectItem key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
                     )}
                 />
 
@@ -161,15 +125,6 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                         </FormItem>
                     )}
                 />
-                
-                {categoryWatcher === 'just-venting' && (
-                    <Alert variant="default" className="bg-amber-50 border-amber-200 text-amber-900">
-                        <AlertDescription>
-                           This is a safe space to vent. We recommend posting anonymously for your comfort.
-                        </AlertDescription>
-                    </Alert>
-                )}
-
 
                 <div className="flex justify-end">
                     <Button type="submit" disabled={isSubmitting}>

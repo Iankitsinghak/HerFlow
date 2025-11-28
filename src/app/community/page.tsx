@@ -15,12 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import { CreatePostForm } from "@/components/create-post-form";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, where, Query } from "firebase/firestore";
+import { collection, query, orderBy, Query } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
 import { CommunityPostCard } from "@/components/community-post-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { communityCategories } from "@/config/community";
 
 export interface CommunityPost {
     id?: string;
@@ -33,7 +31,7 @@ export interface CommunityPost {
     likedBy: string[];
     commentCount: number;
     createdAt: any; // Allow server timestamp
-    category: string;
+    category: string; // This field will no longer be used but is kept for schema compatibility
     isAnonymous?: boolean;
 }
 
@@ -44,7 +42,6 @@ export default function CommunityPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
-    const [filterCategory, setFilterCategory] = useState<string>('all');
     
     const postsCollectionRef = useMemoFirebase(
         () => (firestore ? collection(firestore, 'communityPosts') : null),
@@ -53,15 +50,9 @@ export default function CommunityPage() {
 
     const postsQuery = useMemoFirebase(() => {
         if (!postsCollectionRef) return null;
-        
-        const queries: Query[] = [orderBy('createdAt', 'desc')];
-        if (filterCategory !== 'all') {
-            queries.unshift(where('category', '==', filterCategory));
-        }
-
-        return query(postsCollectionRef, ...queries);
-
-    }, [postsCollectionRef, filterCategory]);
+        // Always fetch all posts, ordered by creation date
+        return query(postsCollectionRef, orderBy('createdAt', 'desc'));
+    }, [postsCollectionRef]);
 
     const { data: posts, isLoading } = useCollection<CommunityPost>(postsQuery);
 
@@ -96,17 +87,6 @@ export default function CommunityPage() {
                 )}
             </div>
 
-            <div className="mb-6">
-                <Tabs value={filterCategory} onValueChange={setFilterCategory}>
-                    <TabsList className="flex flex-wrap h-auto">
-                        <TabsTrigger value="all">All</TabsTrigger>
-                        {communityCategories.map(cat => (
-                             <TabsTrigger key={cat.value} value={cat.value}>{cat.emoji} {cat.label}</TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
-            </div>
-            
             <div className="space-y-6">
                 {isLoading ? (
                     <>
@@ -120,7 +100,7 @@ export default function CommunityPage() {
                     ))
                 ) : (
                     <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                        <h3 className="text-xl font-semibold">No posts in this category yet</h3>
+                        <h3 className="text-xl font-semibold">No posts yet</h3>
                         <p className="text-muted-foreground mt-2">Be the first one to share something! 💬</p>
                     </div>
                 )}

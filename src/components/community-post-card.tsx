@@ -14,8 +14,6 @@ import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentSection } from './comment-section';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-import { Badge } from './ui/badge';
-import { communityCategories } from '@/config/community';
 
 type CommunityPostWithId = WithId<CommunityPost>;
 
@@ -30,7 +28,6 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
-    const category = communityCategories.find(c => c.value === post.category);
 
     const handleLike = async () => {
         if (!user || !firestore || isLiking) return;
@@ -80,7 +77,6 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                                 <span>Posted by {post.isAnonymous ? 'Anonymous' : post.authorName} &bull; {postDate}</span>
                             </CardDescription>
                         </div>
-                        {category && <Badge variant="secondary">{category.emoji} {category.label}</Badge>}
                     </div>
                 </CardHeader>
                 <CardContent>
