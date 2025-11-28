@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { FloatingPetalsBackground } from '@/components/floating-petals-background';
-import { CheckCircle, Heart, Users, Bot, Microscope, HeartHandshake, Lock } from 'lucide-react';
+import { CheckCircle, Heart, Users, Bot, Microscope, HeartHandshake, Lock, ShieldCheck, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import { TabbedFeatures } from '@/components/tabbed-features';
 import { TestimonialsCarousel } from '@/components/testimonials-carousel';
@@ -156,6 +156,13 @@ export default function WelcomePage() {
                                 <p className="text-muted-foreground">{t('communityDescription')}</p>
                             </div>
                         </div>
+                         <div className="flex gap-4">
+                            <ShieldCheck className="h-8 w-8 text-primary shrink-0 mt-1" />
+                            <div>
+                                <h4 className="font-semibold text-foreground">Anonymous & Safe Sharing</h4>
+                                <p className="text-muted-foreground">Choose to post anonymously in the community. Your privacy is a priority, so you can share and ask questions with confidence.</p>
+                            </div>
+                        </div>
                     </div>
                 </motion.div>
                  <motion.div
@@ -169,6 +176,30 @@ export default function WelcomePage() {
                 </motion.div>
             </section>
             
+            {/* Health Guide Section */}
+            <section className="w-full bg-pink-50/50 dark:bg-fuchsia-950/10 py-24">
+                <div className="container mx-auto max-w-5xl text-center">
+                     <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true, amount: 0.5 }}
+                    >
+                        <div className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full p-3 mb-4">
+                            <BookOpen className="h-8 w-8" />
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-headline font-bold text-foreground">A Gentle Health Guide</h2>
+                        <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
+                            Explore our curated library of articles on period products available in India, plus gentle, easy-to-understand awareness on topics like PCOS and Thyroid health. Knowledge is power.
+                        </p>
+                         <Button asChild variant="link" className="mt-4 text-lg">
+                            <Link href="/learn/products">Explore the Guide →</Link>
+                        </Button>
+                    </motion.div>
+                </div>
+            </section>
+
+
             {/* Trust & Values Section */}
             <section className="w-full max-w-5xl mx-auto py-24">
                  <h2 className="text-3xl font-headline font-semibold text-foreground mb-12">{t('trustTitle')}</h2>
@@ -228,5 +259,7 @@ export default function WelcomePage() {
     </div>
   );
 }
+
+    
 
     

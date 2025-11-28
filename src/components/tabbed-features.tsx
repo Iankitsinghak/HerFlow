@@ -4,8 +4,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart2, CalendarDays, Sparkles, Table } from 'lucide-react';
+import { BarChart2, CalendarDays, Sparkles, CheckSquare, Sun } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { Checkbox } from './ui/checkbox';
 
 const features = [
   {
@@ -66,7 +67,7 @@ const features = [
     id: 'insights',
     title: 'Visual Health Insights',
     icon: <BarChart2 />,
-    description: 'Transform your logs into beautiful, easy-to-read charts that reveal patterns in your cycle length, mood, and symptoms.',
+    description: 'Transform your logs into beautiful, easy-to-read charts that reveal patterns in your cycle.',
     content: (
         <Card className="w-full h-full bg-white/50 dark:bg-zinc-900/50 p-4">
              <div className="flex justify-between items-center mb-2">
@@ -88,35 +89,47 @@ const features = [
     ),
   },
   {
-    id: 'ai-planner',
-    title: 'AI Wellness Planner',
-    icon: <Sparkles />,
-    description: 'Based on your symptoms, our AI companion generates a personalized daily plan to help you feel your best.',
+    id: 'ready-kit',
+    title: 'Personalized Ready-Kit',
+    icon: <CheckSquare />,
+    description: 'Build your own custom checklist of period essentials, so you’re always prepared and comfortable.',
     content: (
          <Card className="w-full h-full bg-white/50 dark:bg-zinc-900/50 p-4">
              <div className="flex justify-between items-center mb-3">
-                <p className="font-bold text-sm text-foreground">Your Daily Wellness Plan</p>
+                <p className="font-bold text-sm text-foreground">My Period-Ready Kit</p>
+            </div>
+            <div className="space-y-2 text-left">
+                <div className="flex items-center p-2 bg-background/70 rounded-lg"><Checkbox checked id="i1" className="mr-2 h-4 w-4" /><label htmlFor="i1" className="text-sm">🩸 Pads or tampons in bag</label></div>
+                <div className="flex items-center p-2 bg-background/70 rounded-lg"><Checkbox checked id="i2" className="mr-2 h-4 w-4" /><label htmlFor="i2" className="text-sm">🧣 Pain relief patch</label></div>
+                <div className="flex items-center p-2 bg-background/70 rounded-lg"><Checkbox id="i3" className="mr-2 h-4 w-4" /><label htmlFor="i3" className="text-sm">💧 Water bottle</label></div>
+                <div className="flex items-center p-2 bg-background/70 rounded-lg"><Checkbox id="i4" className="mr-2 h-4 w-4" /><label htmlFor="i4" className="text-sm">🍫 Dark chocolate for cravings</label></div>
+            </div>
+        </Card>
+    ),
+  },
+  {
+    id: 'ai-planner',
+    title: 'AI & Daily Tips',
+    icon: <Sparkles />,
+    description: 'Get AI wellness plans based on your symptoms, plus daily comfort tips for the weather.',
+    content: (
+         <Card className="w-full h-full bg-white/50 dark:bg-zinc-900/50 p-4">
+             <div className="flex justify-between items-center mb-3">
+                <p className="font-bold text-sm text-foreground">Today's Comfort Tip</p>
             </div>
             <div className="space-y-3 text-left">
                 <div className="flex gap-3">
-                    <div className="bg-primary/10 text-primary p-2 rounded-full h-fit"><Sparkles className="h-4 w-4" /></div>
+                    <div className="bg-primary/10 text-primary p-2 rounded-full h-fit"><Sun className="h-4 w-4" /></div>
                     <div>
-                        <p className="font-semibold text-xs text-primary">Morning</p>
-                        <p className="text-sm">Start with gentle stretching to ease cramps and boost your mood.</p>
+                        <p className="font-semibold text-xs text-primary">Hot Weather Tip</p>
+                        <p className="text-sm">It’s quite hot today — stay hydrated and keep an extra pad handy, as humidity can feel uncomfortable.</p>
                     </div>
                 </div>
                  <div className="flex gap-3">
                     <div className="bg-primary/10 text-primary p-2 rounded-full h-fit"><Sparkles className="h-4 w-4" /></div>
                     <div>
-                        <p className="font-semibold text-xs text-primary">Afternoon</p>
-                        <p className="text-sm">Enjoy a warm cup of ginger tea to help with bloating and digestion.</p>
-                    </div>
-                </div>
-                 <div className="flex gap-3">
-                    <div className="bg-primary/10 text-primary p-2 rounded-full h-fit"><Sparkles className="h-4 w-4" /></div>
-                    <div>
-                        <p className="font-semibold text-xs text-primary">Evening</p>
-                        <p className="text-sm">A warm bath with Epsom salts can help relax your muscles and mind.</p>
+                        <p className="font-semibold text-xs text-primary">AI Wellness Plan</p>
+                        <p className="text-sm">Based on your mood, a gentle walk and some chamomile tea could help you relax this evening.</p>
                     </div>
                 </div>
             </div>
