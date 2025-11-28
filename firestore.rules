@@ -4,7 +4,8 @@
  * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
  * the creator can access their data. For public content (community posts, comments), it
  * employs a "public read, owner write" model, allowing anyone to view the content but
- * restricting modifications to the original author.
+ * restricting modifications to the original author. A special exception is made for "hugging"
+ * a post, which any authenticated user can do.
  *
  * Data Structure: The data is structurally segregated based on access patterns. All private
  * user data is nested within a user-specific path, `/users/{userId}`, which simplifies and
@@ -18,22 +19,12 @@
  *   owner, preventing any cross-user data leakage.
  * - Public Content Integrity: While `communityPosts` and their `comments` are publicly readable,
  *   only the authenticated author can create, update, or delete their own posts/comments. The
- *   exception is for 'liking' a post, which any authenticated user can do.
+ *   exception is for 'hugging' a post, which any authenticated user can do.
  * - Read-Only Tags: The `/tags` collection is publicly readable but not writable by clients to
  *   prevent spam and maintain data quality. Tag management should be handled by a trusted
  *   backend process or admin role (not defined in this ruleset).
  *
- * Denormalization for Authorization: To ensure fast and simple authorization checks, this
- * ruleset relies on denormalized ownership fields. For example, `communityPosts` and `comments`
- * contain an `authorId`, and all documents within the `/users/{userId}` path contain a `userId`.
- * This avoids costly and complex cross-collection `get()` calls in rules.
- *
- * Structural Segregation: The separation of private data into user subcollections (`/users/{userId}/cycleLogs`)
- * and public data into top-level collections (`/communityPosts`) is a deliberate design choice. It makes
- * list operations more secure and performant, as rules can safely grant list access on an entire
- * collection without needing to filter the results.
- *
- * v11 - Explicitly handle like/unlike operations on communityPosts.
+ * v12 - Replaced 'like' with 'hug' feature.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -45,16 +36,12 @@ service cloud.firestore {
     }
 
     // Checks if the requesting user's UID matches the provided userId.
-    // Used for path-based ownership checks.
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     // Checks for ownership on an existing document.
-    // CRITICAL: Used for update/delete to prevent acting on non-existent data.
     function isExistingOwner(userIdField) {
-      // We check request.auth.uid against the authorId field in the *existing* document (`resource.data.authorId`).
-      // This prevents a user from overwriting a post and changing the authorId to themselves.
       return isSignedIn() && request.auth.uid == resource.data[userIdField];
     }
     
@@ -64,13 +51,11 @@ service cloud.firestore {
     }
 
     // Validates that the incoming document's userId field matches the userId from the path.
-    // Enforces relational integrity on document creation.
     function incomingDataMatchesOwnershipPath(userId) {
       return request.resource.data.userId == userId;
     }
 
     // Validates that an ownership field (e.g., userId, authorId) is not being changed.
-    // Enforces immutability of ownership on document updates.
     function isOwnershipFieldImmutable(fieldName) {
       return request.resource.data[fieldName] == resource.data[fieldName];
     }
@@ -81,53 +66,44 @@ service cloud.firestore {
         return changedKeys.hasOnly(allowedFields);
     }
     
-    // Checks if a user is liking a post
-    function isLikingPost() {
+    // Checks if a user is giving a hug to a post
+    function isGivingHug() {
       let incoming = request.resource.data;
       let existing = resource.data;
-      let diff = incoming.diff(existing);
       
-      // Ensure only likes and likedBy are being changed
-      if (!diff.affectedKeys.hasOnly(['likes', 'likedBy'])) {
+      // Ensure only hugs and huggedBy are being changed
+      if (!allFieldsUnchangedExcept(['hugs', 'huggedBy'])) {
         return false;
       }
       
-      // Ensure the like count is only incremented by 1
-      if (incoming.likes != existing.likes + 1) {
+      // Ensure the hug count is only incremented by 1
+      if (incoming.hugs != existing.hugs + 1) {
         return false;
       }
       
-      // Ensure the user's ID is being added to the likedBy array
-      return incoming.likedBy == existing.likedBy.concat([request.auth.uid]);
+      // Ensure the user's ID is being added to the huggedBy array
+      return incoming.huggedBy.size() == existing.huggedBy.size() + 1 && incoming.huggedBy.hasAny([request.auth.uid]);
     }
     
-    // Checks if a user is unliking a post
-    function isUnlikingPost() {
+    // Checks if a user is removing a hug from a post
+    function isRemovingHug() {
       let incoming = request.resource.data;
       let existing = resource.data;
-      let diff = incoming.diff(existing);
       
-      // Ensure only likes and likedBy are being changed
-      if (!diff.affectedKeys.hasOnly(['likes', 'likedBy'])) {
+      // Ensure only hugs and huggedBy are being changed
+       if (!allFieldsUnchangedExcept(['hugs', 'huggedBy'])) {
         return false;
       }
       
-      // Ensure the like count is only decremented by 1
-      if (incoming.likes != existing.likes - 1) {
+      // Ensure the hug count is only decremented by 1
+      if (incoming.hugs != existing.hugs - 1) {
         return false;
       }
       
-      // Ensure the user's ID is being removed from the likedBy array
-      return incoming.likedBy.size() == existing.likedBy.size() - 1 && !incoming.likedBy.hasAny([request.auth.uid]);
+      // Ensure the user's ID is being removed from the huggedBy array
+      return incoming.huggedBy.size() == existing.huggedBy.size() - 1 && !incoming.huggedBy.hasAny([request.auth.uid]);
     }
 
-    /**
-     * @description Controls access to a user's private profile. Only the owner can read or write their own profile.
-     * @path /users/{userId}/userProfiles/{profileId}
-     * @allow (auth.uid="user123") -> (create) /users/user123/userProfiles/user123 with {userId: "user123"}
-     * @deny  (auth.uid="user456") -> (get) /users/user123/userProfiles/user123
-     * @principle Restricts access to a user's own data tree and enforces relational integrity.
-     */
     match /users/{userId}/userProfiles/{profileId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
@@ -135,13 +111,6 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Controls access to a user's private cycle logs. This data is highly sensitive and strictly owned.
-     * @path /users/{userId}/cycleLogs/{cycleLogId}
-     * @allow (auth.uid="user123") -> (get) /users/user123/cycleLogs/log-abc
-     * @deny  (auth.uid="user456") -> (list) /users/user123/cycleLogs
-     * @principle Restricts access to a user's own data tree and enforces relational integrity.
-     */
     match /users/{userId}/cycleLogs/{cycleLogId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
@@ -149,13 +118,6 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Controls access to a user's private questions for doctors. This data is sensitive and strictly owned.
-     * @path /users/{userId}/doctorQuestions/{questionId}
-     * @allow (auth.uid="user123") -> (delete) /users/user123/doctorQuestions/q-abc
-     * @deny  (auth.uid="user456") -> (create) /users/user123/doctorQuestions/q-def with {userId: "user123"}
-     * @principle Restricts access to a user's own data tree and enforces relational integrity.
-     */
     match /users/{userId}/doctorQuestions/{questionId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
@@ -163,31 +125,19 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Publicly readable community posts. Any signed-in user can create a post, but only the author can edit or delete it.
-     * @path /communityPosts/{communityPostId}
-     * @allow (auth.uid="user123") -> (create) /communityPosts/post-xyz with {authorId: "user123"}
-     * @deny  (auth.uid="user456") -> (delete) /communityPosts/post-xyz (where post-xyz has authorId: "user123")
-     * @principle Enforces document ownership for writes while allowing public read access.
-     */
     match /communityPosts/{communityPostId} {
       allow get, list: if true;
       allow create: if isIncomingDataAuthor();
 
       // An update is allowed if one of three conditions is met:
       // 1. The user is the original author and is not changing the authorId (for general edits).
-      // 2. The user is liking the post.
-      // 3. The user is unliking the post.
-      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId')) || 
-                       (isSignedIn() && (isLikingPost() || isUnlikingPost()));
+      // 2. The user is giving a hug.
+      // 3. The user is removing a hug.
+      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId') && !allFieldsUnchangedExcept(['hugs', 'huggedBy'])) || 
+                       (isSignedIn() && (isGivingHug() || isRemovingHug()));
       
       allow delete: if isExistingOwner('authorId');
 
-      /**
-       * @description Publicly readable comments. Any signed-in user can create a comment, but only the author can modify it.
-       * @path /communityPosts/{communityPostId}/comments/{commentId}
-       * @principle Secures a subcollection with public read and owner-only writes.
-       */
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isIncomingDataAuthor();
@@ -195,13 +145,6 @@ service cloud.firestore {
       }
     }
 
-    /**
-     * @description Globally readable tags for categorizing content. No client-side writes are allowed to maintain data quality.
-     * @path /tags/{tagId}
-     * @allow (any user) -> (list) /tags
-     * @deny  (any user) -> (create, update, delete) /tags/new-tag
-     * @principle Secures a global, read-only collection to prevent client-side data pollution.
-     */
     match /tags/{tagId} {
       allow get, list: if true;
       allow create, update, delete: if false;

@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ThumbsUp, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { MessageSquare, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { doc, updateDoc, increment, arrayUnion, arrayRemove, deleteDoc, FirestoreError } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -46,7 +46,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
     
     // Use local state for optimistic updates
     const [post, setPost] = useState(initialPost);
-    const [isLiking, setIsLiking] = useState(false);
+    const [isHugging, setIsHugging] = useState(false);
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -57,34 +57,33 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
     }, [initialPost]);
 
 
-    const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
+    const hasHugged = user ? post.huggedBy?.includes(user.uid) : false;
     const isAuthor = user ? user.uid === post.authorId : false;
 
-    const handleLike = () => {
-        if (!user || !firestore || isLiking) return;
+    const handleHug = () => {
+        if (!user || !firestore || isHugging) return;
 
-        setIsLiking(true);
+        setIsHugging(true);
 
-        const newLikedState = !hasLiked;
+        const newHuggedState = !hasHugged;
         
-        // Corrected logic for optimistic update
-        const currentLikeCount = post.likes || 0;
-        const newLikeCount = newLikedState ? currentLikeCount + 1 : currentLikeCount - 1;
+        const currentHugCount = post.hugs || 0;
+        const newHugCount = newHuggedState ? currentHugCount + 1 : currentHugCount - 1;
 
-        const newLikedBy = newLikedState
-            ? [...(post.likedBy || []), user.uid]
-            : (post.likedBy || []).filter(id => id !== user.uid);
+        const newHuggedBy = newHuggedState
+            ? [...(post.huggedBy || []), user.uid]
+            : (post.huggedBy || []).filter(id => id !== user.uid);
 
         setPost({
             ...post,
-            likes: newLikeCount,
-            likedBy: newLikedBy,
+            hugs: newHugCount,
+            huggedBy: newHuggedBy,
         });
 
         const postRef = doc(firestore, 'communityPosts', post.id);
         const updateData = {
-            likes: increment(newLikedState ? 1 : -1),
-            likedBy: newLikedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
+            hugs: increment(newHuggedState ? 1 : -1),
+            huggedBy: newHuggedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
         };
 
         updateDoc(postRef, updateData)
@@ -102,11 +101,11 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                 toast({
                     variant: 'destructive',
                     title: 'Error',
-                    description: 'Could not update like. Please check permissions.',
+                    description: 'Could not give hug. Please check permissions.',
                 });
             })
             .finally(() => {
-                setIsLiking(false);
+                setIsHugging(false);
             });
     };
 
@@ -204,15 +203,15 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleLike}
-                            disabled={!user || isLiking}
+                            onClick={handleHug}
+                            disabled={!user || isHugging}
                             className={cn(
                                 "flex items-center gap-1 hover:text-primary px-1 h-auto py-1",
-                                hasLiked && "text-primary"
+                                hasHugged && "text-primary"
                             )}
                         >
-                            <ThumbsUp className="h-4 w-4" />
-                            <span>{post.likes || 0}</span>
+                            <span className="text-lg">🤗</span>
+                            <span>{post.hugs || 0} Hugs</span>
                         </Button>
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
