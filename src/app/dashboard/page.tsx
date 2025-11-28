@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PeriodReadyChecklist } from '@/components/info/PeriodReadyChecklist';
+import { CustomChecklist } from '@/components/info/CustomChecklist';
 
 const quickActions = [
   {
@@ -263,7 +263,7 @@ export default function DashboardPage() {
             </Card>
         </div>
          <div className="lg:col-span-1">
-             <PeriodReadyChecklist />
+             <CustomChecklist />
         </div>
       </div>
 
