@@ -39,6 +39,7 @@ export default function CommunityPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [rerenderKey, setRerenderKey] = useState(0);
 
   const postsCollectionRef = useMemoFirebase(
     () => (firestore ? collection(firestore, 'communityPosts') : null),
@@ -50,7 +51,16 @@ export default function CommunityPage() {
     return query(postsCollectionRef, orderBy('createdAt', 'desc'));
   }, [postsCollectionRef]);
 
-  const { data: posts, isLoading } = useCollection<CommunityPost>(postsQuery);
+  const { data: posts, isLoading } = useCollection<CommunityPost>(postsQuery, [rerenderKey]);
+  
+  const handlePostCreated = () => {
+      setIsCreatePostOpen(false);
+      setRerenderKey(prev => prev + 1); // Force re-fetch
+  }
+  
+  const handlePostDeleted = () => {
+      setRerenderKey(prev => prev + 1); // Force re-fetch
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -76,7 +86,7 @@ export default function CommunityPage() {
                     Your story matters. Please be kind and respectful of others.
                   </DialogDescription>
                 </DialogHeader>
-                <CreatePostForm onPostCreated={() => setIsCreatePostOpen(false)} />
+                <CreatePostForm onPostCreated={handlePostCreated} />
               </DialogContent>
             </Dialog>
           ) : (
@@ -95,7 +105,7 @@ export default function CommunityPage() {
             </>
           ) : posts && posts.length > 0 ? (
             posts.map(post => (
-              <CommunityPostCard key={post.id} post={post as CommunityPostWithId} />
+              <CommunityPostCard key={post.id} post={post as CommunityPostWithId} onPostDeleted={handlePostDeleted} />
             ))
           ) : (
             <div className="text-center py-16 border-2 border-dashed rounded-lg">

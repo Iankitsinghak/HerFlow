@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 import { useCollection, WithId } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
@@ -37,6 +37,7 @@ type CommentWithId = WithId<Comment>;
 
 interface CommentSectionProps {
     postId: string;
+    onCommentCountChange: (newCount: number) => void;
 }
 
 const getInitials = (name: string) => name ? name.charAt(0).toUpperCase() : '?';
@@ -114,16 +115,31 @@ function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: 
         if (!firestore || !isAuthor) return;
         setIsDeleting(true);
 
-        const commentRef = doc(firestore, `communityPosts/${postId}/comments`, comment.id);
+        const batch = writeBatch(firestore);
         const postRef = doc(firestore, 'communityPosts', postId);
 
-        try {
-            await deleteDoc(commentRef);
-            await updateDoc(postRef, {
-                commentCount: increment(-1)
+        // Delete the main comment
+        const commentRef = doc(firestore, `communityPosts/${postId}/comments`, comment.id);
+        batch.delete(commentRef);
+        let numDeleted = 1;
+
+        // If it's a top-level comment, delete all its replies
+        if (!comment.parentId) {
+            const repliesQuery = query(collection(firestore, `communityPosts/${postId}/comments`), where("parentId", "==", comment.id));
+            const repliesSnapshot = await getDocs(repliesQuery);
+            repliesSnapshot.forEach(replyDoc => {
+                batch.delete(replyDoc.ref);
+                numDeleted++;
             });
+        }
+        
+        // Decrement the comment count
+        batch.update(postRef, { commentCount: increment(-numDeleted) });
+
+        try {
+            await batch.commit();
             toast({ title: "Comment Deleted" });
-            onCommentDeleted();
+            onCommentDeleted(); // Trigger re-render
         } catch (error) {
             console.error("Error deleting comment:", error);
             toast({ variant: 'destructive', title: "Error", description: "Could not delete comment." });
@@ -148,9 +164,11 @@ function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: 
                 </div>
                 <p className="text-sm text-foreground/90 mt-1">{comment.content}</p>
                 <div className="mt-1 flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="text-xs h-auto px-1 py-0.5" onClick={() => setShowReplyForm(!showReplyForm)}>
-                        Reply
-                    </Button>
+                     {user && (
+                        <Button variant="ghost" size="sm" className="text-xs h-auto px-1 py-0.5" onClick={() => setShowReplyForm(!showReplyForm)}>
+                            Reply
+                        </Button>
+                     )}
                      {isAuthor && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -161,7 +179,7 @@ function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: 
                             <AlertDialogContent>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>This will permanently delete your comment.</AlertDialogDescription>
+                                    <AlertDialogDescription>This will permanently delete your comment{comment.parentId ? '' : ' and all its replies'}.</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -176,7 +194,10 @@ function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: 
 
                 {showReplyForm && (
                      <div className="mt-2">
-                        <CommentForm postId={postId} parentId={comment.id} onCommentPosted={() => setShowReplyForm(false)} />
+                        <CommentForm postId={postId} parentId={comment.id} onCommentPosted={() => {
+                            setShowReplyForm(false);
+                            onCommentDeleted(); // Re-render to show new reply
+                        }} />
                     </div>
                 )}
                 
@@ -193,10 +214,10 @@ function CommentItem({ comment, postId, replies, onCommentDeleted }: { comment: 
 }
 
 
-export function CommentSection({ postId }: CommentSectionProps) {
+export function CommentSection({ postId, onCommentCountChange }: CommentSectionProps) {
     const { user } = useUser();
     const firestore = useFirestore();
-    const [forceRerender, setForceRerender] = useState(0);
+    const [rerenderKey, setRerenderKey] = useState(0);
     
     const commentsCollectionRef = useMemoFirebase(
         () => (firestore ? collection(firestore, `communityPosts/${postId}/comments`) : null),
@@ -208,10 +229,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
         [commentsCollectionRef]
     );
 
-    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery, [forceRerender]);
+    const { data: comments, isLoading } = useCollection<Comment>(commentsQuery, [rerenderKey]);
 
-    const { topLevelComments, repliesByParent } = useMemo(() => {
-        if (!comments) return { topLevelComments: [], repliesByParent: {} };
+    const { topLevelComments, repliesByParent, totalComments } = useMemo(() => {
+        if (!comments) return { topLevelComments: [], repliesByParent: {}, totalComments: 0 };
         
         const topLevel: CommentWithId[] = [];
         const replies: Record<string, CommentWithId[]> = {};
@@ -226,15 +247,18 @@ export function CommentSection({ postId }: CommentSectionProps) {
                 topLevel.push(comment as CommentWithId);
             }
         }
-        return { topLevelComments: topLevel, repliesByParent: replies };
-    }, [comments]);
+        onCommentCountChange(comments.length);
+        return { topLevelComments: topLevel, repliesByParent: replies, totalComments: comments.length };
+    }, [comments, onCommentCountChange]);
+    
+    const forceRerender = () => setRerenderKey(v => v + 1);
 
 
     return (
         <div className="px-6 pb-6 space-y-6">
             <div className="w-full">
                 {user ? (
-                    <CommentForm postId={postId} onCommentPosted={() => {}} />
+                    <CommentForm postId={postId} onCommentPosted={forceRerender} />
                 ) : (
                     <p className="text-sm text-muted-foreground text-center">
                         <Link href="/login" className="underline font-medium">Log in</Link> to join the conversation.
@@ -255,7 +279,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                             comment={c} 
                             postId={postId} 
                             replies={repliesByParent[c.id] || []} 
-                            onCommentDeleted={() => setForceRerender(v => v + 1)}
+                            onCommentDeleted={forceRerender}
                         />
                     ))
                 ) : (

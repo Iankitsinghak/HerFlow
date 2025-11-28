@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
-import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { doc, deleteDoc, FirestoreError } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
@@ -36,9 +36,10 @@ type CommunityPostWithId = WithId<CommunityPost>;
 
 interface CommunityPostCardProps {
     post: CommunityPostWithId;
+    onPostDeleted: () => void;
 }
 
-export function CommunityPostCard({ post }: CommunityPostCardProps) {
+export function CommunityPostCard({ post, onPostDeleted }: CommunityPostCardProps) {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -56,30 +57,25 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
         setIsDeleting(true);
         const postRef = doc(firestore, 'communityPosts', post.id);
 
-        deleteDoc(postRef)
-            .then(() => {
-                 toast({
-                    title: 'Post Deleted',
-                    description: 'Your post has been successfully removed.',
-                });
-            })
-            .catch((serverError: FirestoreError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: postRef.path,
-                    operation: 'delete',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'You do not have permission to delete this post.',
-                });
-            })
-            .finally(() => {
-                setIsDeleting(false);
-                setIsDeleteDialogOpen(false);
+        try {
+            await deleteDoc(postRef);
+            toast({
+                title: 'Post Deleted',
+                description: 'Your post has been successfully removed.',
             });
+            onPostDeleted(); // Notify parent to refresh list
+        } catch (error) {
+             console.error('Error deleting post:', error);
+             toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not delete post. You may not have permission.',
+            });
+        }
+        finally {
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+        }
     }
 
     const getInitials = (name: string) => {
@@ -87,6 +83,13 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
     }
     
     const postDate = post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : "just now";
+
+    const handleCommentCountChange = (newCount: number) => {
+        // This is a bit of a trick to update the UI without a full re-fetch
+        // In a real app, you might re-fetch or use a more robust state management
+        post.commentCount = newCount;
+    }
+
 
     return (
         <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 border-primary/10 bg-white/50 dark:bg-card/50 backdrop-blur-lg rounded-2xl overflow-hidden">
@@ -152,7 +155,10 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
 
                 <CollapsibleContent>
                     <div className="border-t pt-4 bg-muted/30">
-                      <CommentSection postId={post.id} />
+                      <CommentSection 
+                        postId={post.id} 
+                        onCommentCountChange={handleCommentCountChange} 
+                      />
                     </div>
                 </CollapsibleContent>
             </Collapsible>
