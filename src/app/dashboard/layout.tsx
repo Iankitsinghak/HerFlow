@@ -3,14 +3,8 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import DashboardSidebar from '@/components/layout/dashboard-sidebar';
+import { useEffect } from 'react';
 import Header from '@/components/layout/header';
-import {
-  Sheet,
-  SheetContent,
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function DashboardLayout({
   children,
@@ -19,8 +13,6 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,14 +35,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-       {isMobile && (
-         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetContent side="left" className="p-0 w-72 bg-card">
-              <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
-            </SheetContent>
-        </Sheet>
-       )}
-      <Header onMobileMenuClick={() => setMobileMenuOpen(true)} />
+      <Header />
       <main className="flex-1">
         <div className="container mx-auto p-6 md:p-8 lg:p-10">
           {children}

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,8 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
   DropdownMenuGroup,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -24,6 +25,8 @@ import { Logo } from "../logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "../ui/sheet";
+import DashboardSidebar from "./dashboard-sidebar";
 
 
 const navItems = [
@@ -36,10 +39,12 @@ const navItems = [
 ];
 
 
-export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () => void }) {
+export default function Header() {
   const { user, loading } = useAuth();
   const isMobile = useIsMobile();
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   const handleLogout = async () => {
     await logout();
@@ -56,11 +61,18 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
+       {isMobile && user && (
+         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetContent side="left" className="p-0 w-72 bg-card">
+              <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
+            </SheetContent>
+        </Sheet>
+       )}
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         
-        <div className="flex items-center gap-6">
-          {isMobile && onMobileMenuClick && user && (
-            <Button variant="ghost" size="icon" className="mr-2" onClick={onMobileMenuClick}>
+        <div className="flex items-center gap-2 md:gap-6">
+          {isMobile && user && (
+            <Button variant="ghost" size="icon" className="-ml-2" onClick={() => setMobileMenuOpen(true)}>
                 <Menu />
             </Button>
           )}
@@ -68,7 +80,7 @@ export default function Header({ onMobileMenuClick }: { onMobileMenuClick?: () =
         </div>
         
         {!isMobile && user && (
-          <nav className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-4">
             {navItems.map(item => (
               <Link
                 key={item.href}

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreatePostForm } from "@/components/create-post-form";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, Query } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useCollection, WithId } from "@/firebase/firestore/use-collection";
 import { CommunityPostCard } from "@/components/community-post-card";
 import { Skeleton } from "@/components/ui/skeleton";
