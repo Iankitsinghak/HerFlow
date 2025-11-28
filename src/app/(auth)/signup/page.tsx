@@ -73,16 +73,16 @@ export default function SignupPage() {
     }
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center justify-center space-y-6 px-4">
         <Logo />
-        <Card className="w-full max-w-sm bg-card/80 backdrop-blur-lg">
-            <CardHeader>
-                <CardTitle className="text-2xl font-headline">Sign Up</CardTitle>
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-lg border-primary/10 shadow-lg">
+            <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-headline">Create Your Account</CardTitle>
                 <CardDescription>
-                Create your account to get started.
+                Join our community to begin your journey of self-discovery.
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
                 <div className="space-y-4">
                     <Button variant="outline" className="w-full" onClick={onGoogleSignIn} disabled={isPending}>
                          <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48" role="img" aria-label="Google logo">
@@ -103,7 +103,7 @@ export default function SignupPage() {
                     </div>
                 </div>
                 <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     {error && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
@@ -143,7 +143,7 @@ export default function SignupPage() {
                 </form>
                 </Form>
             </CardContent>
-            <CardFooter className="text-center text-sm">
+            <CardFooter className="justify-center text-sm">
                 Already have an account?&nbsp;
                 <Link href="/login" className="underline">
                 Log in

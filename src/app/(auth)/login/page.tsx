@@ -75,16 +75,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center justify-center space-y-6 px-4">
         <Logo />
-        <Card className="w-full max-w-sm bg-card/80 backdrop-blur-lg">
-        <CardHeader>
-            <CardTitle className="text-2xl font-headline">Login</CardTitle>
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-lg border-primary/10 shadow-lg">
+        <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
             <CardDescription>
-            Enter your email below to login to your account.
+            Log in to continue your wellness journey.
             </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
             <div className="space-y-4">
                 <Button variant="outline" className="w-full" onClick={onGoogleSignIn} disabled={isPending}>
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48" role="img" aria-label="Google logo">
@@ -105,7 +105,7 @@ export default function LoginPage() {
                 </div>
             </div>
             <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {error && (
                 <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
@@ -145,7 +145,7 @@ export default function LoginPage() {
             </form>
             </Form>
         </CardContent>
-        <CardFooter className="text-center text-sm">
+        <CardFooter className="justify-center text-sm">
             Don&apos;t have an account?&nbsp;
             <Link href="/signup" className="underline">
             Sign up
