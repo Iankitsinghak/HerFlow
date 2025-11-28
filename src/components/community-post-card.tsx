@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,12 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // This effect ensures the local state is updated if the parent's data changes
+    useEffect(() => {
+        setPost(initialPost);
+    }, [initialPost]);
+
+
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
     const isAuthor = user ? user.uid === post.authorId : false;
 
@@ -63,8 +69,8 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
         const newLikedState = !hasLiked;
         const newLikeCount = post.likes + (newLikedState ? 1 : -1);
         const newLikedBy = newLikedState
-            ? [...post.likedBy, user.uid]
-            : post.likedBy.filter(id => id !== user.uid);
+            ? [...(post.likedBy || []), user.uid]
+            : (post.likedBy || []).filter(id => id !== user.uid);
 
         setPost({
             ...post,
