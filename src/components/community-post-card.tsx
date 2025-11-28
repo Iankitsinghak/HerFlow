@@ -65,9 +65,12 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
 
         setIsLiking(true);
 
-        // Optimistic UI update
         const newLikedState = !hasLiked;
-        const newLikeCount = post.likes + (newLikedState ? 1 : -1);
+        
+        // Corrected logic for optimistic update
+        const currentLikeCount = post.likes || 0;
+        const newLikeCount = currentLikeCount + (newLikedState ? 1 : -1);
+
         const newLikedBy = newLikedState
             ? [...(post.likedBy || []), user.uid]
             : (post.likedBy || []).filter(id => id !== user.uid);
@@ -81,17 +84,10 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
         const postRef = doc(firestore, 'communityPosts', post.id);
 
         try {
-            if (newLikedState) {
-                await updateDoc(postRef, {
-                    likes: increment(1),
-                    likedBy: arrayUnion(user.uid)
-                });
-            } else {
-                await updateDoc(postRef, {
-                    likes: increment(-1),
-                    likedBy: arrayRemove(user.uid)
-                });
-            }
+            await updateDoc(postRef, {
+                likes: increment(newLikedState ? 1 : -1),
+                likedBy: newLikedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
+            });
         } catch (error) {
             console.error("Error liking post:", error);
             // Revert optimistic update on error
