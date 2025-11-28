@@ -192,8 +192,8 @@ export default function WelcomePage() {
                      />
                      <ValueCard 
                         icon={<HeartHandshake className="h-8 w-8" />}
-                        title="From a women-led team"
-                        description="Created with empathy and understanding by a team that shares your experiences."
+                        title="Empathetic &amp; Supportive"
+                        description="Created with empathy to be a safe, non-judgmental space for your health journey."
                      />
                      <ValueCard 
                         icon={<Lock className="h-8 w-8" />}
