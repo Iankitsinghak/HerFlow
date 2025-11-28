@@ -160,7 +160,7 @@ export default function WelcomePage() {
                     transition={{ duration: 0.6 }}
                     viewport={{ once: true, amount: 0.5 }}
                 >
-                    <Image src="https://picsum.photos/seed/cycleapp/600/500" alt="Cycle tracking interface" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="cycle tracker app" />
+                    <Image src="https://picsum.photos/seed/woman-journaling/600/500" alt="A woman peacefully journaling" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="woman journaling" />
                 </motion.div>
             </section>
 
@@ -199,7 +199,7 @@ export default function WelcomePage() {
                     transition={{ duration: 0.6 }}
                     viewport={{ once: true, amount: 0.5 }}
                 >
-                     <Image src="https://picsum.photos/seed/aichat/600/500" alt="AI chat interface" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="ai chat interface" />
+                     <Image src="https://picsum.photos/seed/women-supporting/600/500" alt="Two women supporting each other" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="women supporting" />
                 </motion.div>
             </section>
 
@@ -251,4 +251,3 @@ export default function WelcomePage() {
   );
 }
 
-    
