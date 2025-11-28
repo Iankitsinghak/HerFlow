@@ -33,7 +33,7 @@
  * list operations more secure and performant, as rules can safely grant list access on an entire
  * collection without needing to filter the results.
  *
- * v10 - Correct the rule for liking a post. It should only check for 'likes' and 'likedBy'.
+ * v11 - Explicitly handle like/unlike operations on communityPosts.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -76,14 +76,49 @@ service cloud.firestore {
     }
     
     // Checks if only a specific set of fields are being updated.
-    function isOnlyUpdating(allowedFields) {
-      return request.resource.data.keys().hasOnly(allowedFields);
-    }
-    
-    // Checks if all fields EXCEPT a specific set are unchanged.
     function allFieldsUnchangedExcept(allowedFields) {
         let changedKeys = request.resource.data.diff(resource.data).affectedKeys;
         return changedKeys.hasOnly(allowedFields);
+    }
+    
+    // Checks if a user is liking a post
+    function isLikingPost() {
+      let incoming = request.resource.data;
+      let existing = resource.data;
+      let diff = incoming.diff(existing);
+      
+      // Ensure only likes and likedBy are being changed
+      if (!diff.affectedKeys.hasOnly(['likes', 'likedBy'])) {
+        return false;
+      }
+      
+      // Ensure the like count is only incremented by 1
+      if (incoming.likes != existing.likes + 1) {
+        return false;
+      }
+      
+      // Ensure the user's ID is being added to the likedBy array
+      return incoming.likedBy == existing.likedBy.concat([request.auth.uid]);
+    }
+    
+    // Checks if a user is unliking a post
+    function isUnlikingPost() {
+      let incoming = request.resource.data;
+      let existing = resource.data;
+      let diff = incoming.diff(existing);
+      
+      // Ensure only likes and likedBy are being changed
+      if (!diff.affectedKeys.hasOnly(['likes', 'likedBy'])) {
+        return false;
+      }
+      
+      // Ensure the like count is only decremented by 1
+      if (incoming.likes != existing.likes - 1) {
+        return false;
+      }
+      
+      // Ensure the user's ID is being removed from the likedBy array
+      return incoming.likedBy.size() == existing.likedBy.size() - 1 && !incoming.likedBy.hasAny([request.auth.uid]);
     }
 
     /**
@@ -138,11 +173,14 @@ service cloud.firestore {
     match /communityPosts/{communityPostId} {
       allow get, list: if true;
       allow create: if isIncomingDataAuthor();
-      // An update is allowed if one of two conditions is met:
-      // 1. The user is the original author and is not changing the authorId.
-      // 2. The user is only changing the 'likes' and 'likedBy' fields (i.e., liking the post).
-      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId')) ||
-                       (isSignedIn() && allFieldsUnchangedExcept(['likes', 'likedBy']));
+
+      // An update is allowed if one of three conditions is met:
+      // 1. The user is the original author and is not changing the authorId (for general edits).
+      // 2. The user is liking the post.
+      // 3. The user is unliking the post.
+      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId')) || 
+                       (isSignedIn() && (isLikingPost() || isUnlikingPost()));
+      
       allow delete: if isExistingOwner('authorId');
 
       /**
