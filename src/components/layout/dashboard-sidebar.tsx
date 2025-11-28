@@ -9,6 +9,7 @@ import {
   MessageSquare,
   CircleHelp,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/community", icon: <Users className="h-5 w-5" />, label: "Community" },
   { href: "/ask-doctor", icon: <CircleHelp className="h-5 w-5" />, label: "Ask a Doctor" },
   { href: "/ai-chat", icon: <MessageSquare className="h-5 w-5" />, label: "Woomania" },
+  { href: "/learn/products", icon: <BookOpen className="h-5 w-5" />, label: "Period Products" },
 ]
 
 interface DashboardSidebarProps {

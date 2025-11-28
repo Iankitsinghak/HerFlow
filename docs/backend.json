@@ -134,12 +134,13 @@
           "type": "number",
           "description": "The number of comments on this post."
         },
-        "tags": {
-          "type": "array",
-          "description": "References to Tags. (Relationship: Tag N:N CommunityPost)",
-          "items": {
-            "type": "string"
-          }
+        "category": {
+          "type": "string",
+          "description": "The category of the post (e.g., 'period-problems', 'mental-health')."
+        },
+        "isAnonymous": {
+            "type": "boolean",
+            "description": "If true, the author's name and avatar are hidden."
         }
       },
       "required": [
@@ -148,7 +149,8 @@
         "authorName",
         "title",
         "content",
-        "createdAt"
+        "createdAt",
+        "category"
       ]
     },
     "Comment": {

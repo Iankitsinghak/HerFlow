@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, cloneElement } from 'react';
+import { useMemo, cloneElement, useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,9 @@ import {
   Heart,
   MessageCircle,
   Plus,
+  Sun,
+  Cloud,
+  Snowflake,
 } from 'lucide-react';
 import Link from 'next/link';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -23,6 +26,14 @@ import {
 } from '@/lib/cycle-service';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getWeatherTip } from '@/lib/weatherTips';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const quickActions = [
   {
@@ -48,6 +59,7 @@ const quickActions = [
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [weather, setWeather] = useState<'WARM' | 'HOT' | 'COOL'>('WARM');
 
   const userProfileRef = useMemoFirebase(
     () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
@@ -70,16 +82,22 @@ export default function DashboardPage() {
 
   const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
 
-  const { currentPhase, nextPeriodDate, cycleDay } = useMemo(() => {
-    if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) return { currentPhase: 'Unknown', nextPeriodDate: null, cycleDay: null };
+  const { currentPhase, nextPeriodDate, cycleDay, isOnPeriod } = useMemo(() => {
+    if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) {
+      return { currentPhase: 'Unknown', nextPeriodDate: null, cycleDay: null, isOnPeriod: false };
+    }
     
+    const phase = getCurrentCyclePhase(rawLogs);
     return {
-        currentPhase: getCurrentCyclePhase(rawLogs),
+        currentPhase: phase,
         nextPeriodDate: estimateNextPeriodDate(rawLogs),
-        cycleDay: getCurrentCycleDay(rawLogs)
+        cycleDay: getCurrentCycleDay(rawLogs),
+        isOnPeriod: phase === 'Menstrual'
     }
   }, [rawLogs, hasCompletedOnboarding]);
 
+  const weatherTip = useMemo(() => getWeatherTip(weather, isOnPeriod), [weather, isOnPeriod]);
+  
   const isLoading = isLoadingProfile || isLoadingLogs;
 
   if (isLoading) {
@@ -111,53 +129,78 @@ export default function DashboardPage() {
       </div>
 
       {/* Today at a glance / Onboarding CTA */}
-      <Card className="bg-secondary/60 relative overflow-hidden border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="grid lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 bg-secondary/60 relative overflow-hidden border-primary/20">
+            <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                {hasCompletedOnboarding ? (
+                    'Today at a glance'
+                ) : (
+                    <>
+                    <Heart className="text-primary animate-pulse-heart" />
+                    <span>Complete your cycle setup</span>
+                    </>
+                )}
+            </CardTitle>
+            </CardHeader>
+            <CardContent>
             {hasCompletedOnboarding ? (
-                'Today at a glance'
+                <>
+                <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
+                <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                    <Button asChild>
+                        <Link href="/dashboard/cycle-log">
+                            <Plus className="mr-2" /> Log today’s symptoms
+                        </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/cycle-log">
+                            Add a period day
+                        </Link>
+                    </Button>
+                </div>
+                </>
             ) : (
                 <>
-                <Heart className="text-primary animate-pulse-heart" />
-                <span>Complete your cycle setup</span>
+                <p className="text-lg text-muted-foreground">
+                    Tell us about your last period and cycle pattern to unlock predictions and personalized insights.
+                </p>
+                <div className="mt-4">
+                    <Button asChild>
+                        <Link href="/onboarding/start">
+                            Complete Setup
+                        </Link>
+                    </Button>
+                </div>
                 </>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-           {hasCompletedOnboarding ? (
-            <>
-              <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
-              <div className="mt-4 flex flex-col sm:flex-row gap-4">
-                  <Button asChild>
-                      <Link href="/dashboard/cycle-log">
-                          <Plus className="mr-2" /> Log today’s symptoms
-                      </Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                      <Link href="/dashboard/cycle-log">
-                          Add a period day
-                      </Link>
-                  </Button>
-              </div>
-            </>
-           ) : (
-             <>
-              <p className="text-lg text-muted-foreground">
-                Tell us about your last period and cycle pattern to unlock predictions and personalized insights.
-              </p>
-              <div className="mt-4">
-                <Button asChild>
-                    <Link href="/onboarding/start">
-                        Complete Setup
-                    </Link>
-                </Button>
-              </div>
-            </>
-           )}
-        </CardContent>
-         <Heart className="absolute -right-4 -bottom-8 h-32 w-32 text-primary/10 -rotate-12" />
-      </Card>
+            </CardContent>
+            <Heart className="absolute -right-4 -bottom-8 h-32 w-32 text-primary/10 -rotate-12" />
+        </Card>
+
+        {/* Weather Tip Card */}
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base font-headline flex justify-between items-center">
+                    Today's Comfort Tip
+                    <Select value={weather} onValueChange={(v: any) => setWeather(v)}>
+                        <SelectTrigger className="w-auto text-xs h-7 gap-1">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="HOT"><Sun className="inline-block mr-1 h-3 w-3"/> Hot</SelectItem>
+                            <SelectItem value="WARM"><Cloud className="inline-block mr-1 h-3 w-3"/> Warm</SelectItem>
+                            <SelectItem value="COOL"><Snowflake className="inline-block mr-1 h-3 w-3"/> Cool</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground">{weatherTip}</p>
+            </CardContent>
+        </Card>
+      </div>
+
 
       {/* Quick Actions */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

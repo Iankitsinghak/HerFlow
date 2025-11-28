@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ThumbsUp } from "lucide-react";
+import { MessageSquare, ThumbsUp, UserCircle } from "lucide-react";
 import { useUser, useFirestore } from '@/firebase';
 import { doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,8 @@ import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentSection } from './comment-section';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Badge } from './ui/badge';
+import { communityCategories } from '@/config/community';
 
 type CommunityPostWithId = WithId<CommunityPost>;
 
@@ -28,6 +30,7 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
+    const category = communityCategories.find(c => c.value === post.category);
 
     const handleLike = async () => {
         if (!user || !firestore || isLiking) return;
@@ -66,15 +69,18 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                 <CardHeader>
                     <div className="flex items-start gap-4">
                         <Avatar>
-                            <AvatarImage src={post.authorAvatar} />
-                            <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>
+                            <AvatarImage src={post.authorAvatar || undefined} />
+                            <AvatarFallback>
+                                {post.isAnonymous ? <UserCircle/> : getInitials(post.authorName)}
+                            </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                             <CardTitle className="font-headline text-lg">{post.title}</CardTitle>
-                            <CardDescription>
-                                Posted by {post.authorName} &bull; {postDate}
+                            <CardDescription className="flex items-center gap-2">
+                                <span>Posted by {post.isAnonymous ? 'Anonymous' : post.authorName} &bull; {postDate}</span>
                             </CardDescription>
                         </div>
+                        {category && <Badge variant="secondary">{category.emoji} {category.label}</Badge>}
                     </div>
                 </CardHeader>
                 <CardContent>
