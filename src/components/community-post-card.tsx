@@ -5,15 +5,33 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ThumbsUp, UserCircle } from "lucide-react";
+import { MessageSquare, ThumbsUp, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
 import { useUser, useFirestore } from '@/firebase';
-import { doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, increment, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { type WithId } from '@/firebase/firestore/use-collection';
 import { type CommunityPost } from '@/app/community/page';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentSection } from './comment-section';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+
 
 type CommunityPostWithId = WithId<CommunityPost>;
 
@@ -24,10 +42,14 @@ interface CommunityPostCardProps {
 export function CommunityPostCard({ post }: CommunityPostCardProps) {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
     const [isLiking, setIsLiking] = useState(false);
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
+    const isAuthor = user ? user.uid === post.authorId : false;
 
     const handleLike = async () => {
         if (!user || !firestore || isLiking) return;
@@ -54,6 +76,30 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
         }
     };
 
+    const handleDelete = async () => {
+        if (!isAuthor || !firestore) return;
+
+        setIsDeleting(true);
+        try {
+            const postRef = doc(firestore, 'communityPosts', post.id);
+            await deleteDoc(postRef);
+            toast({
+                title: 'Post Deleted',
+                description: 'Your post has been successfully removed.',
+            });
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Could not delete the post. Please try again.',
+            });
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteDialogOpen(false);
+        }
+    }
+
     const getInitials = (name: string) => {
         return name ? name.charAt(0).toUpperCase() : '?';
     }
@@ -77,6 +123,37 @@ export function CommunityPostCard({ post }: CommunityPostCardProps) {
                                 <span>Posted by {post.isAnonymous ? 'Anonymous' : post.authorName} &bull; {postDate}</span>
                             </CardDescription>
                         </div>
+                        {isAuthor && (
+                             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => setIsDeleteDialogOpen(true)} className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            <span>Delete</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete your post and any comments associated with it.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                            {isDeleting ? 'Deleting...' : 'Delete'}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
                     </div>
                 </CardHeader>
                 <CardContent>
