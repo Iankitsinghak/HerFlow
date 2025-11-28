@@ -60,7 +60,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
     const hasLiked = user ? post.likedBy?.includes(user.uid) : false;
     const isAuthor = user ? user.uid === post.authorId : false;
 
-    const handleLike = async () => {
+    const handleLike = () => {
         if (!user || !firestore || isLiking) return;
 
         setIsLiking(true);
@@ -69,7 +69,7 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
         
         // Corrected logic for optimistic update
         const currentLikeCount = post.likes || 0;
-        const newLikeCount = currentLikeCount + (newLikedState ? 1 : -1);
+        const newLikeCount = newLikedState ? currentLikeCount + 1 : currentLikeCount - 1;
 
         const newLikedBy = newLikedState
             ? [...(post.likedBy || []), user.uid]
@@ -82,20 +82,32 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
         });
 
         const postRef = doc(firestore, 'communityPosts', post.id);
+        const updateData = {
+            likes: increment(newLikedState ? 1 : -1),
+            likedBy: newLikedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
+        };
 
-        try {
-            await updateDoc(postRef, {
-                likes: increment(newLikedState ? 1 : -1),
-                likedBy: newLikedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
+        updateDoc(postRef, updateData)
+            .catch((serverError: FirestoreError) => {
+                // Revert optimistic update on error
+                setPost(initialPost); 
+                
+                const permissionError = new FirestorePermissionError({
+                    path: postRef.path,
+                    operation: 'update',
+                    requestResourceData: updateData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not update like. Please check permissions.',
+                });
+            })
+            .finally(() => {
+                setIsLiking(false);
             });
-        } catch (error) {
-            console.error("Error liking post:", error);
-            // Revert optimistic update on error
-            setPost(initialPost);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not update like.' });
-        } finally {
-            setIsLiking(false);
-        }
     };
 
     const handleDelete = async () => {
