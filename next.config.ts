@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -23,12 +24,19 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' as const,
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
     ],
+  },
+  experimental: {
+    // Required to ensure that Genkit AI flows are correctly bundled in production.
+    serverComponentsExternalPackages: ['@genkit-ai/google-genai'],
+    serverActions: {
+      bodySizeLimit: '2mb', // Increase body size limit for server actions
+    },
   },
 };
 
