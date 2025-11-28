@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PeriodReadyChecklist } from '@/components/info/PeriodReadyChecklist';
 
 const quickActions = [
   {
@@ -228,8 +229,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Your cycle overview */}
-        <div className="lg:col-span-1 space-y-4">
+        {/* Your cycle overview & Checklist */}
+        <div className="lg:col-span-2 space-y-4">
             <h2 className="text-xl font-bold font-headline">Your cycle overview</h2>
             <Card>
                 <CardContent className="pt-6 space-y-3">
@@ -261,7 +262,9 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         </div>
-
+         <div className="lg:col-span-1">
+             <PeriodReadyChecklist />
+        </div>
       </div>
 
       {/* Community Teaser */}

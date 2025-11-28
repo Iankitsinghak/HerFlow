@@ -31,10 +31,10 @@ export function PeriodReadyChecklist() {
     const allChecked = Object.keys(checkedItems).length === checklistItems.length && Object.values(checkedItems).every(Boolean);
 
     return (
-        <Card className="w-full max-w-md bg-white/80 dark:bg-card/80 backdrop-blur-lg rounded-3xl shadow-lg border border-pink-100/80">
-            <CardHeader className="text-center">
-                <CardTitle className="font-headline text-2xl">Period-Ready Checklist</CardTitle>
-                <CardDescription>A few small things to keep you comfortable and confident.</CardDescription>
+        <Card className="w-full h-full bg-white/80 dark:bg-card/80 backdrop-blur-lg rounded-xl shadow-lg border border-pink-100/80">
+            <CardHeader>
+                <CardTitle className="font-headline text-lg">Period-Ready Checklist</CardTitle>
+                <CardDescription className="text-xs">A few small things to keep you comfortable.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
                 {checklistItems.map(item => (
@@ -42,7 +42,7 @@ export function PeriodReadyChecklist() {
                         key={item.id}
                         initial={{ opacity: 0.8, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center p-3 bg-background/70 rounded-xl border border-transparent transition-all has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20"
+                        className="flex items-center p-2.5 bg-background/70 rounded-lg border border-transparent transition-all has-[:checked]:bg-primary/10 has-[:checked]:border-primary/20"
                     >
                         <Checkbox
                             id={item.id}
@@ -52,9 +52,9 @@ export function PeriodReadyChecklist() {
                         />
                         <label
                             htmlFor={item.id}
-                            className={`flex-1 ml-4 text-sm font-medium transition-colors cursor-pointer ${checkedItems[item.id] ? 'text-muted-foreground line-through' : 'text-foreground'}`}
+                            className={`flex-1 ml-3 text-sm font-medium transition-colors cursor-pointer ${checkedItems[item.id] ? 'text-muted-foreground line-through' : 'text-foreground'}`}
                         >
-                           <span className="mr-3">{item.emoji}</span> {item.label}
+                           <span className="mr-2">{item.emoji}</span> {item.label}
                         </label>
                     </motion.div>
                 ))}
@@ -66,13 +66,13 @@ export function PeriodReadyChecklist() {
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
-                            className="text-center p-3 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium"
+                            className="text-center p-2 rounded-lg bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-xs font-medium w-full"
                         >
                             🎉 You're all set! Ready to take on the day.
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <Button variant="ghost" onClick={handleReset} className="text-muted-foreground">
+                <Button variant="ghost" onClick={handleReset} className="text-muted-foreground text-xs h-auto py-1">
                     Reset Checklist
                 </Button>
             </CardFooter>
