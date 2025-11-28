@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -14,6 +13,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { DialogFooter } from './ui/dialog';
+import { Loader, WandSparkles } from 'lucide-react';
+import { generatePostContent } from '@/ai/flows/post-writer-flow';
 
 const formSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.').max(100, 'Title is too long.'),
@@ -30,6 +31,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -39,6 +41,27 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
             isAnonymous: false,
         },
     });
+
+    const handleGenerateContent = async () => {
+        const title = form.getValues('title');
+        if (!title.trim()) {
+            form.setError('title', { type: 'manual', message: 'Please enter a title first to generate content.' });
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const response = await generatePostContent({ title });
+            if (response.content) {
+                form.setValue('content', response.content, { shouldValidate: true });
+            }
+        } catch (error) {
+            console.error("Error generating content:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not generate content. Please try again.' });
+        } finally {
+            setIsGenerating(false);
+        }
+    }
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         if (!user || !firestore) {
@@ -95,7 +118,24 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                         name="content"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Content</FormLabel>
+                                <FormLabel className="flex items-center justify-between">
+                                    <span>Content</span>
+                                     <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={handleGenerateContent}
+                                        disabled={isGenerating}
+                                        className="h-auto px-2 py-1 text-xs"
+                                    >
+                                        {isGenerating ? (
+                                            <Loader className="mr-2 h-3 w-3 animate-spin"/>
+                                        ) : (
+                                            <WandSparkles className="mr-2 h-3 w-3" />
+                                        )}
+                                        Write with AI
+                                    </Button>
+                                </FormLabel>
                                 <FormControl>
                                     <Textarea placeholder="Share your thoughts with the community..." className="min-h-[120px]" {...field} />
                                 </FormControl>
@@ -129,7 +169,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                     />
                 </div>
                 <DialogFooter>
-                    <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+                    <Button type="submit" disabled={isSubmitting || isGenerating} className="w-full sm:w-auto">
                         {isSubmitting ? 'Posting...' : 'Create Post'}
                     </Button>
                 </DialogFooter>
