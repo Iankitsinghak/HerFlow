@@ -165,7 +165,7 @@ export default function WelcomePage() {
                     transition={{ duration: 0.6 }}
                     viewport={{ once: true, amount: 0.5 }}
                 >
-                     <Image src="https://picsum.photos/seed/women-supporting/600/500" alt="Two women supporting each other" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="women supporting" />
+                     <Image src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdXBwb3J0JTIwZ3JvdXB8ZW58MHx8fHwxNzY0MTU0Nzk1fDA&ixlib=rb-4.1.0&q=80&w=1080" alt="Two women supporting each other" width={600} height={500} className="rounded-2xl shadow-xl border-8 border-white/50" data-ai-hint="women supporting" />
                 </motion.div>
             </section>
             
@@ -228,3 +228,5 @@ export default function WelcomePage() {
     </div>
   );
 }
+
+    
