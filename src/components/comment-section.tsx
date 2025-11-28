@@ -54,12 +54,10 @@ function CommentForm({ postId, parentId = null, onCommentPosted }: { postId: str
                 parentId: parentId,
             });
 
-            // Only increment for top-level comments
-            if (!parentId) {
-                await updateDoc(postRef, {
-                    commentCount: increment(1)
-                });
-            }
+            // Increment the comment count for every comment (top-level or reply)
+            await updateDoc(postRef, {
+                commentCount: increment(1)
+            });
             
 
             setComment('');
