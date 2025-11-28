@@ -132,17 +132,6 @@
           "description": "Timestamp of when the community post was created.",
           "format": "date-time"
         },
-        "hugs": {
-          "type": "number",
-          "description": "Number of hugs this post has received."
-        },
-        "huggedBy": {
-          "type": "array",
-          "description": "An array of user IDs who have hugged the post.",
-          "items": {
-            "type": "string"
-          }
-        },
         "commentCount": {
           "type": "number",
           "description": "The number of comments on this post."
@@ -164,8 +153,6 @@
         "content",
         "createdAt",
         "category",
-        "hugs",
-        "huggedBy",
         "commentCount"
       ]
     },

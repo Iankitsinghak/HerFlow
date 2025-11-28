@@ -28,8 +28,6 @@ export interface CommunityPost {
   authorAvatar?: string;
   title: string;
   content: string;
-  hugs: number;
-  huggedBy: string[];
   commentCount: number;
   createdAt: any; // Allow server timestamp
   isAnonymous?: boolean;

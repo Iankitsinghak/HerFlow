@@ -1,156 +1,61 @@
 
-/**
- * Core Philosophy: This ruleset enforces a dual security model. For sensitive, personal data
- * (profiles, cycle logs, doctor questions), it uses a strict user-ownership model where only
- * the creator can access their data. For public content (community posts, comments), it
- * employs a "public read, owner write" model, allowing anyone to view the content but
- * restricting modifications to the original author. A special exception is made for "hugging"
- * a post, which any authenticated user can do.
- *
- * Data Structure: The data is structurally segregated based on access patterns. All private
- * user data is nested within a user-specific path, `/users/{userId}`, which simplifies and
- * strengthens ownership rules. Publicly-contributed content resides in top-level collections
- * like `/communityPosts` and their subcollections.
- *
- * Key Security Decisions:
- * - Default Deny: All access is denied by default unless explicitly granted.
- * - No User Listing: It is not possible to list documents in the top-level `/users` collection.
- * - Private Data Isolation: Data in `/users/{userId}` subcollections is strictly confined to the
- *   owner, preventing any cross-user data leakage.
- * - Public Content Integrity: While `communityPosts` and their `comments` are publicly readable,
- *   only the authenticated author can create, update, or delete their own posts/comments. The
- *   exception is for 'hugging' a post, which any authenticated user can do.
- * - Read-Only Tags: The `/tags` collection is publicly readable but not writable by clients to
- *   prevent spam and maintain data quality. Tag management should be handled by a trusted
- *   backend process or admin role (not defined in this ruleset).
- *
- * v13 - Correctly implement hug/unhug security logic.
- */
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
     
+    // Check if user is logged in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if the user accessing the data owns it (for /users/ path)
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Check if the user is the author of the post (stored as authorId)
+    function isAuthor() {
+      return isSignedIn() && request.auth.uid == resource.data.authorId;
+    }
+
+    // --- USER DATA RULES ---
+
+    match /users/{userId}/{path=**} {
+        allow read, write: if isOwner(userId);
+    }
+    
+    // --- COMMUNITY POSTS RULES ---
+
     match /communityPosts/{postId} {
-      // 1. Anyone can view posts
+      // 1. Anyone can read
       allow read: if true;
       
-      // 2. Only logged-in users can create posts
-      allow create: if request.auth != null;
+      // 2. Only logged in users can create. 
+      // We ensure they set themselves as the author.
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
 
-      // 3. The Update Rule (The Fix)
-      allow update: if request.auth != null && (
-        // Allow if the user is the Author
-        request.auth.uid == resource.data.userId || 
-        
-        // OR Allow if the user is just liking/hugging (only touching these two fields)
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hugs', 'huggedBy'])
-      );
-    }
-    
-    // ... rest of your rules
-  }
-}
-    // Checks for ownership on an existing document.
-    function isExistingOwner(userIdField) {
-      return isSignedIn() && request.auth.uid == resource.data[userIdField];
-    }
-    
-    // Validates that the incoming document's authorId field matches the user's auth UID.
-    function isIncomingDataAuthor() {
-      return isSignedIn() && request.resource.data.authorId == request.auth.uid;
-    }
-
-    // Validates that the incoming document's userId field matches the userId from the path.
-    function incomingDataMatchesOwnershipPath(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    // Validates that an ownership field (e.g., userId, authorId) is not being changed.
-    function isOwnershipFieldImmutable(fieldName) {
-      return request.resource.data[fieldName] == resource.data[fieldName];
-    }
-    
-    // Checks if only a specific set of fields are being updated.
-    function isOnlyHugFieldsChanging() {
-        let changedKeys = request.resource.data.diff(resource.data).affectedKeys();
-        return changedKeys.hasOnly(['hugs', 'huggedBy']);
-    }
-    
-    // Checks if a user is giving a hug to a post
-    function isGivingHug() {
-      let incoming = request.resource.data;
-      let existing = resource.data;
+      // 3. Only the author can update their own post. No one else can.
+      allow update: if isAuthor();
       
-      // Ensure only hugs and huggedBy are being changed
-      return isOnlyHugFieldsChanging()
-          // Ensure the hug count is only incremented by 1
-          && incoming.hugs == existing.hugs + 1
-          // Ensure the user's ID is being added to the huggedBy array and no one else's
-          && incoming.huggedBy.toSet().hasAll(existing.huggedBy.toSet())
-          && incoming.huggedBy.toSet().has(request.auth.uid)
-          && incoming.huggedBy.size() == existing.huggedBy.size() + 1;
-    }
-    
-    // Checks if a user is removing a hug from a post
-    function isRemovingHug() {
-      let incoming = request.resource.data;
-      let existing = resource.data;
-      
-      // Ensure only hugs and huggedBy are being changed
-      return isOnlyHugFieldsChanging()
-          // Ensure the hug count is only decremented by 1
-          && incoming.hugs == existing.hugs - 1
-          // Ensure the user's ID is being removed from the huggedBy array
-          && existing.huggedBy.toSet().hasAll(incoming.huggedBy.toSet())
-          && !incoming.huggedBy.toSet().has(request.auth.uid)
-          && incoming.huggedBy.size() == existing.huggedBy.size() - 1;
-    }
+      // 4. Only author can delete
+      allow delete: if isAuthor();
 
-    match /users/{userId}/userProfiles/{profileId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/cycleLogs/{cycleLogId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isOwner(userId);
-    }
-
-    match /users/{userId}/doctorQuestions/{questionId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && incomingDataMatchesOwnershipPath(userId);
-      allow update: if isOwner(userId) && isOwnershipFieldImmutable('userId');
-      allow delete: if isOwner(userId);
-    }
-
-    match /communityPosts/{communityPostId} {
-      allow get, list: if true;
-      allow create: if isIncomingDataAuthor();
-
-      // An update is allowed if one of three conditions is met:
-      // 1. The user is the original author and is not changing the authorId (for general edits).
-      // 2. The user is giving a hug.
-      // 3. The user is removing a hug.
-      allow update: if (isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId') && !isOnlyHugFieldsChanging()) || 
-                       (isSignedIn() && (isGivingHug() || isRemovingHug()));
-      
-      allow delete: if isExistingOwner('authorId');
-
+      // --- COMMENTS SUBCOLLECTION ---
       match /comments/{commentId} {
-        allow get, list: if true;
-        allow create: if isIncomingDataAuthor();
-        allow update, delete: if isExistingOwner('authorId') && isOwnershipFieldImmutable('authorId');
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
       }
     }
 
+    // --- TAGS RULES ---
+    
     match /tags/{tagId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+      allow read: if true;
+      allow write: if false; // Only admin via backend can change tags
     }
   }
 }

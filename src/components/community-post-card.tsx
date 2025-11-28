@@ -44,70 +44,17 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
     const firestore = useFirestore();
     const { toast } = useToast();
     
-    // Use local state for optimistic updates
     const [post, setPost] = useState(initialPost);
-    const [isHugging, setIsHugging] = useState(false);
     const [isCommentsOpen, setIsCommentsOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // This effect ensures the local state is updated if the parent's data changes
     useEffect(() => {
         setPost(initialPost);
     }, [initialPost]);
 
 
-    const hasHugged = user ? post.huggedBy?.includes(user.uid) : false;
     const isAuthor = user ? user.uid === post.authorId : false;
-
-    const handleHug = () => {
-        if (!user || !firestore || isHugging) return;
-
-        setIsHugging(true);
-
-        const newHuggedState = !hasHugged;
-        
-        const currentHugCount = post.hugs || 0;
-        const newHugCount = newHuggedState ? currentHugCount + 1 : currentHugCount - 1;
-
-        const newHuggedBy = newHuggedState
-            ? [...(post.huggedBy || []), user.uid]
-            : (post.huggedBy || []).filter(id => id !== user.uid);
-
-        setPost({
-            ...post,
-            hugs: newHugCount,
-            huggedBy: newHuggedBy,
-        });
-
-        const postRef = doc(firestore, 'communityPosts', post.id);
-        const updateData = {
-            hugs: increment(newHuggedState ? 1 : -1),
-            huggedBy: newHuggedState ? arrayUnion(user.uid) : arrayRemove(user.uid)
-        };
-
-        updateDoc(postRef, updateData)
-            .catch((serverError: FirestoreError) => {
-                // Revert optimistic update on error
-                setPost(initialPost); 
-                
-                const permissionError = new FirestorePermissionError({
-                    path: postRef.path,
-                    operation: 'update',
-                    requestResourceData: updateData,
-                });
-                errorEmitter.emit('permission-error', permissionError);
-
-                toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: 'Could not give hug. Please check permissions.',
-                });
-            })
-            .finally(() => {
-                setIsHugging(false);
-            });
-    };
 
     const handleDelete = async () => {
         if (!isAuthor || !firestore) return;
@@ -200,19 +147,6 @@ export function CommunityPostCard({ post: initialPost }: CommunityPostCardProps)
                 <CardContent>
                     <p className="text-foreground/90 mb-6 whitespace-pre-wrap">{post.content}</p>
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleHug}
-                            disabled={!user || isHugging}
-                            className={cn(
-                                "flex items-center gap-1 hover:text-primary px-1 h-auto py-1",
-                                hasHugged && "text-primary"
-                            )}
-                        >
-                            <span className="text-lg">🤗</span>
-                            <span>{post.hugs || 0} Hugs</span>
-                        </Button>
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
                                 <MessageSquare className="h-4 w-4" />
