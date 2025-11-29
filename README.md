@@ -1,7 +1,8 @@
 # HerFlow 🌸
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1607960402358-a5ceb04ebeb3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkaXZlcnNlJTIwd29tZW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2NDE1NDc5NXww&ixlib=rb-4.1.0&q=80&w=1080" alt="A diverse group of smiling women" width="600" data-ai-hint="diverse women smiling" />
+  <!-- TODO: Replace this placeholder with a screenshot of your actual application -->
+  <img src="https://images.unsplash.com/photo-1667473916565-6fd552001ba2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoZWFsdGglMjBjYWxlbmRhcnxlbnwwfHx8fDE3NjQxNTQ3OTV8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="An abstract image of a digital health calendar and interface" width="600" data-ai-hint="health app interface" />
 </p>
 
 <p align="center">
