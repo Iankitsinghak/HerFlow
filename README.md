@@ -1,34 +1,7 @@
 # 🌸 HerFlow — A Gentle Companion for Every Cycle
 
 <p align="center">
-  <img src="./public/readme/banner.png" width="850" alt="HerFlow Banner" />
-</p>
-
-<p align="center">
   <strong>A beautiful, safe, AI-powered women’s health platform — crafted for clarity, comfort, and care.</strong>
-</p>
-
----
-
-## 💠 ASCII Header (Perfect “HERFLOW”)
-
-```txt
-██╗  ██╗███████╗██████╗ ███████╗██╗      ██████╗ ██╗    ██╗
-██║  ██║██╔════╝██╔══██╗██╔════╝██║     ██╔═══██╗██║    ██║
-███████║█████╗  ██████╔╝ █████╗ ██║     ██║   ██║██║ █╗ ██║
-██╔══██║██╔══╝  ██╔══██╗██║     ██║     ██║   ██║██║███╗██║
-██║  ██║███████╗██║  ██║██║     ███████╗╚██████╔╝╚███╔███╔╝
-╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝██║     ╚══════╝ ╚═════╝  ╚══╝╚══╝ 
-```
-
----
-
-<p align="center"> 
-  <img src="https://img.shields.io/badge/PWA-Ready-ff4da6?style=for-the-badge&logo=pwa&logoColor=white" />
-  <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" />
-  <img src="https://img.shields.io/badge/Firebase-Secure-ffcc33?style=for-the-badge&logo=firebase&logoColor=black" />
-  <img src="https://img.shields.io/badge/Gemini_AI-Woomania-blue?style=for-the-badge&logo=googlecloud" />
-  <img src="https://img.shields.io/badge/Made%20For-Women%20in%20India-ff6699?style=for-the-badge" />
 </p>
 
 ---
@@ -83,10 +56,6 @@ understood, supported, and safe. HerFlow avoids clinical coldness — it’s a s
 - Offline-first PWA: add-to-home-screen, splash screens, fast startup.
 - Security-first: strict Firestore rules and data minimization.
 
-<p align="center">
-  <img src="./public/readme/dashboard.png" alt="Dashboard preview" width="800" />
-</p>
-
 ---
 
 ## 🤖 Woomania — The AI That Feels Human
@@ -104,10 +73,6 @@ understood, supported, and safe. HerFlow avoids clinical coldness — it’s a s
 - Low-toxicity UI patterns (e.g., soft prompts, gradual disclosure).
 - Secure deletion and moderation workflows.
 - AI-assisted draft and content-sanitisation options.
-
-<p align="center">
-  <img src="./public/readme/community.png" alt="Community preview" width="800" />
-</p>
 
 ---
 
