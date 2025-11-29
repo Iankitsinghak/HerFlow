@@ -1,70 +1,108 @@
-# HerFlow 🌸
+# 🌸 HerFlow — A Beautiful Cycle, Wellness & Community Platform for Women
 
 <p align="center">
-  <!-- TODO: Replace this placeholder with a screenshot of your actual application -->
-  <img src="https://images.unsplash.com/photo-1667473916565-6fd552001ba2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoZWFsdGglMjBjYWxlbmRhcnxlbnwwfHx8fDE3NjQxNTQ3OTV8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="An abstract image of a digital health calendar and interface" width="600" data-ai-hint="health app interface" />
+  <img src="./public/readme/cover.png" width="700" alt="HerFlow App Preview" />
 </p>
 
 <p align="center">
-  <strong>A gentle companion for your rhythm, wellbeing, and everyday comfort.</strong>
+  <strong>A gentle companion for your rhythm, wellbeing, and everyday comfort.</strong><br>
+  A modern, AI-powered women’s health app built with love, science, and safety.
 </p>
 
 ---
 
-HerFlow is a supportive and empowering health and wellness platform designed for women. It goes beyond simple period tracking, offering a holistic ecosystem that combines data-driven insights, a private community, and AI-powered guidance to help users understand their bodies and navigate their health journey with confidence and clarity.
+HerFlow is a warm, intuitive, and intelligent health companion designed to support women across every phase of their cycle.  
+It goes beyond traditional period tracking — bringing together **cycle insights**, **symptom logging**, **AI guidance**, **a supportive community**, and **Indian-friendly wellness tools** to create a truly holistic platform.
 
-Built with a modern, secure, and scalable technology stack, HerFlow is a production-ready Progressive Web App (PWA) that provides a seamless, app-like experience on any device.
+Built as a **production-ready Next.js Progressive Web App (PWA)**, HerFlow loads fast, works offline, installs on home screens, and feels just like a native mobile app.
 
-## ✨ Key Features
+---
 
-HerFlow is packed with features designed to support users through every phase of their cycle and life:
+## ✨ Features at a Glance
 
-- **Personalized Onboarding:** A gentle, multi-step flow that gathers essential health information to customize the user experience from day one.
-- **Intelligent Cycle Tracking:** Log period days, symptoms, mood, and flow intensity. The app provides a "Today at a glance" view of the current cycle phase, predicts future periods, and visualizes historical data.
-- **AI-Powered Wellness Planner:** Based on logged symptoms for a given cycle, users can generate a personalized daily wellness plan (Morning, Afternoon, Evening) with actionable advice and recommendations.
-- **AI Chat Companion ("Woomania"):** An empathetic and supportive AI chat assistant available 24/7 to answer general health questions, provide encouragement, and offer a listening ear. It includes safety disclaimers and is designed *not* to give medical advice.
-- **Supportive Community Forum:** A safe and private space for users to connect, share stories, and ask questions. Features include:
-  - Create, read, and comment on posts.
-  - Option to post anonymously to encourage open conversation.
-  - AI-assisted writing to help users draft their posts.
-  - Secure, role-based delete functionality for posts and comments.
-- **Period-Ready Checklist:** A customizable to-do list where users can add and manage essential items to ensure they're always prepared for their period.
-- **Gentle Health Guides:** Informational pages on topics like period products and general health awareness, designed to be accessible and easy to understand.
-- **Progressive Web App (PWA):** Fully installable on both mobile and desktop devices for a native app experience, including full-screen launch and a permanent "Install App" button.
-- **Secure Authentication:** Robust user authentication with options for Email/Password and Google Sign-In, built on Firebase Authentication.
-- **Multi-Language Support:** A flexible i18n framework to support multiple languages, with user preferences saved to their profile.
-- **Responsive & Modern UI:** A beautiful, calming, and fully responsive user interface built with ShadCN UI and Tailwind CSS.
+### 🌙 **Personalized Cycle Tracking**
+- Track periods, flow, mood, symptoms, and lifestyle factors  
+- “Today at a Glance” card with phase prediction  
+- Automatic period & ovulation prediction (with luteal-phase logic)  
+- Insights based on historical cycles  
 
-## 🚀 Technology Stack
+<p align="center">
+  <img src="./public/readme/dashboard.png" width="700" alt="HerFlow Dashboard" />
+</p>
 
-HerFlow is built with a modern, robust, and scalable tech stack, perfect for a production environment.
+---
 
-- **Framework:** [Next.js](https://nextjs.org/) (App Router)
-- **Language:** [TypeScript](https://www.typescriptlang.org/)
-- **Backend & Database:** [Firebase](https://firebase.google.com/)
-  - **Authentication:** Firebase Authentication (Email/Password, Google Provider)
-  - **Database:** Cloud Firestore for all application data.
-  - **Security:** Strict Firestore Security Rules to protect user data.
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components:** [ShadCN UI](https://ui.shadcn.com/)
-- **Generative AI:** [Google's Genkit](https://firebase.google.com/docs/genkit)
-- **Form Management:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/) for validation
-- **Data Fetching:** Real-time data synchronization with Firestore using custom React hooks.
-- **PWA:** [next-pwa](https://www.npmjs.com/package/next-pwa) for Progressive Web App capabilities.
+### 🤖 **Woomania — Your Gentle AI Companion**
+A soft, empathetic, non-judgmental chatbot trained to:
+- Explain concepts clearly  
+- Offer emotional comfort  
+- Provide safe, general health guidance  
+- Encourage users to consult doctors for medical decisions  
 
-## Getting Started
+---
 
-This project is set up to run in a Firebase Studio environment.
+### 🩸 **Symptom & Mood Logging**
+- Customizable symptoms with emojis  
+- Daily logging system  
+- Graph trends for mood, symptoms, flow, cycle length  
 
-1.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
-2.  **Run the Development Server:**
-    ```bash
-    npm run dev
-    ```
-    The application will be available at `http://localhost:9002`.
+---
+
+### 🌸 **Indian-Friendly Wellness Features**
+- Period-ready checklist  
+- Indian product guide (pads/cups/tampons brands used here)  
+- PCOS/Thyroid awareness snapshots  
+- Cultural sensitivity built-in (privacy-first design)
+
+---
+
+### 💬 **Community (Anonymous-Friendly)**
+A safe space where users can:
+- Post publicly or anonymously  
+- Comment, reply, and support each other  
+- Delete their own posts (secure role-based rules)  
+- Use AI to help draft posts  
+
+<p align="center">
+  <img src="./public/readme/community.png" width="700" alt="HerFlow Community" />
+</p>
+
+---
+
+### 🩺 **Ask a Doctor**
+A private section where users can submit concerns that only doctors/moderators can see.
+
+---
+
+### 📱 **PWA – Installable App**
+- Add to Home Screen  
+- Startup splash screens  
+- Offline-ready  
+- Looks/behaves like a native app  
+
+---
+
+### 🔐 **Private, Secure, Account-Based**
+- Firebase Auth (Email + Google Sign-In)  
+- Firestore with secure rules  
+- Privacy-first: no tracking, no analytics sharing, no 3rd-party ads  
+
+---
+
+## 🚀 Tech Stack
+
+- **Next.js (App Router)** — Modern, fast & scalable  
+- **TypeScript** — Type-safe development  
+- **Firebase**  
+  - Authentication  
+  - Firestore  
+  - Storage  
+- **Genkit AI (Gemini)** — AI chat & insights  
+- **Tailwind CSS + ShadCN UI** — Beautiful, responsive UI  
+- **React Hook Form + Zod** — Forms & validation  
+- **next-pwa** — Progressive Web App support  
+
+---
 
 ### Project Structure
 
