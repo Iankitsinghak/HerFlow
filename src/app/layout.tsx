@@ -9,6 +9,8 @@ import { LanguageProvider } from '@/context/language-provider';
 export const metadata: Metadata = {
   title: 'HerFlow',
   description: 'Empowering women through every phase of life.',
+  manifest: '/manifest.json',
+  themeColor: '#C2185B',
 };
 
 export default function RootLayout({
