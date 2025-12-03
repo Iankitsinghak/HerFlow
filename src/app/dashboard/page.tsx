@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, cloneElement, useState } from 'react';
@@ -23,6 +24,7 @@ import {
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomChecklist } from '@/components/info/CustomChecklist';
+import { DailyFemInsight } from '@/components/info/DailyFemInsight';
 
 const quickActions = [
   {
@@ -88,6 +90,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8">
             <Skeleton className="h-12 w-1/2" />
+            <Skeleton className="h-20 w-full" />
             <Skeleton className="h-40 w-full" />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Skeleton className="h-24 w-full" />
@@ -111,6 +114,8 @@ export default function DashboardPage() {
           symptoms, and explore real stories.
         </p>
       </div>
+
+      <DailyFemInsight />
 
       {/* Today at a glance / Onboarding CTA */}
       <div className="grid lg:grid-cols-3 gap-6">
