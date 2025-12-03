@@ -11,9 +11,6 @@ import {
   Heart,
   MessageCircle,
   Plus,
-  Sun,
-  Cloud,
-  Snowflake,
 } from 'lucide-react';
 import Link from 'next/link';
 import { collection, query, orderBy, doc } from 'firebase/firestore';
@@ -26,15 +23,8 @@ import {
 } from '@/lib/cycle-service';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getWeatherTip } from '@/lib/weatherTips';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { CustomChecklist } from '@/components/info/CustomChecklist';
+import { GentleDailyGoal } from '@/components/gentle-daily-goal';
 
 const quickActions = [
   {
@@ -60,7 +50,6 @@ const quickActions = [
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const [weather, setWeather] = useState<'WARM' | 'HOT' | 'COOL'>('WARM');
 
   const userProfileRef = useMemoFirebase(
     () => (user ? doc(firestore, `users/${user.uid}/userProfiles`, user.uid) : null),
@@ -83,21 +72,17 @@ export default function DashboardPage() {
 
   const { data: rawLogs, isLoading: isLoadingLogs } = useCollection<CycleLog>(logsQuery);
 
-  const { currentPhase, nextPeriodDate, cycleDay, isOnPeriod } = useMemo(() => {
+  const { currentPhase, nextPeriodDate, cycleDay } = useMemo(() => {
     if (!rawLogs || !hasCompletedOnboarding || rawLogs.length === 0) {
-      return { currentPhase: 'Unknown', nextPeriodDate: null, cycleDay: null, isOnPeriod: false };
+      return { currentPhase: 'Unknown', nextPeriodDate: null, cycleDay: null };
     }
     
-    const phase = getCurrentCyclePhase(rawLogs);
     return {
-        currentPhase: phase,
+        currentPhase: getCurrentCyclePhase(rawLogs),
         nextPeriodDate: estimateNextPeriodDate(rawLogs),
         cycleDay: getCurrentCycleDay(rawLogs),
-        isOnPeriod: phase === 'Menstrual'
     }
   }, [rawLogs, hasCompletedOnboarding]);
-
-  const weatherTip = useMemo(() => getWeatherTip(weather, isOnPeriod), [weather, isOnPeriod]);
   
   const isLoading = isLoadingProfile || isLoadingLogs;
 
@@ -179,27 +164,8 @@ export default function DashboardPage() {
             <Heart className="absolute -right-4 -bottom-8 h-32 w-32 text-primary/10 -rotate-12" />
         </Card>
 
-        {/* Weather Tip Card */}
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-base font-headline flex justify-between items-center">
-                    Today's Comfort Tip
-                    <Select value={weather} onValueChange={(v: any) => setWeather(v)}>
-                        <SelectTrigger className="w-auto text-xs h-7 gap-1">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="HOT"><Sun className="inline-block mr-1 h-3 w-3"/> Hot</SelectItem>
-                            <SelectItem value="WARM"><Cloud className="inline-block mr-1 h-3 w-3"/> Warm</SelectItem>
-                            <SelectItem value="COOL"><Snowflake className="inline-block mr-1 h-3 w-3"/> Cool</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-sm text-muted-foreground">{weatherTip}</p>
-            </CardContent>
-        </Card>
+        {/* Gentle Daily Goal Card */}
+        <GentleDailyGoal />
       </div>
 
 
@@ -280,3 +246,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
