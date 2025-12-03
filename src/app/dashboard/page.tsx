@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useMemo, cloneElement, useState } from 'react';
+import { useMemo } from 'react';
 import { useUser, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,8 +22,10 @@ import {
 } from '@/lib/cycle-service';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CustomChecklist } from '@/components/info/CustomChecklist';
 import { DailyFemInsight } from '@/components/info/DailyFemInsight';
+import DashboardHeader from '@/components/dashboard-header';
+import { CustomChecklist } from '@/components/info/CustomChecklist';
+import { GlowTracker } from '@/components/glow-tracker';
 
 const quickActions = [
   {
@@ -105,36 +106,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div>
-        <h1 className="text-3xl font-bold font-headline">
-          Welcome back, {displayName}. Let’s understand your cycle together 🌸
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Based on your info, we’ll help you track your cycle, understand
-          symptoms, and explore real stories.
-        </p>
-      </div>
+      <DashboardHeader name={displayName} />
 
       <DailyFemInsight />
 
-      {/* Today at a glance / Onboarding CTA */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
+      {/* Onboarding CTA or Glance */}
+      {hasCompletedOnboarding ? (
+         <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
             <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                {hasCompletedOnboarding ? (
-                    'Today at a glance'
-                ) : (
-                    <>
-                    <Heart className="text-primary animate-pulse-heart" />
-                    <span>Complete your cycle setup</span>
-                    </>
-                )}
-            </CardTitle>
+               <CardTitle className="flex items-center gap-2">Today at a glance</CardTitle>
             </CardHeader>
             <CardContent>
-            {hasCompletedOnboarding ? (
-                <>
                 <p className="text-lg">🌸 You’re likely in your {currentPhase} phase.</p>
                 <div className="mt-4 flex flex-col sm:flex-row gap-4">
                     <Button asChild>
@@ -148,9 +130,17 @@ export default function DashboardPage() {
                         </Link>
                     </Button>
                 </div>
-                </>
-            ) : (
-                <>
+            </CardContent>
+        </Card>
+      ) : (
+        <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <Heart className="text-primary animate-pulse-heart" />
+                  <span>Complete your cycle setup</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
                 <p className="text-lg text-muted-foreground">
                     Tell us about your last period and cycle pattern to unlock predictions and personalized insights.
                 </p>
@@ -161,12 +151,10 @@ export default function DashboardPage() {
                         </Link>
                     </Button>
                 </div>
-                </>
-            )}
             </CardContent>
             <Heart className="absolute -right-4 -bottom-8 h-32 w-32 text-primary/10 -rotate-12" />
         </Card>
-      </div>
+      )}
 
 
       {/* Quick Actions */}
@@ -177,7 +165,7 @@ export default function DashboardPage() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                    {cloneElement(action.icon, { className: 'h-6 w-6' })}
+                    {React.cloneElement(action.icon, { className: 'h-6 w-6' })}
                   </div>
                   <div>
                     <CardTitle className="text-base font-headline">
@@ -195,7 +183,16 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Your cycle overview & Checklist */}
+        <div className="lg:col-span-2">
+           <GlowTracker currentPhase={currentPhase}/>
+        </div>
+         <div className="lg:col-span-1">
+             <CustomChecklist />
+        </div>
+      </div>
+      
+       <div className="grid gap-8 lg:grid-cols-3">
+        {/* Your cycle overview */}
         <div className="lg:col-span-2 space-y-4">
             <h2 className="text-xl font-bold font-headline">Your cycle overview</h2>
             <Card>
@@ -228,9 +225,7 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         </div>
-         <div className="lg:col-span-1">
-             <CustomChecklist />
-        </div>
+        <div />
       </div>
 
       {/* Community Teaser */}
