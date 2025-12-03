@@ -54,28 +54,6 @@
         "email"
       ]
     },
-    "DailyCheckin": {
-        "title": "DailyCheckin",
-        "type": "object",
-        "description": "A record that a user has completed their daily gentle goal.",
-        "properties": {
-            "date": { "type": "string", "format": "date", "description": "The date of the check-in in YYYY-MM-DD format." },
-            "doneAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the goal was marked as done." }
-        },
-        "required": ["date", "doneAt"]
-    },
-    "Streak": {
-        "title": "Streak",
-        "type": "object",
-        "description": "Tracks the user's daily check-in streak.",
-        "properties": {
-            "currentStreak": { "type": "number", "description": "The current number of consecutive daily check-ins." },
-            "bestStreak": { "type": "number", "description": "The user's longest streak ever." },
-            "lastCheckinDate": { "type": "string", "format": "date", "description": "The date of the last check-in in YYYY-MM-DD format." },
-            "updatedAt": { "type": "string", "format": "date-time", "description": "Timestamp of when the streak was last updated." }
-        },
-        "required": ["currentStreak", "lastCheckinDate"]
-    },
     "CycleLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "CycleLog",
@@ -276,30 +254,6 @@
               "name": "profileId",
               "description": "The unique ID of the user profile document.  It's recommended this is the same as the userId."
             }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/dailyCheckins/{checkinId}",
-        "definition": {
-          "entityName": "DailyCheckin",
-          "schema": { "$ref": "#/backend/entities/DailyCheckin" },
-          "description": "Stores daily goal completion records for a user. The `checkinId` is the date in YYYY-MM-DD format.",
-          "params": [
-            { "name": "userId", "description": "The unique ID of the user." },
-            { "name": "checkinId", "description": "The date of the check-in (YYYY-MM-DD)." }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/streaks/{streakId}",
-        "definition": {
-          "entityName": "Streak",
-          "schema": { "$ref": "#/backend/entities/Streak" },
-          "description": "Stores streak information for a user. The `streakId` is typically 'current'.",
-          "params": [
-            { "name": "userId", "description": "The unique ID of the user." },
-            { "name": "streakId", "description": "The ID of the streak document (e.g., 'current')." }
           ]
         }
       },

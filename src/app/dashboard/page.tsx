@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo, cloneElement, useState } from 'react';
@@ -24,7 +23,6 @@ import {
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CustomChecklist } from '@/components/info/CustomChecklist';
-import { GentleDailyGoal } from '@/components/gentle-daily-goal';
 
 const quickActions = [
   {
@@ -116,7 +114,7 @@ export default function DashboardPage() {
 
       {/* Today at a glance / Onboarding CTA */}
       <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-secondary/60 relative overflow-hidden border-primary/20">
+        <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
             <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 {hasCompletedOnboarding ? (
@@ -163,9 +161,6 @@ export default function DashboardPage() {
             </CardContent>
             <Heart className="absolute -right-4 -bottom-8 h-32 w-32 text-primary/10 -rotate-12" />
         </Card>
-
-        {/* Gentle Daily Goal Card */}
-        <GentleDailyGoal />
       </div>
 
 
@@ -246,5 +241,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
