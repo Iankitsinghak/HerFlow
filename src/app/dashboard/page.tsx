@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo } from 'react';
@@ -25,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DailyFemInsight } from '@/components/info/DailyFemInsight';
 import DashboardHeader from '@/components/dashboard-header';
 import { CustomChecklist } from '@/components/info/CustomChecklist';
+import { GlowTracker } from '@/components/glow-tracker';
 
 
 const quickActions = [
@@ -184,7 +186,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-8 lg:grid-cols-3">
          <div className="lg:col-span-2">
-            {/* The GlowTracker component was here. It has been removed. */}
+            <GlowTracker />
         </div>
          <div className="lg:col-span-1">
              <CustomChecklist />
