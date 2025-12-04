@@ -2,9 +2,10 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay, getDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
+import { Separator } from './ui/separator';
 
 interface DashboardHeaderProps {
     name: string;
@@ -27,12 +28,12 @@ export default function DashboardHeader({ name, nextPeriodDate }: DashboardHeade
         setGreeting(getGreeting());
     }, []);
 
+    const today = useMemo(() => new Date(), []);
     const monthDays = useMemo(() => {
-        const today = new Date();
         const start = startOfMonth(today);
         const end = endOfMonth(today);
         return eachDayOfInterval({ start, end });
-    }, []);
+    }, [today]);
 
     useEffect(() => {
         if (todayRef.current) {
@@ -46,27 +47,33 @@ export default function DashboardHeader({ name, nextPeriodDate }: DashboardHeade
                 {greeting}, {name}!
             </h1>
             <div className="mt-6">
+                <div className="mb-2 pl-1">
+                    <p className="font-bold text-lg text-primary">{format(today, 'MMM yyyy')}</p>
+                </div>
                 <ScrollArea className="w-full whitespace-nowrap">
                     <div className="flex w-max space-x-2 text-center pb-4">
                         {monthDays.map(day => {
                             const isPredicted = nextPeriodDate && isSameDay(day, nextPeriodDate);
+                            const isSunday = getDay(day) === 0;
                             return (
-                                <div
-                                    key={day.toISOString()}
-                                    className="flex flex-col items-center"
-                                    ref={isToday(day) ? todayRef : null}
-                                >
-                                    <p className="text-sm font-semibold text-muted-foreground">{format(day, 'E')}</p>
-                                    <div className={cn(
-                                        "relative mt-2 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-colors",
-                                        isToday(day) 
-                                            ? "bg-primary text-primary-foreground" 
-                                            : "bg-secondary text-secondary-foreground hover:bg-primary/10",
-                                        isPredicted && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                                    )}>
-                                        {format(day, 'd')}
+                                <React.Fragment key={day.toISOString()}>
+                                    <div
+                                        className="flex flex-col items-center"
+                                        ref={isToday(day) ? todayRef : null}
+                                    >
+                                        <p className="text-sm font-semibold text-muted-foreground">{format(day, 'E')}</p>
+                                        <div className={cn(
+                                            "relative mt-2 flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-colors",
+                                            isToday(day) 
+                                                ? "bg-primary text-primary-foreground" 
+                                                : "bg-secondary text-secondary-foreground hover:bg-primary/10",
+                                            isPredicted && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                                        )}>
+                                            {format(day, 'd')}
+                                        </div>
                                     </div>
-                                </div>
+                                    {isSunday && <Separator orientation="vertical" className="h-16 self-center mx-2" />}
+                                </React.Fragment>
                             )
                         })}
                     </div>
