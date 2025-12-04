@@ -147,7 +147,7 @@ export function CommunityPostCard({ post, onPostDeleted }: CommunityPostCardProp
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
                                 <MessageSquare className="h-4 w-4" />
-                                <span>{post.commentCount || 0} Comments</span>
+                                <span>Comments</span>
                             </Button>
                         </CollapsibleTrigger>
                     </div>
