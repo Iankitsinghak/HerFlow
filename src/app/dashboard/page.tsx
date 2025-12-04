@@ -108,7 +108,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <DashboardHeader name={displayName} />
+      <DashboardHeader name={displayName} nextPeriodDate={nextPeriodDate} />
 
       <DailyFemInsight />
 
