@@ -46,7 +46,7 @@ import {
     calculateAverageCycleLength,
     estimateNextPeriodDate,
     getCurrentCyclePhase,
-    groupLogsIntoCycles as groupLogsIntoCyclesLegacy,
+    groupLogsIntoCyclesLegacy,
     type CycleLog,
     type GroupedCycle,
     getCurrentCycleDay,
@@ -340,3 +340,5 @@ export default function CycleLogPage() {
     </div>
   );
 }
+
+    
