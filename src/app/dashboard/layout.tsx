@@ -22,7 +22,7 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
           <p className="text-lg text-muted-foreground">
@@ -34,12 +34,10 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="flex-1">
-        <div className="container mx-auto p-6 md:p-8 lg:p-10">
+      <main className="container mx-auto px-4 py-8 md:px-6 md:py-10">
           {children}
-        </div>
       </main>
     </div>
   );

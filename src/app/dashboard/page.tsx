@@ -94,12 +94,14 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <Skeleton className="h-12 w-1/2" />
             <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-40 w-full" />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
                 <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
+            </div>
+             <div className="grid gap-8 lg:grid-cols-3">
+                <Skeleton className="lg:col-span-2 h-64" />
+                <Skeleton className="lg:col-span-1 h-64" />
             </div>
         </div>
     )
@@ -114,7 +116,7 @@ export default function DashboardPage() {
 
       {/* Onboarding CTA or Glance */}
       {hasCompletedOnboarding ? (
-         <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
+         <Card className="bg-secondary/60 relative overflow-hidden border-primary/20">
             <CardHeader>
                <CardTitle className="flex items-center gap-2">Today at a glance</CardTitle>
             </CardHeader>
@@ -135,7 +137,7 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
       ) : (
-        <Card className="lg:col-span-3 bg-secondary/60 relative overflow-hidden border-primary/20">
+        <Card className="bg-secondary/60 relative overflow-hidden border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                   <Heart className="text-primary animate-pulse-heart" />
@@ -162,25 +164,19 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {quickActions.map((action) => (
-          <Link href={action.href} key={action.title}>
-            <Card className="h-full hover:bg-muted/50 transition-colors">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className="bg-primary/10 text-primary p-2 rounded-lg">
-                    {React.cloneElement(action.icon, { className: 'h-6 w-6' })}
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-headline">
+            <Card key={action.title} className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/80 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <Link href={action.href} className="flex h-full flex-col p-6">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      {React.cloneElement(action.icon, { className: 'h-6 w-6' })}
+                    </div>
+                    <CardTitle className="text-base font-headline mb-1">
                       {action.title}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {action.description}
                     </p>
-                  </div>
-                </div>
-              </CardHeader>
+                </Link>
             </Card>
-          </Link>
         ))}
       </div>
 
@@ -192,51 +188,14 @@ export default function DashboardPage() {
              <CustomChecklist />
         </div>
       </div>
-      
-       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Your cycle overview */}
-        <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-bold font-headline">Your cycle overview</h2>
-            <Card>
-                <CardContent className="pt-6 space-y-3">
-                {!hasCompletedOnboarding ? (
-                    <>
-                        <p className="text-muted-foreground">
-                            You haven’t logged any cycle data yet.
-                        </p>
-                        <p className="text-muted-foreground mt-2">
-                            👉 Start by completing your setup to see patterns here.
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Next Predicted Period</span>
-                            <span className="font-semibold">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd, yyyy') : 'N/A'}</span>
-                        </div>
-                         <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Current Phase</span>
-                            <span className="font-semibold">{currentPhase}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Cycle Day</span>
-                            <span className="font-semibold">{cycleDay ?? 'N/A'}</span>
-                        </div>
-                    </>
-                )}
-                </CardContent>
-            </Card>
-        </div>
-        <div />
-      </div>
 
       {/* Community Teaser */}
-      <div className="bg-accent text-accent-foreground rounded-lg p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
+      <div className="bg-accent text-accent-foreground rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
+        <div className="text-center md:text-left">
             <h3 className="text-xl font-bold font-headline">You’re not alone here. 💬</h3>
-            <p>See what other women are talking about in the community.</p>
+            <p className="opacity-90 mt-1">See what other women are talking about in the community.</p>
         </div>
-        <Button variant="outline" className="bg-accent text-accent-foreground border-accent-foreground hover:bg-accent-foreground hover:text-accent" asChild>
+        <Button variant="outline" className="bg-accent text-accent-foreground border-accent-foreground/50 hover:bg-accent-foreground hover:text-accent" asChild>
             <Link href="/community">Go to Community</Link>
         </Button>
       </div>
