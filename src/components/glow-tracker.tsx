@@ -7,11 +7,13 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { startOfDay, format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from './ui/card';
-import { Loader, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Loader, Sparkles, ChevronDown } from 'lucide-react';
 import { getCurrentCyclePhase, type CycleLog } from '@/lib/cycle-service';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, orderBy } from 'firebase/firestore';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { generateGlowInsight } from '@/ai/flows/glow-insight-flow';
 
 // --- Types ---
 type GlowLog = {
@@ -25,6 +27,8 @@ type GlowLog = {
   mood?: string;
   aiInsight?: string;
 };
+
+export type GlowLogInput = Partial<Omit<GlowLog, 'date' | 'updatedAt'>>;
 
 type Option = { label: string; value: string };
 type Category = {
@@ -101,21 +105,6 @@ const categories: Category[] = [
   },
 ];
 
-const generateGlowInsight = (cyclePhase: string): string => {
-  switch (cyclePhase.toLowerCase()) {
-    case 'follicular':
-      return "You're in your follicular phase. Your energy might be on the rise, making it a great time for creative projects! 🌸";
-    case 'ovulation':
-      return 'This is your ovulation phase. You may feel more radiant and social. Your natural glow is at its peak! ✨';
-    case 'luteal':
-      return 'You are in the luteal phase. It’s normal to feel a bit inward and crave comfort. Be extra gentle with yourself. 💖';
-    case 'menstrual':
-      return 'Welcome to your menstrual phase. Your body is asking for rest and warmth. A cozy tea and warm socks can feel like a hug. 🌙';
-    default:
-      return 'Track your cycle to get more personalized glow insights here.';
-  }
-};
-
 
 // --- Pill Component ---
 const GlowPill = ({ label, isSelected, onClick }: { label: string; isSelected: boolean; onClick: () => void }) => {
@@ -144,7 +133,8 @@ export function GlowTracker() {
   const [logData, setLogData] = useState<Partial<GlowLog>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const todayStr = format(startOfDay(new Date()), 'yyyy-MM-dd');
   const glowLogRef = useMemoFirebase(
@@ -178,10 +168,6 @@ export function GlowTracker() {
         const docSnap = await getDoc(glowLogRef);
         if (docSnap.exists()) {
           setLogData(docSnap.data());
-        } else {
-          // No log for today, generate initial insight
-          const insight = generateGlowInsight(cyclePhase);
-          setLogData({ aiInsight: insight });
         }
       } catch (error) {
         console.error("Error fetching glow log:", error);
@@ -191,7 +177,7 @@ export function GlowTracker() {
     };
 
     fetchLog();
-  }, [glowLogRef, cyclePhase]);
+  }, [glowLogRef]);
 
   const handleSelect = useCallback(async (key: string, value: string) => {
     if (!glowLogRef || !user) return;
@@ -199,27 +185,34 @@ export function GlowTracker() {
     setIsUpdating(key);
     
     const newLogData = { ...logData, [key]: value };
-    const insight = generateGlowInsight(cyclePhase);
-    
-    const finalData = {
-        ...newLogData,
-        aiInsight: insight,
-        date: todayStr,
-        updatedAt: new Date(), // Using client-side timestamp
-    };
-    
-    setLogData(finalData);
+    setLogData(newLogData);
 
-    startTransition(async () => {
-        try {
+    try {
+        await setDoc(glowLogRef, {
+            ...newLogData,
+            date: todayStr,
+            updatedAt: new Date(),
+        }, { merge: true });
+        
+        // After saving, trigger AI generation
+        setIsAiGenerating(true);
+        const insightResponse = await generateGlowInsight({
+            cyclePhase: cyclePhase,
+            logData: newLogData as GlowLogInput
+        });
+
+        if (insightResponse.insight) {
+            const finalData = { ...newLogData, aiInsight: insightResponse.insight };
+            setLogData(finalData);
             await setDoc(glowLogRef, finalData, { merge: true });
-        } catch (error) {
-            console.error("Error updating glow log:", error);
-            // Optionally revert state or show toast
-        } finally {
-            setIsUpdating(null);
         }
-    });
+
+    } catch (error) {
+        console.error("Error updating glow log:", error);
+    } finally {
+        setIsUpdating(null);
+        setIsAiGenerating(false);
+    }
 
   }, [logData, glowLogRef, user, cyclePhase, todayStr]);
 
@@ -235,47 +228,58 @@ export function GlowTracker() {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-rose-50/80 to-purple-50/60 dark:from-fuchsia-950/20 dark:to-black/20 p-6 md:p-8 rounded-2xl shadow-md border border-pink-100/50 dark:border-fuchsia-900/30">
-        <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">✨</span>
-            <h2 className="text-2xl font-headline font-semibold text-pink-900/80 dark:text-pink-200/90">Glow Tracker</h2>
-        </div>
-        <p className="text-muted-foreground mb-8">How are you feeling in your body today?</p>
-        
-        <div className="space-y-8">
-            {categories.map(({ key, label, emoji, options }) => (
-                <div key={key}>
-                <h3 className="flex items-center gap-2 font-semibold text-foreground/90 mb-3">
-                    <span>{emoji}</span>
-                    <span>{label}</span>
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                    {options.map((option) => (
-                    <GlowPill
-                        key={option.value}
-                        label={option.label}
-                        isSelected={logData[key as keyof GlowLog] === option.value}
-                        onClick={() => handleSelect(key, option.value)}
-                    />
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Card className="bg-gradient-to-br from-rose-50/80 to-purple-50/60 dark:from-fuchsia-950/20 dark:to-black/20 p-6 md:p-8 rounded-2xl shadow-md border border-pink-100/50 dark:border-fuchsia-900/30">
+            <CollapsibleTrigger className="flex justify-between items-center w-full">
+                <div>
+                    <CardTitle className="flex items-center gap-3 text-pink-900/80 dark:text-pink-200/90 font-headline text-2xl">
+                         <span className="text-2xl">✨</span>
+                         Glow Tracker
+                    </CardTitle>
+                    <CardDescription className="text-left mt-1">How are you feeling in your body today?</CardDescription>
+                </div>
+                <ChevronDown className={cn("h-6 w-6 text-pink-900/80 dark:text-pink-200/90 transition-transform", isOpen && "rotate-180")} />
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent>
+                <div className="space-y-8 mt-8">
+                    {categories.map(({ key, label, emoji, options }) => (
+                        <div key={key}>
+                        <h3 className="flex items-center gap-2 font-semibold text-foreground/90 mb-3">
+                            <span>{emoji}</span>
+                            <span>{label}</span>
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
+                            {options.map((option) => (
+                            <GlowPill
+                                key={option.value}
+                                label={option.label}
+                                isSelected={logData[key as keyof GlowLog] === option.value}
+                                onClick={() => handleSelect(key, option.value)}
+                            />
+                            ))}
+                        </div>
+                        </div>
                     ))}
                 </div>
-                </div>
-            ))}
-        </div>
 
-        <div className="mt-10 pt-6 border-t border-pink-200/40 dark:border-fuchsia-800/30">
-             <div className="bg-white/80 dark:bg-fuchsia-950/30 border border-pink-100/70 dark:border-fuchsia-800/40 rounded-xl p-4">
-                 <div className="flex items-start gap-3">
-                    <Sparkles className="h-5 w-5 text-pink-500 mt-0.5 shrink-0" />
-                    <div>
-                        <h4 className="font-semibold text-pink-900/90 dark:text-pink-200/90">Today's Glow Insight</h4>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            {logData?.aiInsight || 'Your insight will appear here.'}
-                        </p>
+                <div className="mt-10 pt-6 border-t border-pink-200/40 dark:border-fuchsia-800/30">
+                    <div className="bg-white/80 dark:bg-fuchsia-950/30 border border-pink-100/70 dark:border-fuchsia-800/40 rounded-xl p-4">
+                        <div className="flex items-start gap-3">
+                            <Sparkles className="h-5 w-5 text-pink-500 mt-0.5 shrink-0" />
+                            <div>
+                                <h4 className="font-semibold text-pink-900/90 dark:text-pink-200/90">Today's Glow Insight</h4>
+                                <p className="text-sm text-muted-foreground mt-1 min-h-[20px]">
+                                    {isAiGenerating 
+                                        ? <span className="flex items-center gap-2"><Loader className="h-4 w-4 animate-spin"/> Generating...</span> 
+                                        : (logData?.aiInsight || 'Your insight will appear here as you log.')}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-             </div>
-        </div>
-    </Card>
+            </CollapsibleContent>
+        </Card>
+    </Collapsible>
   );
 }
