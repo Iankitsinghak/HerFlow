@@ -14,13 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User as UserIcon, Menu, Download, Moon, Sun, Monitor } from 'lucide-react';
+import { LogOut, User as UserIcon, Menu, Download } from 'lucide-react';
 import { Logo } from '../logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
