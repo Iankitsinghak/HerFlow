@@ -20,7 +20,7 @@ import { LogOut, User as UserIcon, Menu, Download } from 'lucide-react';
 import { Logo } from '../logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent } from '../ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet';
 import DashboardSidebar from './dashboard-sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
@@ -61,6 +61,9 @@ export default function Header() {
       {isMobile && user && (
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent side="left" className="p-0 w-72 bg-card">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Main Menu</SheetTitle>
+            </SheetHeader>
             <DashboardSidebar onLinkClick={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
