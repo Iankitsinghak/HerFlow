@@ -174,23 +174,39 @@ export function groupLogsIntoCyclesLegacy(logs: CycleLog[], userProfile?: { peri
 
     // Special case: if there's only one period day log, it's likely from onboarding.
     const periodDays = logs.filter(log => log.isPeriodDay);
-    if (periodDays.length === 1 && userProfile?.periodDuration) {
-        const singleLog = periodDays[0];
-        const startDate = startOfDay(parseISO(singleLog.date));
+    if (periodDays.length > 0 && periodDays.length < 3 && userProfile?.periodDuration) {
+        const firstLog = periodDays[0];
+        const startDate = startOfDay(parseISO(firstLog.date));
         
-        const durationEstimate = parseInt(userProfile.periodDuration, 10);
+        let durationEstimate = 5; // default
+        try {
+            durationEstimate = parseInt(userProfile.periodDuration, 10);
+        } catch {}
+
         const endDate = addDays(startDate, Math.max(0, durationEstimate - 1));
 
-        return [{
-            cycleIndex: 1,
-            startDate: startDate,
-            endDate: endDate,
-            duration: userProfile.periodDuration, // Use the string from onboarding, e.g., "4-5"
-            symptoms: logs.flatMap(l => l.symptoms || []),
-            logs: logs,
-            cycleLength: null,
-        }];
+        // Let's check if the cycle is actually finished or still in progress
+        const realPeriodLogs = logs.filter(l => l.isPeriodDay && startOfDay(parseISO(l.date)) >= startDate);
+        const lastRealPeriodDay = realPeriodLogs.length > 0 ? startOfDay(parseISO(realPeriodLogs[realPeriodLogs.length - 1].date)) : null;
+        
+        // If there's another period start after this one, the cycle is complete.
+        const nextPeriodStarts = findPeriodStartDates(logs).filter(d => d > startDate);
+
+        if (nextPeriodStarts.length === 0 && lastRealPeriodDay && differenceInDays(new Date(), lastRealPeriodDay) < 15) {
+             // This is the current, ongoing cycle. Use real logs to determine duration.
+            const realDuration = differenceInDays(lastRealPeriodDay, startDate) + 1;
+            return [{
+                cycleIndex: 1,
+                startDate: startDate,
+                endDate: lastRealPeriodDay,
+                duration: realDuration,
+                symptoms: logs.flatMap(l => l.symptoms || []),
+                logs: logs,
+                cycleLength: null, // Still in progress
+            }];
+        }
     }
+
 
     const cycles: GroupedCycle[] = [];
     let currentCycleLogs: CycleLog[] = [];

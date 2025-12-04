@@ -89,8 +89,9 @@ export default function CycleLogPage() {
     
     // Use the new, more robust grouping logic
     const cycles = useMemo(() => {
-        return rawLogs ? groupLogsIntoCycles(rawLogs) : [];
-    }, [rawLogs]);
+        // Pass userProfile to the legacy function for the initial estimate
+        return rawLogs ? groupLogsIntoCyclesLegacy(rawLogs, userProfile) : [];
+    }, [rawLogs, userProfile]);
     
     // Legacy calculations for the top banner (can be updated later)
     const averageCycleLength = useMemo(() => {
