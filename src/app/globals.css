@@ -67,6 +67,14 @@
     --ring: 25 95% 53%;
   }
 
+  /* Light Background Themes */
+  .bg-pink { --background: 340 67% 94%; }
+  .bg-lavender { --background: 250 50% 95%; }
+  .bg-peach { --background: 30 80% 95%; }
+  .bg-mint { --background: 170 40% 95%; }
+  .bg-stone { --background: 240 10% 96%; }
+
+
   .dark {
     --background: 337 10% 10%;
     --foreground: 340 10% 90%;
@@ -129,6 +137,13 @@
     --accent: 25 95% 63%;
     --ring: 25 95% 63%;
   }
+
+  /* Dark Background Themes */
+  .dark.bg-pink { --background: 337 10% 10%; }
+  .dark.bg-lavender { --background: 250 10% 12%; }
+  .dark.bg-peach { --background: 25 10% 10%; }
+  .dark.bg-mint { --background: 170 12% 11%; }
+  .dark.bg-stone { --background: 240 5% 12%; }
 }
 
 @layer base {

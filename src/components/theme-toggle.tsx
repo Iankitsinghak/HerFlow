@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Moon, Sun, Monitor, Paintbrush } from 'lucide-react';
+import { Moon, Sun, Monitor, Paintbrush, Images } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   DropdownMenuSub,
@@ -16,7 +16,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 
-const themes = [
+const accentThemes = [
   { name: 'Pink', class: '' }, // Default
   { name: 'Violet', class: 'theme-violet' },
   { name: 'Blue', class: 'theme-blue' },
@@ -24,29 +24,45 @@ const themes = [
   { name: 'Orange', class: 'theme-orange' },
 ];
 
+const backgroundThemes = [
+    { name: 'Pink', class: 'bg-pink' },
+    { name: 'Lavender', class: 'bg-lavender' },
+    { name: 'Peach', class: 'bg-peach' },
+    { name: 'Mint', class: 'bg-mint' },
+    { name: 'Stone', class: 'bg-stone' },
+]
+
 export function ThemeToggle() {
   const { setTheme } = useTheme();
-  const [colorTheme, setColorTheme] = React.useState('');
+  const [accentTheme, setAccentTheme] = React.useState('');
+  const [backgroundTheme, setBackgroundTheme] = React.useState('bg-pink');
 
   React.useEffect(() => {
-    // On mount, read the theme from localStorage and update state
-    const savedTheme = localStorage.getItem('theme') || '';
-    setColorTheme(savedTheme);
+    // On mount, read the themes from localStorage and update state
+    const savedAccent = localStorage.getItem('theme') || '';
+    const savedBackground = localStorage.getItem('background-theme') || 'bg-pink';
+    setAccentTheme(savedAccent);
+    setBackgroundTheme(savedBackground);
   }, []);
 
-  const handleColorChange = (newThemeClass: string) => {
-    // Remove all possible theme classes, filtering out empty strings
-    document.body.classList.remove(...themes.map(t => t.class).filter(Boolean));
+  const handleAccentChange = (newThemeClass: string) => {
+    // Remove all possible accent theme classes, filtering out empty strings
+    document.body.classList.remove(...accentThemes.map(t => t.class).filter(Boolean));
     
-    // Add the new one if it's not the default
     if (newThemeClass) {
       document.body.classList.add(newThemeClass);
     }
     
-    // Persist and update state
     localStorage.setItem('theme', newThemeClass);
-    setColorTheme(newThemeClass);
+    setAccentTheme(newThemeClass);
   };
+
+  const handleBackgroundChange = (newThemeClass: string) => {
+    document.body.classList.remove(...backgroundThemes.map(t => t.class));
+    document.body.classList.add(newThemeClass);
+    localStorage.setItem('background-theme', newThemeClass);
+    setBackgroundTheme(newThemeClass);
+  }
 
   return (
     <>
@@ -54,7 +70,7 @@ export function ThemeToggle() {
         <DropdownMenuSubTrigger>
           <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span>Theme</span>
+          <span>Mode</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent>
@@ -77,14 +93,34 @@ export function ThemeToggle() {
       <DropdownMenuSub>
         <DropdownMenuSubTrigger>
           <Paintbrush className="mr-2 h-4 w-4" />
-          <span>Color</span>
+          <span>Accent</span>
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
           <DropdownMenuSubContent>
-             <DropdownMenuRadioGroup value={colorTheme} onValueChange={handleColorChange}>
+             <DropdownMenuRadioGroup value={accentTheme} onValueChange={handleAccentChange}>
                 <DropdownMenuLabel>Accent Color</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {themes.map(theme => (
+                {accentThemes.map(theme => (
+                    <DropdownMenuRadioItem key={theme.name} value={theme.class}>
+                        {theme.name}
+                    </DropdownMenuRadioItem>
+                ))}
+             </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuPortal>
+      </DropdownMenuSub>
+      
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger>
+          <Images className="mr-2 h-4 w-4" />
+          <span>Background</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuPortal>
+          <DropdownMenuSubContent>
+             <DropdownMenuRadioGroup value={backgroundTheme} onValueChange={handleBackgroundChange}>
+                <DropdownMenuLabel>Background Color</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {backgroundThemes.map(theme => (
                     <DropdownMenuRadioItem key={theme.name} value={theme.class}>
                         {theme.name}
                     </DropdownMenuRadioItem>
