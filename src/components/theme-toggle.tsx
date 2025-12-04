@@ -35,8 +35,8 @@ export function ThemeToggle() {
   }, []);
 
   const handleColorChange = (newThemeClass: string) => {
-    // Remove all possible theme classes
-    document.body.classList.remove(...themes.map(t => t.class));
+    // Remove all possible theme classes, filtering out empty strings
+    document.body.classList.remove(...themes.map(t => t.class).filter(Boolean));
     
     // Add the new one if it's not the default
     if (newThemeClass) {
