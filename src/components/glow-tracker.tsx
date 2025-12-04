@@ -28,7 +28,7 @@ type GlowLog = {
   aiInsight?: string;
 };
 
-export type GlowLogInput = Partial<Omit<GlowLog, 'date' | 'updatedAt'>>;
+export type GlowLogInput = Partial<Omit<GlowLog, 'date' | 'updatedAt' | 'aiInsight'>>;
 
 type Option = { label: string; value: string };
 type Category = {
@@ -196,9 +196,13 @@ export function GlowTracker() {
         
         // After saving, trigger AI generation
         setIsAiGenerating(true);
+        
+        // Create a plain object for the server action
+        const { date, updatedAt, aiInsight, ...plainLogData } = newLogData;
+
         const insightResponse = await generateGlowInsight({
             cyclePhase: cyclePhase,
-            logData: newLogData as GlowLogInput
+            logData: plainLogData as GlowLogInput
         });
 
         if (insightResponse.insight) {
