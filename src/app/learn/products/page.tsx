@@ -1,5 +1,6 @@
 
 import { PeriodProductsGuide } from "@/components/info/PeriodProductsGuide";
+import { CyclePhasesGuide } from "@/components/info/CyclePhasesGuide";
 import Header from "@/components/layout/header";
 import { HeartHandshake } from "lucide-react";
 
@@ -17,10 +18,14 @@ export default function ProductsPage() {
                             Your Gentle Health Guide
                         </h1>
                         <p className="text-lg text-muted-foreground mt-3">
-                            A supportive space to learn about your body. Explore common products and gentle health topics with clarity and confidence.
+                            A supportive space to learn about your body. Explore cycle phases, common products, and gentle health topics with clarity and confidence.
                         </p>
                     </div>
-                    <PeriodProductsGuide />
+
+                    <div className="space-y-24">
+                        <CyclePhasesGuide />
+                        <PeriodProductsGuide />
+                    </div>
                 </div>
             </div>
         </div>
