@@ -87,16 +87,14 @@ export default function CycleLogPage() {
 
     const { data: rawLogs, isLoading } = useCollection<CycleLog>(logsQuery);
     
-    // Use the new, more robust grouping logic
+    // Use the legacy function which now handles onboarding data for initial estimates
     const cycles = useMemo(() => {
-        // Pass userProfile to the legacy function for the initial estimate
         return rawLogs ? groupLogsIntoCyclesLegacy(rawLogs, userProfile) : [];
     }, [rawLogs, userProfile]);
     
-    // Legacy calculations for the top banner (can be updated later)
     const averageCycleLength = useMemo(() => {
-        return rawLogs ? calculateAverageCycleLength(rawLogs) : 28;
-    }, [rawLogs]);
+        return rawLogs ? calculateAverageCycleLength(rawLogs) : (userProfile?.cycleLength ? parseInt(userProfile.cycleLength.split('-')[0]) : 28);
+    }, [rawLogs, userProfile]);
 
     const nextPeriodDate = useMemo(() => {
         return rawLogs ? estimateNextPeriodDate(rawLogs) : null;
@@ -340,5 +338,3 @@ export default function CycleLogPage() {
     </div>
   );
 }
-
-    
