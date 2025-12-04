@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +18,11 @@ const getGreeting = (): string => {
 
 
 export default function DashboardHeader({ name }: DashboardHeaderProps) {
-    const greeting = getGreeting();
+    const [greeting, setGreeting] = useState('');
+
+    useEffect(() => {
+        setGreeting(getGreeting());
+    }, []);
 
     const weekDays = useMemo(() => {
         const start = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
