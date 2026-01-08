@@ -1,8 +1,28 @@
 
 {
-  "name": "nextn",
+  "name": "herflow",
   "version": "0.1.0",
-  "private": true,
+  "description": "A beautiful, safe, AI-powered women's health platform — crafted for clarity, comfort, and care",
+  "author": "Ankit Singh <iankitsinghak@github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Iankitsinghak/HerFlow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Iankitsinghak/HerFlow/issues"
+  },
+  "homepage": "https://github.com/Iankitsinghak/HerFlow#readme",
+  "keywords": [
+    "women-health",
+    "period-tracker",
+    "cycle-tracking",
+    "pwa",
+    "nextjs",
+    "firebase",
+    "ai",
+    "wellness"
+  ],
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
