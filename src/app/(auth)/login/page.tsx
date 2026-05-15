@@ -56,6 +56,7 @@ export default function LoginPage() {
       const result = await login(values);
       if (result?.error) {
         setError(result.error);
+        console.error("Submission Login Error:", result.error);
       } else {
         router.push('/dashboard');
       }
@@ -68,6 +69,7 @@ export default function LoginPage() {
         const result = await googleSignIn();
         if (result?.error) {
             setError(result.error);
+            console.error("Google Sign In Error:", result.error);
         } else {
             router.push('/dashboard');
         }

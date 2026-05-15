@@ -135,6 +135,7 @@ export default function CycleLogPage() {
                 });
             })
             .catch((serverError: FirestoreError) => {
+                console.error("Firestore Add Period Day Error:", serverError);
                 const permissionError = new FirestorePermissionError({
                     path: logsCollectionRef.path,
                     operation: 'create',

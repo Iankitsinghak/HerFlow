@@ -10,7 +10,7 @@ const withPWA = require('next-pwa')({
 
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -39,9 +39,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['@genkit-ai/google-genai'],
   experimental: {
-    // Required to ensure that Genkit AI flows are correctly bundled in production.
-    serverComponentsExternalPackages: ['@genkit-ai/google-genai'],
     serverActions: {
       bodySizeLimit: '2mb', // Increase body size limit for server actions
     },

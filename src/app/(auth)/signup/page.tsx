@@ -54,6 +54,7 @@ export default function SignupPage() {
             const result = await clientSignup(values);
             if (result?.error) {
                 setError(result.error);
+                console.error("Form Signup Error:", result.error);
             } else {
                 router.push('/dashboard');
             }
@@ -66,6 +67,7 @@ export default function SignupPage() {
             const result = await googleSignIn();
             if (result?.error) {
                 setError(result.error);
+                console.error("Google Sign In Error:", result.error);
             } else {
                 router.push('/dashboard');
             }

@@ -51,6 +51,7 @@ export async function googleSignIn() {
       return { user: result.user, isNewUser: false };
 
     } catch (error: any) {
+      console.error("Google Sign In Error:", error);
       return { error: error.message };
     }
 }
@@ -65,6 +66,7 @@ export async function login(values: any) {
     );
     return { success: true };
   } catch (error: any) {
+    console.error("Login Error:", error);
     return { error: error.message };
   }
 }
@@ -79,6 +81,7 @@ export async function clientSignup(values: any) {
         );
         return { success: true, user: userCredential.user };
     } catch (error: any) {
+        console.error("Signup Error:", error);
         return { error: error.message };
     }
 }

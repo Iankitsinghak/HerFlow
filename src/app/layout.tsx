@@ -1,5 +1,5 @@
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
@@ -7,11 +7,14 @@ import { OnboardingProvider } from './onboarding/provider';
 import { LanguageProvider } from '@/context/language-provider';
 import { ThemeProvider } from '@/context/theme-provider';
 
+export const viewport: Viewport = {
+  themeColor: '#C2185B',
+};
+
 export const metadata: Metadata = {
   title: 'HerFlow',
   description: 'Empowering women through every phase of life.',
   manifest: '/manifest.json',
-  themeColor: '#C2185B',
 };
 
 export default function RootLayout({
