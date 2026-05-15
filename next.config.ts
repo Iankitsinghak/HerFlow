@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@genkit-ai/google-genai'],
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb', // Increase body size limit for server actions
+      bodySizeLimit: '2mb',
     },
   },
 };
