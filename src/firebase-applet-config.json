@@ -1,10 +1,10 @@
 {
-  "projectId": "studio-6892491068",
-  "appId": "1:600000000000:web:xxxxxxxxxxxxxxxxxxxxxx",
-  "apiKey": "AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "authDomain": "studio-6892491068.firebaseapp.com",
-  "storageBucket": "studio-6892491068.firebasestorage.app",
-  "messagingSenderId": "600000000000",
-  "measurementId": "G-XXXXXXXXXX",
+  "projectId": "herflow-f075a",
+  "appId": "1:666235933425:web:e82c163f47424d15050f50",
+  "apiKey": "AIzaSyDze32rMyS2vqiUwt5RdHOsm0LLrWupWTg",
+  "authDomain": "herflow-f075a.firebaseapp.com",
+  "storageBucket": "herflow-f075a.firebasestorage.app",
+  "messagingSenderId": "666235933425",
+  "measurementId": "G-3TBL0YS3K4",
   "firestoreDatabaseId": "(default)"
 }
