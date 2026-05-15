@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -16,14 +15,12 @@ import { getAuth } from "firebase/auth";
 import { firebaseConfig } from "@/firebase/config";
 
 // --- START: Consolidated Firebase Initialization ---
-
-// This pattern ensures that Firebase is initialized only once on the client.
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth: Auth = getAuth(app);
 const firestore = getFirestore(app);
 // --- END: Consolidated Firebase Initialization ---
 
-export { auth, firestore }; // Export initialized services
+export { auth, firestore };
 
 export async function googleSignIn() {
     if (!auth) {
@@ -99,7 +96,6 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
         const uid = currentUser.uid;
         const userProfileRef = doc(firestore, `users/${uid}/userProfiles`, uid);
 
-        // Robust fallback for displayName
         const displayName = onboardingData.name || currentUser.displayName || currentUser.email || 'User';
 
         const finalProfileData = {
@@ -149,8 +145,7 @@ export async function logout() {
   try {
     await signOut(auth);
     window.location.href = '/login';
-  } catch (error: any)
-  {
+  } catch (error: any) {
     console.error("Logout failed:", error);
     return { error: error.message };
   }
