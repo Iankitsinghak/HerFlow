@@ -10,22 +10,12 @@ import {
     type Auth,
     type User,
   } from "firebase/auth";
-import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { firebaseConfig } from "@/firebase/config";
 
 // --- START: Consolidated Firebase Initialization ---
-
-const firebaseConfig: FirebaseOptions = {
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-};
-
 
 // This pattern ensures that Firebase is initialized only once on the client.
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -36,7 +26,11 @@ const firestore = getFirestore(app);
 export { auth, firestore }; // Export initialized services
 
 export async function googleSignIn() {
-    if (!auth) return { error: "Auth service not available." };
+    if (!auth) {
+      const err = "Auth service not available.";
+      console.error(err);
+      return { error: err };
+    }
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -57,7 +51,11 @@ export async function googleSignIn() {
 }
 
 export async function login(values: any) {
-    if (!auth) return { error: "Auth service not available." };
+    if (!auth) {
+      const err = "Auth service not available.";
+      console.error(err);
+      return { error: err };
+    }
   try {
     await signInWithEmailAndPassword(
       auth,
@@ -72,7 +70,11 @@ export async function login(values: any) {
 }
 
 export async function clientSignup(values: any) {
-    if (!auth) return { error: "Auth service not available." };
+    if (!auth) {
+      const err = "Auth service not available.";
+      console.error(err);
+      return { error: err };
+    }
     try {
         const userCredential = await createUserWithEmailAndPassword(
             auth,
@@ -88,7 +90,9 @@ export async function clientSignup(values: any) {
 
 export async function completeOnboarding(currentUser: User, onboardingData: any) {
     if (!firestore || !currentUser) {
-        return { error: "Firestore or user not available." };
+        const err = "Firestore or user not available.";
+        console.error(err);
+        return { error: err };
     }
 
     try {
@@ -137,7 +141,11 @@ export async function completeOnboarding(currentUser: User, onboardingData: any)
 }
 
 export async function logout() {
-  if (!auth) return { error: "Auth service not available." };
+  if (!auth) {
+    const err = "Auth service not available.";
+    console.error(err);
+    return { error: err };
+  }
   try {
     await signOut(auth);
     window.location.href = '/login';
