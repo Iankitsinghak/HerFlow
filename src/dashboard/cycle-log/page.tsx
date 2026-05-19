@@ -196,36 +196,38 @@ export default function CycleLogPage() {
                     <p className="text-sm text-muted-foreground mt-2">Use the buttons above to start tracking your cycle.</p>
                 </div>
             ) : (
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>End Date</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Symptoms</TableHead>
-                        <TableHead><span className="sr-only">Actions</span></TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {groupedCycles.map((cycle, index) => (
-                        <TableRow key={index}>
-                        <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
-                        <TableCell>{cycle.duration} days</TableCell>
-                        <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                            {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </TableCell>
+                <div className="w-full overflow-x-auto rounded-md">
+                    <Table className="w-full">
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>End Date</TableHead>
+                            <TableHead>Duration</TableHead>
+                            <TableHead className="min-w-[160px]">Symptoms</TableHead>
+                            <TableHead><span className="sr-only">Actions</span></TableHead>
                         </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                        {groupedCycles.map((cycle, index) => (
+                            <TableRow key={index}>
+                            <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{format(cycle.endDate, 'MMM dd, yyyy')}</TableCell>
+                            <TableCell>{cycle.duration} days</TableCell>
+                            <TableCell className="max-w-[200px] align-top">
+                                <div className="flex flex-wrap gap-1 min-w-0">
+                                {cycle.symptoms.length > 0 ? cycle.symptoms.map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                </div>
             )}
         </CardContent>
       </Card>
