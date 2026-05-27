@@ -151,7 +151,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                         control={form.control}
                         name="isAnonymous"
                         render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg bg-muted/50 p-3 mt-6">
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg bg-primary/20 p-3 mt-6">
                                 <div className="space-y-0.5">
                                     <FormLabel>Post Anonymously</FormLabel>
                                     <FormDescription className="text-xs">
