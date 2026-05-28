@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, addDoc, serverTimestamp, doc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, where, addDoc, serverTimestamp, doc, updateDoc, increment, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 import { useCollection, WithId } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';

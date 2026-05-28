@@ -29,7 +29,8 @@ export interface CommunityPost {
   title: string;
   content: string;
   commentCount: number;
-  createdAt: any; // Allow server timestamp
+  likeCount: number;
+  createdAt: any;
   isAnonymous?: boolean;
 }
 

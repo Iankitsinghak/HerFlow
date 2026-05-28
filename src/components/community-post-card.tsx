@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, UserCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { LikeButton } from "./like-button";
 import { useUser, useFirestore } from '@/firebase';
 import { doc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { type WithId } from '@/firebase/firestore/use-collection';
@@ -144,6 +145,7 @@ export function CommunityPostCard({ post, onPostDeleted }: CommunityPostCardProp
                 <CardContent>
                     <p className="text-foreground/90 mb-6 whitespace-pre-wrap">{post.content}</p>
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                        <LikeButton postId={post.id} likeCount={post.likeCount ?? 0} />
                         <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-primary px-1 h-auto py-1">
                                 <MessageSquare className="h-4 w-4" />
