@@ -278,40 +278,42 @@ export default function CycleLogPage() {
                         </div>
                     ) : (
                         <Dialog onOpenChange={(open) => !open && setSelectedCycle(null)}>
-                            <Table>
-                                <TableHeader>
-                                <TableRow>
-                                    <TableHead>Cycle</TableHead>
-                                    <TableHead>Period Duration</TableHead>
-                                    <TableHead>Cycle Length</TableHead>
-                                    <TableHead>Symptoms</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {cycles.map((cycle) => (
-                                    <TableRow key={cycle.cycleIndex}>
-                                    <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
-                                    <TableCell>{`${cycle.duration} days`}</TableCell>
-                                    <TableCell>{cycle.cycleLength ? `${cycle.cycleLength} days` : 'In Progress'}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1 max-w-xs">
-                                        {cycle.symptoms.length > 0 ? cycle.symptoms.slice(0,3).map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
-                                        {cycle.symptoms.length > 3 && <Badge variant="outline">+{cycle.symptoms.length - 3} more</Badge>}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <DialogTrigger asChild>
-                                            <Button variant="ghost" onClick={() => setSelectedCycle(cycle)}>
-                                                <WandSparkles className="mr-2 h-4 w-4" />
-                                                Get Plan
-                                            </Button>
-                                        </DialogTrigger>
-                                    </TableCell>
+                            <div className="w-full overflow-x-auto rounded-md">
+                                <Table className="w-full">
+                                    <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Cycle</TableHead>
+                                        <TableHead>Period Duration</TableHead>
+                                        <TableHead>Cycle Length</TableHead>
+                                        <TableHead className="min-w-[160px]">Symptoms</TableHead>
+                                        <TableHead>Actions</TableHead>
                                     </TableRow>
-                                ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                    {cycles.map((cycle) => (
+                                        <TableRow key={cycle.cycleIndex}>
+                                        <TableCell className="font-medium">{format(cycle.startDate, 'MMM dd, yyyy')}</TableCell>
+                                        <TableCell>{`${cycle.duration} days`}</TableCell>
+                                        <TableCell>{cycle.cycleLength ? `${cycle.cycleLength} days` : 'In Progress'}</TableCell>
+                                        <TableCell className="max-w-[200px] align-top">
+                                            <div className="flex flex-wrap gap-1 min-w-0">
+                                            {cycle.symptoms.length > 0 ? cycle.symptoms.slice(0,3).map(symptom => <Badge key={symptom} variant="secondary">{symptom}</Badge>) : <span className="text-xs text-muted-foreground">None</span>}
+                                            {cycle.symptoms.length > 3 && <Badge variant="outline">+{cycle.symptoms.length - 3} more</Badge>}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" onClick={() => setSelectedCycle(cycle)}>
+                                                    <WandSparkles className="mr-2 h-4 w-4" />
+                                                    Get Plan
+                                                </Button>
+                                            </DialogTrigger>
+                                        </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                             {selectedCycle && (
                                 <DialogContent className="max-w-2xl">
                                     <DialogHeader>
