@@ -80,6 +80,7 @@ export function CreatePostForm({ onPostCreated }: CreatePostFormProps) {
                 content: values.content,
                 isAnonymous: values.isAnonymous,
                 commentCount: 0,
+                likeCount: 0,
                 createdAt: serverTimestamp(),
             });
 
