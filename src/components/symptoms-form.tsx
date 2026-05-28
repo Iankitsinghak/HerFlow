@@ -90,7 +90,7 @@ export function SymptomsForm({ onSave, onCancel, currentLogs }: SymptomsFormProp
   };
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6">
       
       <div className="space-y-3">
         <Label>Are you on your period today?</Label>
@@ -164,7 +164,7 @@ export function SymptomsForm({ onSave, onCancel, currentLogs }: SymptomsFormProp
       </div>
 
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : 'Save Details'}
