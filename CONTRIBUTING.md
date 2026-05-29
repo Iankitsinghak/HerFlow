@@ -58,7 +58,7 @@ HerFlow is built with Next.js, Tailwind CSS, and Firebase.
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   Open [http://localhost:9002](http://localhost:9002) (Note: The development server port may vary depending on the local configuration or scripts defined in package.json.)
 
 ### Pull Request Process
 
