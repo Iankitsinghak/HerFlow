@@ -44,7 +44,7 @@ export default function DashboardHeader({ name, nextPeriodDate }: DashboardHeade
 
     return (
         <div>
-            <h1 className="text-3xl font-bold font-headline">
+            <h1 className="text-3xl font-bold font-headline dark:text-gray-700">
                 {greeting}, {name}!
             </h1>
             <div className="mt-6">

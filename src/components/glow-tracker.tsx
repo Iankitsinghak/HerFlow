@@ -236,13 +236,13 @@ export function GlowTracker() {
         <Card className="bg-gradient-to-br from-rose-50/80 to-purple-50/60 dark:from-fuchsia-950/20 dark:to-black/20 p-6 md:p-8 rounded-2xl shadow-md border border-pink-100/50 dark:border-fuchsia-900/30">
             <CollapsibleTrigger className="flex justify-between items-center w-full">
                 <div>
-                    <CardTitle className="flex items-center gap-3 text-pink-900/80 dark:text-pink-200/90 font-headline text-2xl">
+                    <CardTitle className="flex items-center gap-3 text-pink-900/80 dark:text-pink-700 font-headline text-2xl">
                          <span className="text-2xl">✨</span>
                          Glow Tracker
                     </CardTitle>
-                    <CardDescription className="text-left mt-1">How are you feeling in your body today?</CardDescription>
+                    <CardDescription className="text-left mt-1 dark:text-gray-500">How are you feeling in your body today?</CardDescription>
                 </div>
-                <ChevronDown className={cn("h-6 w-6 text-pink-900/80 dark:text-pink-200/90 transition-transform", isOpen && "rotate-180")} />
+                <ChevronDown className={cn("h-6 w-6 text-pink-900/80 dark:text-pink-700 transition-transform", isOpen && "rotate-180")} />
             </CollapsibleTrigger>
             
             <CollapsibleContent>
@@ -273,9 +273,9 @@ export function GlowTracker() {
                             <Sparkles className="h-5 w-5 text-pink-500 mt-0.5 shrink-0" />
                             <div>
                                 <h4 className="font-semibold text-pink-900/90 dark:text-pink-200/90">Today's Glow Insight</h4>
-                                <p className="text-sm text-muted-foreground mt-1 min-h-[20px]">
+                                <p className="text-sm text-pink-600 dark:text-gray-600 mt-1 min-h-[20px]">
                                     {isAiGenerating 
-                                        ? <span className="flex items-center gap-2"><Loader className="h-4 w-4 animate-spin"/> Generating...</span> 
+                                        ? <span className="flex items-center gap-2 "><Loader className="h-4 w-4 animate-spin"/> Generating...</span> 
                                         : (logData?.aiInsight || 'Your insight will appear here as you log.')}
                                 </p>
                             </div>

@@ -145,7 +145,7 @@ export default function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-lg text-muted-foreground">
+                <p className="text-lg text-muted-foreground dark:text-pink-200">
                     Tell us about your last period and cycle pattern to unlock predictions and personalized insights.
                 </p>
                 <div className="mt-4">

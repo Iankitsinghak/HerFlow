@@ -69,7 +69,7 @@ export default function CommunityPage() {
       <div className="container mx-auto px-4 md:px-6 py-12">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div className="text-center md:text-left mb-4 md:mb-0">
-            <h1 className="text-4xl md:text-5xl font-bold font-headline">Community Forum</h1>
+            <h1 className="text-4xl md:text-5xl font-bold font-headline dark:text-gray-700">Community Forum</h1>
             <p className="text-lg text-muted-foreground mt-2">Connect, share, and support each other.</p>
           </div>
           {user ? (
@@ -110,7 +110,7 @@ export default function CommunityPage() {
             ))
           ) : (
             <div className="text-center py-16 border-2 border-dashed rounded-lg">
-              <h3 className="text-xl font-semibold">No posts yet</h3>
+              <h3 className="text-xl font-semibold dark:text-pink-500">No posts yet</h3>
               <p className="text-muted-foreground mt-2">Be the first one to share something! 💬</p>
             </div>
           )}

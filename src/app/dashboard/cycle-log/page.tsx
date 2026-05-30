@@ -155,7 +155,7 @@ export default function CycleLogPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold font-headline">Cycle Log 🌸</h1>
+        <h1 className="text-3xl font-bold font-headline dark:text-gray-700">Cycle Log 🌸</h1>
         <p className="text-muted-foreground">
           Track and manage your menstrual cycle history.
         </p>
@@ -175,7 +175,7 @@ export default function CycleLogPage() {
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Current Phase</p>
-                                <p className="font-bold text-lg">{currentPhase}</p>
+                                <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{currentPhase}</p>
                             </div>
                         </div>
                     </TooltipTrigger>
@@ -193,7 +193,7 @@ export default function CycleLogPage() {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Next Period</p>
-                            <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
+                            <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
                         </div>
                     </div>
                 </PopoverTrigger>
@@ -214,7 +214,7 @@ export default function CycleLogPage() {
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Avg. Cycle</p>
-                    <p className="font-bold text-lg">{averageCycleLength} days</p>
+                    <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{averageCycleLength} days</p>
                 </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-background rounded-lg shadow-sm">
@@ -223,7 +223,7 @@ export default function CycleLogPage() {
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Cycle Day</p>
-                    <p className="font-bold text-lg">{cycleDay ?? 'N/A'}</p>
+                    <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{cycleDay ?? 'N/A'}</p>
                 </div>
             </div>
         </CardContent>
@@ -257,7 +257,7 @@ export default function CycleLogPage() {
       </Card>
 
       <Tabs defaultValue="table" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 ">
             <TabsTrigger value="table">Table View</TabsTrigger>
             <TabsTrigger value="graphs">Graph View</TabsTrigger>
             <TabsTrigger value="insights">Insights View</TabsTrigger>
