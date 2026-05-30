@@ -12,7 +12,7 @@ export function DailyFemInsight() {
             <div className="shrink-0">
                 <Sparkles className="h-6 w-6 text-accent" />
             </div>
-            <p className="text-sm md:text-base font-medium text-foreground/90">
+            <p className="text-sm md:text-base font-medium text-foreground/90 dark:text-gray-700">
                 <span className="font-bold text-accent mr-1">Today's Insight:</span>
                 {insight}
             </p>

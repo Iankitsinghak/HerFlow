@@ -31,7 +31,7 @@ export default function AskDoctorPage() {
             <div className="grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-8">
                     <div className="text-center md:text-left">
-                        <h1 className="text-4xl md:text-5xl font-bold font-headline">Ask Our Experts</h1>
+                        <h1 className="text-4xl md:text-5xl font-bold font-headline dark:text-gray-700">Ask Our Experts</h1>
                         <p className="text-lg text-muted-foreground mt-2">Get answers to your health questions from qualified professionals.</p>
                     </div>
                     
@@ -48,12 +48,12 @@ export default function AskDoctorPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold font-headline">Recently Answered</h2>
+                    <h2 className="text-2xl font-bold font-headline dark:text-gray-500">Recently Answered</h2>
                     <Accordion type="single" collapsible className="w-full">
                         {mockQuestions.map(item => (
                              <AccordionItem value={`item-${item.id}`} key={item.id}>
-                                <AccordionTrigger className="text-left">{item.question}</AccordionTrigger>
-                                <AccordionContent className="space-y-4">
+                                <AccordionTrigger className="text-left dark:text-gray-500">{item.question}</AccordionTrigger>
+                                <AccordionContent className="space-y-4 dark:text-gray-500">
                                     <p>{item.answer}</p>
                                     <div className="flex items-center gap-2 pt-2 border-t">
                                         <Avatar className="h-8 w-8">

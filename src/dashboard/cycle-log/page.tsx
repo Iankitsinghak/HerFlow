@@ -136,7 +136,7 @@ export default function CycleLogPage() {
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Current Phase</p>
-                    <p className="font-bold text-lg">{currentPhase}</p>
+                    <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{currentPhase}</p>
                 </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
@@ -145,7 +145,7 @@ export default function CycleLogPage() {
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Next Period</p>
-                    <p className="font-bold text-lg">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
+                    <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{nextPeriodDate ? format(nextPeriodDate, 'MMM dd') : 'Not enough data'}</p>
                 </div>
             </div>
              <div className="flex items-center gap-4 p-4 bg-background rounded-lg">
@@ -154,7 +154,7 @@ export default function CycleLogPage() {
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground">Avg. Cycle</p>
-                    <p className="font-bold text-lg">{averageCycleLength} days</p>
+                    <p className="font-bold text-lg text-pink-600 dark:text-pink-400">{averageCycleLength} days</p>
                 </div>
             </div>
         </CardContent>
