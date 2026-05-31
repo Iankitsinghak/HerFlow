@@ -1,6 +1,7 @@
 
 import Header from "@/components/layout/header";
 import { AiChatInterface } from "@/components/ai-chat-interface";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export default function AiChatPage() {
     return (
@@ -12,7 +13,9 @@ export default function AiChatPage() {
                         <h1 className="text-4xl md:text-5xl font-bold font-headline dark:text-gray-700">Woomania</h1>
                         <p className="text-lg text-muted-foreground mt-2">Your AI companion for health and well-being.</p>
                     </div>
-                    <AiChatInterface />
+                    <ErrorBoundary>
+                        <AiChatInterface />
+                    </ErrorBoundary>
                 </div>
             </div>
         </div>
